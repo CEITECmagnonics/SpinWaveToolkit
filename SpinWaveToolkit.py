@@ -4,7 +4,7 @@ Created on Tue Aug 25 \n
 This module provides analytical tools in Spin wave physics
 
 Available classes are:
-    SpinWaveCharacteristic -- Compute spin wave characteristic in dependance to k-vector \n
+    DispersionCharacteristic -- Compute spin wave characteristic in dependance to k-vector \n
     Material -- Class for magnetic materials used in spin wave resreach
     
 Available constants: \n
@@ -27,7 +27,7 @@ import numpy as np \n
 
 kxi = np.linspace(1e-12, 10e6, 150) \n
 
-NiFeChar = SWT.SpinWaveCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundaryCond = 2, Bext = 20e-3, material = SWT.NiFe) \n
+NiFeChar = SWT.DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundaryCond = 2, Bext = 20e-3, material = SWT.NiFe) \n
 DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
@@ -39,7 +39,7 @@ import numpy as np
 
 mu0 = 4*np.pi*1e-7; #Magnetic permeability
 
-class SpinWaveCharacteristic:
+class DispersionCharacteristic:
     """Compute spin wave characteristic in dependance to k-vector (wavenumber) such as frequency, group velocity, lifetime and propagation length
     #The model uses famous Slavin-Kalinikos equation from https://doi.org/10.1088%2F0022-3719%2F19%2F35%2F014
     Keyword arguments: \n
@@ -65,7 +65,7 @@ class SpinWaveCharacteristic:
     #Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150) \n
      \n
-    NiFeChar = SpinWaveCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 30e-9, weff = 2e-6, nT = 0, boundaryCond = 2, Bext = 20e-3, material = NiFe) \n
+    NiFeChar = DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 30e-9, weff = 2e-6, nT = 0, boundaryCond = 2, Bext = 20e-3, material = NiFe) \n
     DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
     vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
