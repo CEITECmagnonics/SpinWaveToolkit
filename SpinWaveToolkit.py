@@ -157,12 +157,12 @@ class Material:
     NiFe (Permalloy)\n
     CoFeB\n
     FeNi (Metastable iron)"""
-    def __init__(self, Ms, Aex, alpha, gamma = 28.1*np.pi*1e9):
+    def __init__(self, Ms, Aex, alpha, gamma = 28.1*2*np.pi*1e9):
         self.Ms = Ms
         self.Aex = Aex
         self.alpha = alpha
         self.gamma = gamma
 #Predefined materials
 NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4)
-CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*np.pi*1e9)
+CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*2*np.pi*1e9)
 FeNi = Material(Ms = 1410e3, Aex = 11e-12, alpha = 80e-4)
