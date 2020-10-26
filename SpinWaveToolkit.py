@@ -114,8 +114,12 @@ class DispersionCharacteristic:
                 Pnn = (self.kxi**2)/(k**2) - (self.kxi**4)/(k**4)*(1/2)*(2/(self.kxi*self.d)*(1-np.exp(-self.kxi*self.d)))
             else:
                 Pnn = (self.kxi**2)/(k**2)*(kappa**2*kappac**2)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
-            # Deprecated
-                # Pnn = np.power(kxi,2)/np.power(k,2) - np.power(kxi,2)/np.power(k,2)*(1 - np.exp(-k*d))/(k*d)
+        # Totally unpinned condition - long wave limit         
+        if self.boundaryCond == 3:
+                if n == 0:
+                    Pnn = self.kxi*d/2
+                else:
+                    Pnn = (self.kxi*d)**2/(n**2*np.pi**2)
         return(Pnn)
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """ Gives frequencies for defined k (Dispersion relation) \n
