@@ -49,7 +49,6 @@ class DispersionCharacteristic:
     n -- the quantization number in z (out-of-plane) direction (default 0) \n
     d -- thickness of layer in m (in z direction) \n
     weff -- effective width of the waveguide in um (optional, default 3e-6 um) \n
-    n -- the transversal quantization number in y  direction (default 0) \n
     boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition \n
     
     w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext \n
@@ -61,6 +60,8 @@ class DispersionCharacteristic:
     GetLifetime \n
     GetGroupVelocity \n
     GetPropLen \n
+    GetPropagationVector \n
+    GetSecondPerturbation \n
     Code example: \n
     #Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150) \n
@@ -71,63 +72,122 @@ class DispersionCharacteristic:
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
-    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, n = 0, weff = 3e-6, nT = 0, boundaryCond = 2):
+    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 2):
         self.kxi = kxi
         self.theta = theta
         self.phi= phi
-        self.n = n
         self.d = d
         self.weff = weff
-        self.nT = nT
         self.boundaryCond = boundaryCond
         self.alpha = material.alpha
         #Compute Slavin-Kalinikos parameters wM, w0 A
         self.wM = material.Ms*material.gamma*mu0
         self.w0 = material.gamma*Bext
         self.A = material.Aex*2/(material.Ms**2*mu0)
-    def GetDispersion(self):
-        """ Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the same units as w0, wM"""
-        k = np.sqrt(np.power(self.kxi,2) + np.power(self.n*np.pi/self.d,2) + np.power(self.nT*np.pi/self.weff,2))
+    def GetPropagationVector(self, n = 0, nc = -1, nT = 0):
+        """ Gives dimensionless propagation vector \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        if nc == -1:
+            nc = n
+        kappa = n*np.pi/self.d
+        kappac = nc*np.pi/self.d
+        k = np.sqrt(np.power(self.kxi,2) + kappa**2 + np.power(nT*np.pi/self.weff,2))
+        kc = np.sqrt(np.power(self.kxi,2) + kappac**2 + np.power(nT*np.pi/self.weff,2))
         # Totally unpinned boundary condition
         if self.boundaryCond == 1:
-            if self.n == 0:
+            Fn = 2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d))
+            if n == 0 and nc == 0:         
+                Pnn = (self.kxi**2)/(kc**2) - (self.kxi**4)/(k**2*kc**2)*1/2*((1+(-1)**(n+nc))/2)*Fn
+            elif n == 0 and nc != 0 or nc == 0 and n != 0 :
+                Pnn =  - (self.kxi**4)/(k**2*kc**2)*1/np.sqrt(2)*((1+(-1)**(n+nc))/2)*Fn
+            elif n == nc:
+                Pnn = (self.kxi**2)/(kc**2) - (self.kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+            else:
+                Pnn = - (self.kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+        # Totally pinned boundary condition
+        if self.boundaryCond == 2:
+            if n == nc:
+                Pnn = (self.kxi**2)/(kc**2) + (self.kxi**2)/(k**2)*(k*kc)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
                 Pnn = (self.kxi**2)/(k**2) - (self.kxi**4)/(k**4)*(1/2)*(2/(self.kxi*self.d)*(1-np.exp(-self.kxi*self.d)))
             else:
-                Pnn = (self.kxi**2)/(k**2) - (self.kxi**4)/(k**4)*(2/(self.kxi*self.d)*(1-np.exp(-self.kxi*self.d)))
-        # Totally pinned boundary condition
-        else:
-            Pnn = (self.kxi**2)/(k**2) - (self.kxi**2)/(k**2)*(1 - np.exp(-k*self.d))/(k*self.d);
-        # Deprecated
-            # Pnn = np.power(kxi,2)/np.power(k,2) - np.power(kxi,2)/np.power(k,2)*(1 - np.exp(-k*d))/(k*d)
-        Pnn[0] = 0
+                Pnn = (self.kxi**2)/(k**2)*(kappa**2*kappac**2)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
+            # Deprecated
+                # Pnn = np.power(kxi,2)/np.power(k,2) - np.power(kxi,2)/np.power(k,2)*(1 - np.exp(-k*d))/(k*d)
+        return(Pnn)
+    def GetDispersion(self, n=0, nc=-1, nT=0):
+        """ Gives frequencies for defined k (Dispersion relation) \n
+        The returned value is in the rad Hz \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        if nc == -1:
+            nc = n
+        kappa = n*np.pi/self.d
+        k = np.sqrt(np.power(self.kxi,2) + kappa**2 + np.power(nT*np.pi/self.weff,2))
+        Pnn = self.GetPropagationVector(n = n, nc = nc, nT = nT)
         Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(self.phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(self.phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
         f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
         return f
-    def GetGroupVelocity(self):
+    def GetGroupVelocity(self, n=0, nc=-1, nT=0):
         """ Gives group velocities for defined k \n
         The group velocity is computed as vg = dw/dk
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number 
         """
-        f = self.GetDispersion()
+        if nc == -1:
+            nc = n
+        f = self.GetDispersion(n = n, nc = nc, nT = nT)
         vg = np.diff(f)/(self.kxi[2]-self.kxi[1])
         return(vg)
-    def GetLifetime(self):
+    def GetLifetime(self, n=0, nc=-1, nT=0):
         """ Gives lifetimes for defined k \n
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1"""
+        lifetime is computed as tau = (alpha*w*dw/dw0)^-1
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        if nc == -1:
+            nc = n
         w0Ori = self.w0
         self.w0 = w0Ori*0.9999999
-        dw0p999 = self.GetDispersion()
+        dw0p999 = self.GetDispersion(n = n, nc = nc, nT = nT)
         self.w0 = w0Ori*1.0000001
-        dw0p001 = self.GetDispersion()
+        dw0p001 = self.GetDispersion(n = n, nc = nc, nT = nT)
         self.w0 = w0Ori
-        lifetime = (self.alpha*self.GetDispersion()*(dw0p001 - dw0p999)/(w0Ori*1.0000001 - w0Ori*0.9999999))**-1
+        lifetime = (self.alpha*self.GetDispersion(n = n, nc = nc, nT = nT)*(dw0p001 - dw0p999)/(w0Ori*1.0000001 - w0Ori*0.9999999))**-1
         return lifetime
-    def GetPropLen(self):
+    def GetPropLen(self, n=0, nc=-1, nT=0):
         """ Give propagation lengths for defined k \n
-        propagation length is computed as lambda = vg*tau"""
-        propLen = self.GetLifetime()[0:-1]*self.GetGroupVelocity()
+        propagation length is computed as lambda = vg*tau
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        if nc == -1:
+            nc = n
+        propLen = self.GetLifetime(n = n, nc = nc, nT = nT)[0:-1]*self.GetGroupVelocity(n = n, nc = nc, nT = nT)
         return propLen
-    
+    def GetSecondPerturbation(self, n, nc):
+        """ Give degenerate dispersion relation based on the secular equation 54 \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc -- Quantization number of crossing mode \n """
+        kappa = n*np.pi/self.d
+        kappac = nc*np.pi/self.d
+        Om = self.w0 + self.wM*self.A*(kappa**2 + self.kxi**2);
+        Omc = self.w0 + self.wM*self.A*(kappac**2 + self.kxi**2);
+        Pnn = self.GetPropagationVector(n = n, nc = nc)
+        wnn = self.GetDispersion(n = n, nc = n)
+        wncnc = self.GetDispersion(n = nc, nc = nc)
+        wdn = np.sqrt(wnn**2+wncnc**2-np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
+        wdnc = np.sqrt(wnn**2+wncnc**2+np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
+        return(wdn, wdnc)
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
