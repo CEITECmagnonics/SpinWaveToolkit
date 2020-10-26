@@ -49,7 +49,8 @@ class DispersionCharacteristic:
     n -- the quantization number in z (out-of-plane) direction (default 0) \n
     d -- thickness of layer in m (in z direction) \n
     weff -- effective width of the waveguide in um (optional, default 3e-6 um) \n
-    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition \n
+    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned \n
+    dp -- for 4 BC, pinning parameter ranges from 0 to inf. 0 means totally unpinned \n
     
     w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext \n
     wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms \n
@@ -72,7 +73,7 @@ class DispersionCharacteristic:
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
-    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 2):
+    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0):
         self.kxi = kxi
         self.theta = theta
         self.phi= phi
@@ -84,6 +85,7 @@ class DispersionCharacteristic:
         self.wM = material.Ms*material.gamma*mu0
         self.w0 = material.gamma*Bext
         self.A = material.Aex*2/(material.Ms**2*mu0)
+        self.dp = dp
     def GetPropagationVector(self, n = 0, nc = -1, nT = 0):
         """ Gives dimensionless propagation vector \n
         Arguments: \n
@@ -117,9 +119,27 @@ class DispersionCharacteristic:
         # Totally unpinned condition - long wave limit         
         if self.boundaryCond == 3:
                 if n == 0:
-                    Pnn = self.kxi*d/2
+                    Pnn = self.kxi*self.d/2
                 else:
-                    Pnn = (self.kxi*d)**2/(n**2*np.pi**2)
+                    Pnn = (self.kxi*self.d)**2/(n**2*np.pi**2)
+        # Partially pinned boundary condition
+        if self.boundaryCond == 4:
+            dp = self.dp
+            if kappa == 0:
+                kappa = 1e2
+            if kappac == 0:
+                kappac = 1e2
+            An = np.sqrt(2*((kappa**2 + dp**2)/kappa**2 + np.sin(kappa*self.d)/(kappa*self.d) * ((kappa**2 - dp**2)/kappa**2*np.cos(kappa*self.d) + 2*dp/kappa*np.sin(kappa*self.d)))**-1)
+            Anc = np.sqrt(2*((kappac**2 + dp**2)/kappac**2 + np.sin(kappac*self.d)/(kappac*self.d) * ((kappac**2 - dp**2)/kappac**2*np.cos(kappac*self.d) + 2*dp/kappac*np.sin(kappac*self.d)))**-1)
+            Pnnc = self.kxi*An*Anc/(2*self.d*k**2*kc**2)*((self.kxi**2 - dp**2)*np.exp(-self.kxi*self.d)*(np.cos(kappa*self.d) + 
+                                                          np.cos(kappac*self.d)) + (self.kxi - dp)*np.exp(-self.kxi*self.d)*((dp*self.kxi - kappa**2)*np.sin(kappa*self.d)/kappa + 
+                                                          (dp*self.kxi - kappac**2)*np.sin(kappac*self.d)/kappac) - (self.kxi**2 - dp**2)*(1 + np.cos(kappa*self.d)*np.cos(kappac*self.d)) + 
+                                                          (kappa**2*kappac**2 - dp**2*self.kxi**2)*np.sin(kappa*self.d)/kappa*np.sin(kappac*self.d)/kappac - 
+                                                          dp*(k**2*np.cos(kappac*self.d)*np.sin(kappa*self.d)/kappa + kc**2*np.cos(kappa*self.d)*np.sin(kappac*self.d)/kappac))
+            if n == nc:
+                Pnn = self.kxi**2/kc**2 + Pnnc
+            else:
+                Pnn = Pnnc
         return(Pnn)
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """ Gives frequencies for defined k (Dispersion relation) \n
