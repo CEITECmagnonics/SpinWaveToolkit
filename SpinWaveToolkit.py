@@ -88,10 +88,12 @@ class DispersionCharacteristic:
         self.dp = dp
     def GetPropagationVector(self, n = 0, nc = -1, nT = 0):
         """ Gives dimensionless propagation vector \n
+        The boundary condition is chosen based on the object property \n
         Arguments: \n
         n -- Quantization number \n
         nc(optional) -- Second quantization number. Used for hybridization \n
-        nT(optional) -- Waveguide (transversal) quantization number """
+        nT(optional) -- Waveguide (transversal) quantization number
+        """
         if nc == -1:
             nc = n
         kappa = n*np.pi/self.d
