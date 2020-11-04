@@ -75,7 +75,7 @@ class DispersionCharacteristic:
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
     def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0):
-        self.kxi = kxi
+        self.kxi = np.array(kxi)
         self.theta = theta
         self.phi= phi
         self.d = d
@@ -232,7 +232,7 @@ def wavenumberToWavelength(wavenumber):
     wavenumber -- wavenumber of the wave (rad/m)
     Return: \n
     wavelength (m)"""
-    return 2*np.pi/wavenumber
+    return 2*np.pi/np.array(wavenumber)
 def wavelengthTowavenumber(wavelength):
     """ Convert wavenumber to wavelength
     k = 2*pi/lambda 
@@ -240,7 +240,7 @@ def wavelengthTowavenumber(wavelength):
     wavelength -- wavelength of the wave (m)
     Return: \n
     wavenumber (rad/m)"""
-    return 2*np.pi/wavelength
+    return 2*np.pi/np.array(wavelength)
       
 class Material:
     """Class for magnetic materials used in spin wave resreach \n
