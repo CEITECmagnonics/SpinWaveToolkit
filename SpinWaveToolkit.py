@@ -33,7 +33,7 @@ vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
 propLen = NiFeChar.GetPropLen()*1e6 #um \n
 \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n
-@author: Ondrej Wojewoda
+@author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
 
@@ -63,6 +63,7 @@ class DispersionCharacteristic:
     GetPropLen \n
     GetPropagationVector \n
     GetSecondPerturbation \n
+    GetDensityOfStates \n
     Code example: \n
     #Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150) \n
@@ -114,10 +115,9 @@ class DispersionCharacteristic:
         # Totally pinned boundary condition
         if self.boundaryCond == 2:
             if n == nc:
-                Pnn = (self.kxi**2)/(kc**2) + (self.kxi**2)/(k**2)*(k*kc)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
-                Pnn = (self.kxi**2)/(k**2) - (self.kxi**4)/(k**4)*(1/2)*(2/(self.kxi*self.d)*(1-np.exp(-self.kxi*self.d)))
+                Pnn = (self.kxi**2)/(kc**2) + (self.kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
             else:
-                Pnn = (self.kxi**2)/(k**2)*(kappa**2*kappac**2)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
+                Pnn = (self.kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
         # Totally unpinned condition - long wave limit         
         if self.boundaryCond == 3:
                 if n == 0:
@@ -214,6 +214,17 @@ class DispersionCharacteristic:
         wdn = np.sqrt(wnn**2+wncnc**2-np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
         wdnc = np.sqrt(wnn**2+wncnc**2+np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
         return(wdn, wdnc)
+    def GetDensityOfStates(self, n=0, nc=-1, nT=0):
+        """ Give density of states for \n
+        Density of states is computed as DoS = 1/vg \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        if nc == -1:
+            nc = n
+        DoS = 1/self.GetGroupVelocity(n = n, nc = nc, nT = nT)
+        return DoS
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
@@ -252,3 +263,4 @@ class Material:
 NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4)
 CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*2*np.pi*1e9)
 FeNi = Material(Ms = 1410e3, Aex = 11e-12, alpha = 80e-4)
+YIG = Material(Ms = 170e3, Aex = 3.6e-12, alpha = 1.5e-4)
