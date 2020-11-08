@@ -36,6 +36,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um \n
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
+from scipy.optimize import fsolve
 
 mu0 = 4*np.pi*1e-7; #Magnetic permeability
 
@@ -62,6 +63,7 @@ class DispersionCharacteristic:
     GetGroupVelocity \n
     GetPropLen \n
     GetPropagationVector \n
+    GetPropagationQVector \n
     GetSecondPerturbation \n
     GetDensityOfStates \n
     Code example: \n
@@ -97,52 +99,116 @@ class DispersionCharacteristic:
         """
         if nc == -1:
             nc = n
+        kxi = np.sqrt(self.kxi**2 + (nT*np.pi/self.weff)**2)
         kappa = n*np.pi/self.d
         kappac = nc*np.pi/self.d
-        k = np.sqrt(np.power(self.kxi,2) + kappa**2 + np.power(nT*np.pi/self.weff,2))
-        kc = np.sqrt(np.power(self.kxi,2) + kappac**2 + np.power(nT*np.pi/self.weff,2))
+        k = np.sqrt(np.power(kxi,2) + kappa**2)
+        kc = np.sqrt(np.power(kxi,2) + kappac**2 )
         # Totally unpinned boundary condition
         if self.boundaryCond == 1:
-            Fn = 2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d))
+            Fn = 2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d))
             if n == 0 and nc == 0:         
-                Pnn = (self.kxi**2)/(kc**2) - (self.kxi**4)/(k**2*kc**2)*1/2*((1+(-1)**(n+nc))/2)*Fn
+                Pnn = (kxi**2)/(kc**2) - (kxi**4)/(k**2*kc**2)*1/2*((1+(-1)**(n+nc))/2)*Fn
             elif n == 0 and nc != 0 or nc == 0 and n != 0 :
-                Pnn =  - (self.kxi**4)/(k**2*kc**2)*1/np.sqrt(2)*((1+(-1)**(n+nc))/2)*Fn
+                Pnn =  - (kxi**4)/(k**2*kc**2)*1/np.sqrt(2)*((1+(-1)**(n+nc))/2)*Fn
             elif n == nc:
-                Pnn = (self.kxi**2)/(kc**2) - (self.kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+                Pnn = (kxi**2)/(kc**2) - (kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
             else:
-                Pnn = - (self.kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+                Pnn = - (kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
         # Totally pinned boundary condition
-        if self.boundaryCond == 2:
+        elif self.boundaryCond == 2:
             if n == nc:
-                Pnn = (self.kxi**2)/(kc**2) + (self.kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
+                Pnn = (kxi**2)/(kc**2) + (kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d));
             else:
-                Pnn = (self.kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(self.kxi*self.d)*(1-(-1)**n*np.exp(-self.kxi*self.d));
+                Pnn = (kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d));
         # Totally unpinned condition - long wave limit         
-        if self.boundaryCond == 3:
+        elif self.boundaryCond == 3:
                 if n == 0:
-                    Pnn = self.kxi*self.d/2
+                    Pnn = kxi*self.d/2
                 else:
-                    Pnn = (self.kxi*self.d)**2/(n**2*np.pi**2)
+                    Pnn = (kxi*self.d)**2/(n**2*np.pi**2)
         # Partially pinned boundary condition
-        if self.boundaryCond == 4:
+        elif self.boundaryCond == 4:
             dp = self.dp
+            kappa = self.GetPartiallyPinnedKappa(n) #We have to get correct kappa from transversal eq.
+            kappac = self.GetPartiallyPinnedKappa(nc)
             if kappa == 0:
-                kappa = 1e2
+                kappa = 1
             if kappac == 0:
-                kappac = 1e2
+                kappac = 1
+            k = np.sqrt(np.power(kxi,2) + kappa**2)
+            kc = np.sqrt(np.power(kxi,2) + kappac**2 )
             An = np.sqrt(2*((kappa**2 + dp**2)/kappa**2 + np.sin(kappa*self.d)/(kappa*self.d) * ((kappa**2 - dp**2)/kappa**2*np.cos(kappa*self.d) + 2*dp/kappa*np.sin(kappa*self.d)))**-1)
             Anc = np.sqrt(2*((kappac**2 + dp**2)/kappac**2 + np.sin(kappac*self.d)/(kappac*self.d) * ((kappac**2 - dp**2)/kappac**2*np.cos(kappac*self.d) + 2*dp/kappac*np.sin(kappac*self.d)))**-1)
-            Pnnc = self.kxi*An*Anc/(2*self.d*k**2*kc**2)*((self.kxi**2 - dp**2)*np.exp(-self.kxi*self.d)*(np.cos(kappa*self.d) + 
-                                                          np.cos(kappac*self.d)) + (self.kxi - dp)*np.exp(-self.kxi*self.d)*((dp*self.kxi - kappa**2)*np.sin(kappa*self.d)/kappa + 
-                                                          (dp*self.kxi - kappac**2)*np.sin(kappac*self.d)/kappac) - (self.kxi**2 - dp**2)*(1 + np.cos(kappa*self.d)*np.cos(kappac*self.d)) + 
-                                                          (kappa**2*kappac**2 - dp**2*self.kxi**2)*np.sin(kappa*self.d)/kappa*np.sin(kappac*self.d)/kappac - 
+            Pnnc = kxi*An*Anc/(2*self.d*k**2*kc**2)*((kxi**2 - dp**2)*np.exp(-kxi*self.d)*(np.cos(kappa*self.d) + 
+                                                          np.cos(kappac*self.d)) + (kxi - dp)*np.exp(-kxi*self.d)*((dp*kxi - kappa**2)*np.sin(kappa*self.d)/kappa + 
+                                                          (dp*kxi - kappac**2)*np.sin(kappac*self.d)/kappac) - (kxi**2 - dp**2)*(1 + np.cos(kappa*self.d)*np.cos(kappac*self.d)) + 
+                                                          (kappa**2*kappac**2 - dp**2*kxi**2)*np.sin(kappa*self.d)/kappa*np.sin(kappac*self.d)/kappac - 
                                                           dp*(k**2*np.cos(kappac*self.d)*np.sin(kappa*self.d)/kappa + kc**2*np.cos(kappa*self.d)*np.sin(kappac*self.d)/kappac))
             if n == nc:
-                Pnn = self.kxi**2/kc**2 + Pnnc
+                Pnn = kxi**2/kc**2 + Pnnc
             else:
                 Pnn = Pnnc
+        else:
+             raise Exception("Sorry, there is no boundary condition with this number.") 
+            
         return(Pnn)
+    def GetPropagationQVector(self, n = 0, nc = -1, nT = 0):
+        """ Gives dimensionless propagation vector Q \n
+        This vector accounts for interaction between odd and even spin wave mode \n
+        The boundary condition is chosen based on the object property \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number
+        """
+        if nc == -1:
+            nc = n
+        kxi = np.sqrt(self.kxi**2 + (nT*np.pi/self.weff)**2)
+        kappa = n*np.pi/self.d
+        kappac = nc*np.pi/self.d
+        if kappa == 0:
+            kappa = 1
+        if kappac == 0:
+            kappac = 1
+        k = np.sqrt(np.power(kxi,2) + kappa**2)
+        kc = np.sqrt(np.power(kxi,2) + kappac**2 )
+        # Totally unpinned boundary condition
+        if self.boundaryCond == 1:
+            Fn = 2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d))
+            Qnn = kxi**2/kc**2*(kappac**2/(kappac**2-kappa**2)*2/(kxi*self.d) - kxi**2/(2*k**2)*Fn)*((1-(-1)**(n + nc))/2)
+        elif self.boundaryCond == 4:
+            dp = self.dp
+            kappa = self.GetPartiallyPinnedKappa(n)
+            kappac = self.GetPartiallyPinnedKappa(nc)
+            if kappa == 0:
+                kappa = 1
+            if kappac == 0:
+                kappac = 1
+            An = np.sqrt(2*((kappa**2 + dp**2)/kappa**2 + np.sin(kappa*self.d)/(kappa*self.d) * ((kappa**2 - dp**2)/kappa**2*np.cos(kappa*self.d) + 2*dp/kappa*np.sin(kappa*self.d)))**-1)
+            Anc = np.sqrt(2*((kappac**2 + dp**2)/kappac**2 + np.sin(kappac*self.d)/(kappac*self.d) * ((kappac**2 - dp**2)/kappac**2*np.cos(kappac*self.d) + 2*dp/kappac*np.sin(kappac*self.d)))**-1)
+            Qnn = kxi*An*Anc/(2*self.d*k**2*kc**2)*((kxi**2-dp**2)*np.exp(-kxi*self.d)*(np.cos(kappa*self.d)-np.cos(kappac*self.d)) + (kxi - dp)*np.exp(-kxi*self.d)*((dp*kxi - 
+                            kappa**2)*np.sin(kappa*self.d)/kappa - (dp*kxi - kappac**2)*np.sin(kappac*self.d)/kappac) + (kxi - dp)*((dp*kxi - 
+                               kappac**2)*np.cos(kappa*self.d)*np.sin(kappac*self.d)/kappac - (dp*kxi - 
+                                 kappa**2)*np.cos(kappac*self.d)*np.sin(kappa*self.d)/kappa) + (1 - 
+                                    np.cos(kappac*self.d)*np.cos(kappa*self.d)*2*(kxi**2*dp**2 + 
+                                          kappa**2*kappac**2 + (kappac**2 + kappa**2)*(kxi**2 + dp**2))/(kappac**2-kappa**2)
+                                            - np.sin(kappa*self.d)*np.sin(kappac**2*self.d)/(kappa*kappac*(kappac**2-kappa**2))*(dp*kxi*(kappa**4+kappac**4) +
+                                                 (dp**2*kxi**2 - kappa**2*kappac**2)*(kappa**2 + kappac**2)-2*kappa**2*kappac**2*(dp**2 + kxi**2 - dp*kxi))))
+        else:
+             raise Exception("Sorry, there is no boundary condition with this number.") 
+        return Qnn
+    def GetPartiallyPinnedKappa(self, n):
+        """ Gives kappa from the transverse equation \n
+        Arguments: \n
+        n -- Quantization number \n
+        """
+        def transEq(kappa, d, dp):
+            e = (kappa**2 - dp**2)*np.tan(kappa*d) - kappa*dp*2 
+            return e
+        #The classical thickness mode is given as starting point
+        kappa = fsolve(transEq, x0=(n*np.pi/self.d), args = (self.d, self.dp), maxfev=10000, epsfcn=1e-10, factor=0.1)
+        return(kappa)
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """ Gives frequencies for defined k (Dispersion relation) \n
         The returned value is in the rad Hz \n
@@ -152,10 +218,15 @@ class DispersionCharacteristic:
         nT(optional) -- Waveguide (transversal) quantization number """
         if nc == -1:
             nc = n
-        kappa = n*np.pi/self.d
-        k = np.sqrt(np.power(self.kxi,2) + kappa**2 + np.power(nT*np.pi/self.weff,2))
+        if self.boundaryCond == 4:
+            kappa = self.GetPartiallyPinnedKappa(n)
+        else:
+            kappa = n*np.pi/self.d
+        kxi = np.sqrt(self.kxi**2 + (nT*np.pi/self.weff)**2)
+        k = np.sqrt(np.power(kxi,2) + kappa**2)
+        phi = np.arctan((nT*np.pi/self.weff)/self.kxi) - self.phi
         Pnn = self.GetPropagationVector(n = n, nc = nc, nT = nT)
-        Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(self.phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(self.phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
+        Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
         f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
         return f
     def GetGroupVelocity(self, n=0, nc=-1, nT=0):
@@ -204,15 +275,32 @@ class DispersionCharacteristic:
         Arguments: \n
         n -- Quantization number \n
         nc -- Quantization number of crossing mode \n """
-        kappa = n*np.pi/self.d
-        kappac = nc*np.pi/self.d
+        if self.boundaryCond == 4:
+            kappa = self.GetPartiallyPinnedKappa(n)
+            kappac = self.GetPartiallyPinnedKappa(nc)
+        else:
+            kappa = n*np.pi/self.d
+            kappac = nc*np.pi/self.d
         Om = self.w0 + self.wM*self.A*(kappa**2 + self.kxi**2);
         Omc = self.w0 + self.wM*self.A*(kappac**2 + self.kxi**2);
-        Pnn = self.GetPropagationVector(n = n, nc = nc)
+        Pnnc = self.GetPropagationVector(n = n, nc = nc)
+        Pnn = self.GetPropagationVector(n = n, nc = n) 
+        Pncnc = self.GetPropagationVector(n = nc, nc = nc)
+        Qnnc = self.GetPropagationQVector(n = n, nc = nc)
         wnn = self.GetDispersion(n = n, nc = n)
         wncnc = self.GetDispersion(n = nc, nc = nc)
-        wdn = np.sqrt(wnn**2+wncnc**2-np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
-        wdnc = np.sqrt(wnn**2+wncnc**2+np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnn**2*self.wM**2))/np.sqrt(2);
+        if self.theta == 0:
+            wdn = np.sqrt(wnn**2+wncnc**2-np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnnc**2*self.wM**2))/np.sqrt(2);
+            wdnc = np.sqrt(wnn**2+wncnc**2+np.sqrt(wnn**4-2*wnn**2.*wncnc**2+wncnc**4+4*Om*Omc*Pnnc**2*self.wM**2))/np.sqrt(2);
+        elif self.theta == np.pi/2:          
+            wdn = (1/np.sqrt(2))*(np.sqrt(wnn**2 + wncnc**2 - 2*Pnnc**2*self.wM**2 - 8*Qnnc**2*self.wM**2 - np.sqrt(wnn**4 + wncnc**4 - 4*(Pnnc**2 + 4*Qnnc**2)*wncnc**2*self.wM**2 - 
+                                 2*wnn**2*(wncnc**2 + 2*(Pnnc**2 + 4*Qnnc**2)*self.wM**2) + 4*self.wM**2*(Om*(Pnnc**2 + 4*Qnnc**2)*(2*Omc + self.wM) + self.wM*(Omc*(Pnnc**2 + 
+                                           4*Qnnc**2) +  4*(Pncnc + Pnn - 2*Pncnc*Pnn)*Qnnc**2*self.wM + Pnnc**2*(1 - Pnn + Pncnc*(-1 + 2*Pnn) + 16*Qnnc**2)*self.wM))))) 
+            wdnc = (1/np.sqrt(2))*(np.sqrt(wnn**2 + wncnc**2 - 2*Pnnc**2*self.wM**2 - 8*Qnnc**2*self.wM**2 + np.sqrt(wnn**4 + wncnc**4 - 4*(Pnnc**2 + 4*Qnnc**2)*wncnc**2*self.wM**2 - 
+                                 2*wnn**2*(wncnc**2 + 2*(Pnnc**2 + 4*Qnnc**2)*self.wM**2) + 4*self.wM**2*(Om*(Pnnc**2 + 4*Qnnc**2)*(2*Omc + self.wM) + self.wM*(Omc*(Pnnc**2 + 
+                                           4*Qnnc**2) +  4*(Pncnc + Pnn - 2*Pncnc*Pnn)*Qnnc**2*self.wM + Pnnc**2*(1 - Pnn + Pncnc*(-1 + 2*Pnn) + 16*Qnnc**2)*self.wM)))))      
+        else:
+            raise Exception("Sorry, for degenerate perturbation you have to choose theta = pi/2 or 0.") 
         return(wdn, wdnc)
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """ Give density of states for \n
