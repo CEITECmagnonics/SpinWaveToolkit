@@ -2,7 +2,6 @@
 """
 Created on Tue Aug 25 \n
 This module provides analytical tools in Spin wave physics
-
 Available classes are:
     DispersionCharacteristic -- Compute spin wave characteristic in dependance to k-vector \n
     Material -- Class for magnetic materials used in spin wave resreach
@@ -15,18 +14,13 @@ Available functions: \n
     wavelengthTowavenumber -- Convert wavenumber to wavelength \n
     
 Example code for obtaining propagation lenght and dispersion charactetristic: \n
-
 import SpinWaveToolkit as SWT
 import numpy as np
-
 \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n
 #Here is an example of code    \n
-
 import SpinWaveToolkit as SWT \n
 import numpy as np \n
-
 kxi = np.linspace(1e-12, 10e6, 150) \n
-
 NiFeChar = SWT.DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundaryCond = 2, Bext = 20e-3, material = SWT.NiFe) \n
 DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
@@ -37,6 +31,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um \n
 """
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.integrate import trapz
 
 mu0 = 4*np.pi*1e-7; #Magnetic permeability
 
@@ -198,6 +193,13 @@ class DispersionCharacteristic:
         else:
              raise Exception("Sorry, there is no boundary condition with this number.") 
         return Qnn
+#    def GetTVector(self, n, nc, kappan, kappanc):
+#        zeta = np.linspace(-self.d/2, self.d/2, 500)
+#        An = 1
+#        Phin = An*(np.cos(kappan)*(zeta + self.d/2) + self.dp/kappan*np.sin(kappan)*(zeta + self.d/2))
+#        Phinc = An*(np.cos(kappanc)*(zeta + self.d/2) + self.dp/kappanc*np.sin(kappanc)*(zeta + self.d/2))
+#        Tnn = 1/self.d*trapz(y = Phin*Phinc, x = zeta)
+#        return Tnn
     def GetPartiallyPinnedKappa(self, n):
         """ Gives kappa from the transverse equation \n
         Arguments: \n
@@ -229,6 +231,34 @@ class DispersionCharacteristic:
         Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
         f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
         return f
+    
+#    def GetDispersionNumeric(self, n=0, nc=-1, nT=0):
+#        """ Gives frequencies for defined k (Dispersion relation) \n
+#        The returned value is in the rad Hz \n
+#        Arguments: \n
+#        n -- Quantization number \n
+#        nc(optional) -- Second quantization number. Used for hybridization \n
+#        nT(optional) -- Waveguide (transversal) quantization number """
+#        if nc == -1:
+#            nc = n
+#        if self.boundaryCond == 4:
+#            kappa = self.GetPartiallyPinnedKappa(n)
+#        else:
+#            kappa = n*np.pi/self.d
+#        kxi = np.sqrt(self.kxi**2 + (nT*np.pi/self.weff)**2)
+#        k = np.sqrt(np.power(kxi,2) + kappa**2)
+#        phi = np.arctan((nT*np.pi/self.weff)/self.kxi) - self.phi
+#        Pnn = self.GetPropagationVector(n = n, nc = nc, nT = nT)
+#        
+#        A = np.cos(self.phi)**2 - np.sin(self.theta)**2*(1 - np.cos(self.phi)**2)
+#        B = -2*np.cos(self.phi)*np.sin(2*self.theta)
+#        C = np.cos(self.theta)*np.sin(self.phi)*np.cos(self.phi)
+#        D = -2*np.sin(self.theta)*np.sin(self.phi)
+#        E = np.sin(self.phi)**2
+#        
+#        Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
+#        f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
+#        return f
     def GetGroupVelocity(self, n=0, nc=-1, nT=0):
         """ Gives group velocities for defined k \n
         The group velocity is computed as vg = dw/dk
@@ -313,6 +343,7 @@ class DispersionCharacteristic:
             nc = n
         DoS = 1/self.GetGroupVelocity(n = n, nc = nc, nT = nT)
         return DoS
+        
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
@@ -348,7 +379,7 @@ class Material:
         self.alpha = alpha
         self.gamma = gamma
 #Predefined materials
-NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4)
+NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4, gamma = 28.8*2*np.pi*1e9)
 CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*2*np.pi*1e9)
 FeNi = Material(Ms = 1410e3, Aex = 11e-12, alpha = 80e-4)
-YIG = Material(Ms = 170e3, Aex = 3.6e-12, alpha = 1.5e-4)
+YIG = Material(Ms = 140e3, Aex = 3.6e-12, alpha = 1.5e-4, gamma = 28*2*np.pi*1e9)
