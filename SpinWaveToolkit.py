@@ -343,7 +343,9 @@ class DispersionCharacteristic:
             nc = n
         DoS = 1/self.GetGroupVelocity(n = n, nc = nc, nT = nT)
         return DoS
-        
+    def GetExchangeLen(self):
+        exLen = np.sqrt(self.A)
+        return exLen
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
