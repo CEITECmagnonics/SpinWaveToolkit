@@ -31,7 +31,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um \n
 """
 import numpy as np
 from scipy.optimize import fsolve
-from scipy.integrate import trapz
+# from scipy.integrate import trapz
 
 mu0 = 4*np.pi*1e-7; #Magnetic permeability
 
@@ -84,6 +84,8 @@ class DispersionCharacteristic:
         self.w0 = material.gamma*Bext
         self.A = material.Aex*2/(material.Ms**2*mu0)
         self.dp = dp
+        self.gamma = material.gamma
+        self.mu0dH0 = material.mu0dH0
     def GetPropagationVector(self, n = 0, nc = -1, nT = 0):
         """ Gives dimensionless propagation vector \n
         The boundary condition is chosen based on the object property \n
@@ -287,7 +289,7 @@ class DispersionCharacteristic:
         self.w0 = w0Ori*1.0000001
         dw0p001 = self.GetDispersion(n = n, nc = nc, nT = nT)
         self.w0 = w0Ori
-        lifetime = (self.alpha*self.GetDispersion(n = n, nc = nc, nT = nT)*(dw0p001 - dw0p999)/(w0Ori*1.0000001 - w0Ori*0.9999999))**-1
+        lifetime = ((self.alpha*self.GetDispersion(n = n, nc = nc, nT = nT) + self.gamma*self.mu0dH0)*(dw0p001 - dw0p999)/(w0Ori*1.0000001 - w0Ori*0.9999999))**-1
         return lifetime
     def GetPropLen(self, n=0, nc=-1, nT=0):
         """ Give propagation lengths for defined k \n
@@ -343,7 +345,9 @@ class DispersionCharacteristic:
             nc = n
         DoS = 1/self.GetGroupVelocity(n = n, nc = nc, nT = nT)
         return DoS
-        
+    def GetExchangeLen(self):
+        exLen = np.sqrt(self.A)
+        return exLen
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
@@ -373,13 +377,14 @@ class Material:
     NiFe (Permalloy)\n
     CoFeB\n
     FeNi (Metastable iron)"""
-    def __init__(self, Ms, Aex, alpha, gamma = 28.1*2*np.pi*1e9):
+    def __init__(self, Ms, Aex, alpha, mu0dH0 = 0, gamma = 28.1*2*np.pi*1e9):
         self.Ms = Ms
         self.Aex = Aex
         self.alpha = alpha
         self.gamma = gamma
+        self.mu0dH0 = mu0dH0
 #Predefined materials
 NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4, gamma = 28.8*2*np.pi*1e9)
 CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*2*np.pi*1e9)
 FeNi = Material(Ms = 1410e3, Aex = 11e-12, alpha = 80e-4)
-YIG = Material(Ms = 140e3, Aex = 3.6e-12, alpha = 1.5e-4, gamma = 28*2*np.pi*1e9)
+YIG = Material(Ms = 140e3, Aex = 3.6e-12, alpha = 1.5e-4, gamma = 28*2*np.pi*1e9, mu0dH0 = 0.18e-3)
