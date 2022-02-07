@@ -31,6 +31,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um \n
 """
 import numpy as np
 from scipy.optimize import fsolve
+from numpy import linalg as LA
 # from scipy.integrate import trapz
 
 mu0 = 4*np.pi*1e-7; #Magnetic permeability
@@ -71,7 +72,7 @@ class DispersionCharacteristic:
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
-    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0):
+    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0, Ku = 0):
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi= phi
@@ -82,6 +83,7 @@ class DispersionCharacteristic:
         #Compute Slavin-Kalinikos parameters wM, w0 A
         self.wM = material.Ms*material.gamma*mu0
         self.w0 = material.gamma*Bext
+        self.wU = material.gamma*2*material.Ku/material.Ms
         self.A = material.Aex*2/(material.Ms**2*mu0)
         self.dp = dp
         self.gamma = material.gamma
@@ -233,6 +235,122 @@ class DispersionCharacteristic:
         Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
         f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
         return f
+    def GetDispersionTacchi(self):
+        """ Gives frequencies for defined k (Dispersion relation) \n
+        The returned value is in the rad Hz \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number """
+        ks = np.sqrt(np.power(self.kxi,2))
+        phi = self.phi
+        wV = np.zeros((6, np.size(ks,0)))
+        for idx, k in enumerate(ks):
+            Ck = np.array([[-(self.ankTacchi(0, k) + self.CnncTacchi(0, 0, k, phi)), -(self.bTacchi() + self.pnncTachci(0, 0, k, phi)), 0, -self.qnncTacchi(1, 0, k, phi), -self.CnncTacchi(2, 0, k, phi), -self.pnncTachci(2, 0, k, phi)],
+                           [(self.bTacchi() + self.pnncTachci(0, 0, k, phi)), (self.ankTacchi(0, k) + self.CnncTacchi(0, 0, k, phi)), -self.qnncTacchi(1, 0, k, phi), 0, self.pnncTachci(2, 0, k, phi), self.CnncTacchi(2, 0, k, phi)],
+                           [0, -self.qnncTacchi(0, 1, k, phi), -(self.ankTacchi(1, k) + self.CnncTacchi(1, 1, k, phi)), -(self.bTacchi() + self.pnncTachci(1, 1, k, phi)), 0, -self.qnncTacchi(2, 1, k, phi)],
+                           [-self.qnncTacchi(0, 1, k, phi), 0, (self.bTacchi() + self.pnncTachci(1, 1, k, phi)), (self.ankTacchi(1, k) + self.CnncTacchi(1, 1, k, phi)), -self.qnncTacchi(2, 1, k, phi), 0],
+                           [-self.CnncTacchi(0, 2, k, phi), -self.pnncTachci(0, 2, k, phi), 0, -self.qnncTacchi(1, 2, k, phi), -(self.ankTacchi(2, k) + self.CnncTacchi(2, 2, k, phi)), -(self.bTacchi() + self.pnncTachci(2, 2, k, phi))],
+                           [self.pnncTachci(0, 2, k, phi), self.CnncTacchi(0, 2, k, phi), -self.qnncTacchi(1, 2, k, phi), 0, (self.bTacchi() + self.pnncTachci(2, 2, k, phi)), (self.ankTacchi(2, k) + self.CnncTacchi(2, 2, k, phi))]],
+                          dtype=float)
+            w, v = LA.eig(Ck)
+            wV[:, idx] = np.sort(w)
+        return wV
+    def CnncTacchi(self, n, nc, k, phi):
+        Cnnc = -self.wM/2*(1 - np.sin(phi)**2)*self.PnncTacchi(n,nc,k)
+        return Cnnc
+    def pnncTachci(self, n, nc, k, phi):
+        pnnc = -self.wM/2*(1 + np.sin(phi)**2)*self.PnncTacchi(n,nc,k)
+        return pnnc
+    def qnncTacchi(self, n, nc, k, phi):
+        qnnc = -self.wM/2*np.sin(phi)*self.QnncTacchi(n,nc,k)
+        return qnnc
+    def OmegankTacchi(self, n, k):
+        Omegank = self.w0 + self.wM*self.A*(k**2 + (n*np.pi/self.d)**2)
+        return Omegank
+    def ankTacchi(self, n, k):
+        ank = self.OmegankTacchi(n, k) + self.wM/2 - self.wU/2
+        return ank
+    def bTacchi(self):
+        b = self.wM/2 - self.wU/2
+        return b
+    def PnncTacchi(self, n, nc,kxi):
+        """ Gives dimensionless propagation vector \n
+        The boundary condition is chosen based on the object property \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number
+        """
+        kappa = n*np.pi/self.d
+        kappac = nc*np.pi/self.d
+        k = np.sqrt(np.power(kxi,2) + kappa**2)
+        kc = np.sqrt(np.power(kxi,2) + kappac**2 )
+        # Totally unpinned boundary condition
+        if self.boundaryCond == 1:
+            Fn = 2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d))
+            if n == 0 and nc == 0:         
+                Pnn = (kxi**2)/(kc**2) - (kxi**4)/(k**2*kc**2)*1/2*((1+(-1)**(n+nc))/2)*Fn
+            elif n == 0 and nc != 0 or nc == 0 and n != 0 :
+                Pnn =  - (kxi**4)/(k**2*kc**2)*1/np.sqrt(2)*((1+(-1)**(n+nc))/2)*Fn
+            elif n == nc:
+                Pnn = (kxi**2)/(kc**2) - (kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+            else:
+                Pnn = - (kxi**4)/(k**2*kc**2)*((1+(-1)**(n+nc))/2)*Fn
+        # Totally pinned boundary condition
+        elif self.boundaryCond == 2:
+            if n == nc:
+                Pnn = (kxi**2)/(kc**2) + (kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d));
+            else:
+                Pnn = (kxi**2)/(k**2)*(kappa*kappac)/(kc**2)*(1+(-1)**(n+nc)/2)*2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d));
+        else:
+             raise Exception("Sorry, there is no boundary condition with this number for Tacchi numeric solution.") 
+            
+        return(Pnn)
+    def QnncTacchi(self, n, nc, kxi):
+        """ Gives dimensionless propagation vector Q \n
+        This vector accounts for interaction between odd and even spin wave mode \n
+        The boundary condition is chosen based on the object property \n
+        Arguments: \n
+        n -- Quantization number \n
+        nc(optional) -- Second quantization number. Used for hybridization \n
+        nT(optional) -- Waveguide (transversal) quantization number
+        """
+        # The totally pinned BC should be added
+        kappa = n*np.pi/self.d
+        kappac = nc*np.pi/self.d
+        if kappa == 0:
+            kappa = 1
+        if kappac == 0:
+            kappac = 1
+        k = np.sqrt(np.power(kxi,2) + kappa**2)
+        kc = np.sqrt(np.power(kxi,2) + kappac**2 )
+        # Totally unpinned boundary condition
+        if self.boundaryCond == 1:
+            Fn = 2/(kxi*self.d)*(1-(-1)**n*np.exp(-kxi*self.d))
+            Qnn = kxi**2/kc**2*(kappac**2/(kappac**2-kappa**2)*2/(kxi*self.d) - kxi**2/(2*k**2)*Fn)*((1-(-1)**(n + nc))/2)
+        elif self.boundaryCond == 4:
+            dp = self.dp
+            kappa = self.GetPartiallyPinnedKappa(n)
+            kappac = self.GetPartiallyPinnedKappa(nc)
+            if kappa == 0:
+                kappa = 1
+            if kappac == 0:
+                kappac = 1
+            An = np.sqrt(2*((kappa**2 + dp**2)/kappa**2 + np.sin(kappa*self.d)/(kappa*self.d) * ((kappa**2 - dp**2)/kappa**2*np.cos(kappa*self.d) + 2*dp/kappa*np.sin(kappa*self.d)))**-1)
+            Anc = np.sqrt(2*((kappac**2 + dp**2)/kappac**2 + np.sin(kappac*self.d)/(kappac*self.d) * ((kappac**2 - dp**2)/kappac**2*np.cos(kappac*self.d) + 2*dp/kappac*np.sin(kappac*self.d)))**-1)
+            Qnn = kxi*An*Anc/(2*self.d*k**2*kc**2)*((kxi**2-dp**2)*np.exp(-kxi*self.d)*(np.cos(kappa*self.d)-np.cos(kappac*self.d)) + (kxi - dp)*np.exp(-kxi*self.d)*((dp*kxi - 
+                            kappa**2)*np.sin(kappa*self.d)/kappa - (dp*kxi - kappac**2)*np.sin(kappac*self.d)/kappac) + (kxi - dp)*((dp*kxi - 
+                               kappac**2)*np.cos(kappa*self.d)*np.sin(kappac*self.d)/kappac - (dp*kxi - 
+                                 kappa**2)*np.cos(kappac*self.d)*np.sin(kappa*self.d)/kappa) + (1 - 
+                                    np.cos(kappac*self.d)*np.cos(kappa*self.d)*2*(kxi**2*dp**2 + 
+                                          kappa**2*kappac**2 + (kappac**2 + kappa**2)*(kxi**2 + dp**2))/(kappac**2-kappa**2)
+                                            - np.sin(kappa*self.d)*np.sin(kappac**2*self.d)/(kappa*kappac*(kappac**2-kappa**2))*(dp*kxi*(kappa**4+kappac**4) +
+                                                 (dp**2*kxi**2 - kappa**2*kappac**2)*(kappa**2 + kappac**2)-2*kappa**2*kappac**2*(dp**2 + kxi**2 - dp*kxi))))
+        else:
+             raise Exception("Sorry, there is no boundary condition with this number for Tacchi numeric solution.") 
+        return Qnn
+    
     
 #    def GetDispersionNumeric(self, n=0, nc=-1, nT=0):
 #        """ Gives frequencies for defined k (Dispersion relation) \n
@@ -377,14 +495,15 @@ class Material:
     NiFe (Permalloy)\n
     CoFeB\n
     FeNi (Metastable iron)"""
-    def __init__(self, Ms, Aex, alpha, mu0dH0 = 0, gamma = 28.1*2*np.pi*1e9):
+    def __init__(self, Ms, Aex, alpha, mu0dH0 = 0, gamma = 28.1*2*np.pi*1e9, Ku = 0):
         self.Ms = Ms
         self.Aex = Aex
         self.alpha = alpha
         self.gamma = gamma
         self.mu0dH0 = mu0dH0
+        self.Ku = Ku
 #Predefined materials
-NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4, gamma = 28.8*2*np.pi*1e9)
+NiFe = Material(Ms = 800e3, Aex = 16e-12, alpha = 70e-4, gamma = 28.8*2*np.pi*1e9, Ku = 0)
 CoFeB = Material(Ms = 1250e3, Aex = 15e-12, alpha = 40e-4, gamma=30*2*np.pi*1e9)
 FeNi = Material(Ms = 1410e3, Aex = 11e-12, alpha = 80e-4)
 YIG = Material(Ms = 140e3, Aex = 3.6e-12, alpha = 1.5e-4, gamma = 28*2*np.pi*1e9, mu0dH0 = 0.18e-3)
