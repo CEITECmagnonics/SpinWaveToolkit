@@ -132,9 +132,9 @@ class DispersionCharacteristic:
             kappa = self.GetPartiallyPinnedKappa(n) #We have to get correct kappa from transversal eq.
             kappac = self.GetPartiallyPinnedKappa(nc)
             if kappa == 0:
-                kappa = 1
+                kappa = 1e1
             if kappac == 0:
-                kappac = 1
+                kappac = 1e1
             k = np.sqrt(np.power(kxi,2) + kappa**2)
             kc = np.sqrt(np.power(kxi,2) + kappac**2 )
             An = np.sqrt(2*((kappa**2 + dp**2)/kappa**2 + np.sin(kappa*self.d)/(kappa*self.d) * ((kappa**2 - dp**2)/kappa**2*np.cos(kappa*self.d) + 2*dp/kappa*np.sin(kappa*self.d)))**-1)
