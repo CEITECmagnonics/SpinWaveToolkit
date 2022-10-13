@@ -466,6 +466,18 @@ class DispersionCharacteristic:
     def GetExchangeLen(self):
         exLen = np.sqrt(self.A)
         return exLen
+    def GetAk(self):
+        gk = 1 - (1 - np.exp(-self.kxi*self.d))
+        return(self.w0 + self.wM*self.A*self.kxi**2 + self.wM/2*(gk*np.sin(self.phi)**2+(1-gk)))
+    def GetBk(self):
+        gk = 1 - (1 - np.exp(-self.kxi*self.d))
+        return(self.wM/2*(gk*np.sin(self.phi)**2 - (1 - gk)))
+    def GetEllipticity(self):
+        return(2*abs(self.GetBk())/(self.GetAk() + abs(self.GetBk())))
+    def GetCouplingParam(self):
+        return(self.gamma*self.GetBk()/(2*self.GetDispersion(n=0, nc=0, nT=0)))
+    def GetThresholdField(self):
+        return(2*np.pi/(self.GetLifetime(n=0, nc=0, nT=0)*abs(self.GetCouplingParam())))
 def wavenumberToWavelength(wavenumber):
     """ Convert wavelength to wavenumber
     lambda = 2*pi/k     
