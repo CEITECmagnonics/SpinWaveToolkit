@@ -6,5 +6,7 @@ dependencies:
   - numpy
   - pip
   - pip:
+    - numpy
+    - scipy
     - pandas
     - matplotlib
