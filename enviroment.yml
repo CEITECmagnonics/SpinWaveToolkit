@@ -1,12 +1,14 @@
-name: SWT-envi
+name: example-environment
 channels:
   - conda-forge
 dependencies:
-  - python
+  - python=3.11
   - numpy
-  - pip
-  - pip:
-    - numpy
-    - scipy
-    - pandas
-    - matplotlib
+  - psutil
+  - toolz
+  - matplotlib
+  - dill
+  - pandas
+  - partd
+  - bokeh
+  - dask
