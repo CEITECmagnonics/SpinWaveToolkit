@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.11
   - numpy
+  - scipy
   - psutil
   - toolz
   - matplotlib
@@ -12,4 +13,3 @@ dependencies:
   - partd
   - bokeh
   - dask
-  - scipy
