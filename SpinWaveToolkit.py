@@ -30,7 +30,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um \n
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, minimize
 from numpy import linalg as LA
 # from scipy.integrate import trapz
 
@@ -72,22 +72,44 @@ class DispersionCharacteristic:
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
-    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0, Ku = 0):
+    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0, Ku = 0,  Jbl=0, Jbq=0, s=0, d2=0, material2=0):
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi= phi
         self.d = d
+        self.d1 = d
         self.weff = weff
         self.boundaryCond = boundaryCond
         self.alpha = material.alpha
         #Compute Slavin-Kalinikos parameters wM, w0 A
         self.wM = material.Ms*material.gamma*mu0
         self.w0 = material.gamma*Bext
-        self.wU = material.gamma*2*material.Ku/material.Ms
+        self.wU = material.gamma*2*Ku/material.Ms
         self.A = material.Aex*2/(material.Ms**2*mu0)
         self.dp = dp
         self.gamma = material.gamma
         self.mu0dH0 = material.mu0dH0
+        
+        self.Ms = material.Ms
+        self.Hani = 2*Ku/material.Ms/mu0
+        if d2==0:
+            self.d2=d
+        else:
+            self.d2=d2
+        if material2==0:
+            self.Ms2 = material.Ms
+            self.Hani2 = 2*Ku/material.Ms/mu0
+            self.A2 = material.Aex*2/(material.Ms**2*mu0)
+        else:
+            self.Ms2 = material2.Ms
+            self.Hani2 = 2*Ku/material2.Ms/mu0
+            self.A2 = material2.Aex*2/(material2.Ms**2*mu0)
+        self.s = s
+        self.Jbl = Jbl
+        self.Jbq = Jbq
+        self.Bext = Bext
+        self.Ku = Ku
+        
     def GetPropagationVector(self, n = 0, nc = -1, nT = 0):
         """ Gives dimensionless propagation vector \n
         The boundary condition is chosen based on the object property \n
@@ -352,6 +374,101 @@ class DispersionCharacteristic:
         return Qnn
     
     
+    def GetDispersionSAFM(self, n=0):
+        """ Gives frequencies for defined k (Dispersion relation) \n
+        The returned value is in the rad Hz \n
+        Seems that this model has huge aproximation and I recomend to not use it \n
+        Arguments: \n
+        n -- number of mode - 0 - acoustic """
+        Zet = np.sinh(self.kxi*self.d/2)/(self.kxi*self.d/2)*np.exp(-abs(self.kxi)*self.d/2)
+        g = mu0*self.Ms*Zet**2*np.exp(-abs(self.kxi)*self.s)*self.kxi*self.d/2
+        p = mu0*self.Hani + mu0*self.Ms*self.kxi**2*self.A + mu0*self.Ms*(1 - Zet)
+        q = mu0*self.Hani + mu0*self.Ms*self.kxi**2*self.A + mu0*self.Ms*Zet
+        Cj = (self.Jbl - 2*self.Jbq)/(self.Ms*self.d)
+        
+        if n==0:       
+            f = self.gamma*(g + np.sqrt((p - g)*(q - g - 2*Cj)))
+        elif n==1:
+            f = self.gamma*(-g + np.sqrt((q + g)*(p + g - 2*Cj)))
+        return f
+    def GetDispersionSAFMNumeric(self):
+        """ Gives frequencies for defined k (Dispersion relation) \n
+        The returned value is in the rad Hz \n
+        Arguments: \n
+        n -- number of mode - 0 - acoustic """
+        
+        Ms1 = self.Ms
+        Ms2 = self.Ms2
+        A1 = self.A
+        A2 = self.A2
+        Hu1 = self.Hani
+        Hu2 = self.Hani2
+        d1 = self.d1
+        d2 = self.d2
+        
+        Hs1 = 0 #Surface anisotropy of the first layer
+        Hs2 = 0 #Surface anisotropy of the second layer
+        
+        phih = 0 # Angle of the external field
+        phi1, phi2 = self.GetPhisSAFM()
+        # phi1 = np.pi/2 #angle of the magnetization in the first layer
+        # phi2 = -np.pi/2 #angle of the magnetization in the second layer
+        
+        ks = self.kxi
+        wV = np.zeros((4, np.size(ks,0)))
+        for idx, k in enumerate(ks):
+            Zet1 = np.sinh(k*self.d1/2)/(k*self.d1/2)*np.exp(-abs(k)*self.d1/2)
+            Zet2 = np.sinh(k*self.d2/2)/(k*self.d2/2)*np.exp(-abs(k)*self.d2/2)
+            
+            Hz1e0 = self.Bext/mu0*np.cos(phih - phi1) + Hu1*np.sin(phi1)**2 + (self.Jbl*np.cos(phi1-phi2) + 2*self.Jbq*np.cos(phi1-phi2))/(d1*Ms1)
+            Hz2e0 = self.Bext/mu0*np.cos(phih - phi2) + Hu2*np.sin(phi2)**2 + (self.Jbl*np.cos(phi1-phi2) + 2*self.Jbq*np.cos(phi1-phi2))/(d2*Ms2)
+            
+            AX1Y1 = -Ms1*Zet1-Ms1*A1*k**2 - Hz1e0 - Hs1
+            AX1X2 = 1j*Ms1*np.sin(phi2)*k*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
+            AX1Y2 = Ms1*abs(k)*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)+(self.Jbl+2*self.Jbq*np.cos(phi1-phi2))/(d1*Ms2)
+            AY1X1 = Ms1*np.sin(phi1)**2*(1-Zet1)+Ms1*A1*k**2-Hu1*np.cos(phi1)**2+Hz1e0-2*self.Jbq/(d1*Ms1)*np.sin(phi1-phi2)**2
+            AY1X2 = Ms1*np.sin(phi1)*np.sin(phi2)*abs(k)*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s) - (self.Jbl*np.cos(phi2-phi1)+2*self.Jbq*np.cos(2*(phi1-phi2)))/(d1*Ms2)
+            AY1Y2 = -1j*Ms1*np.sin(phi1)*k*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
+            AX2X1 = -1j*Ms2*np.sin(phi1)*k*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
+            AX2Y1 = Ms2*abs(k)*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)+(self.Jbl+2*self.Jbq*np.cos(phi1-phi2))/(d2*Ms1)
+            AX2Y2 = -Ms2*Zet2-Ms2*A2*k**2-Hz2e0+Hs2
+            AY2X1 = Ms2*np.sin(phi1)*np.sin(phi2)*abs(k)*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)-(self.Jbl*np.cos(phi1-phi2)+2*self.Jbq*np.cos(2*(phi1-phi2)))/(d2*Ms1)
+            AY2Y1 = 1j*Ms2*np.sin(phi2)*k*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
+            AY2X2 = Ms2*np.sin(phi2)**2*(1-Zet2)+Ms2*A2*k**2-Hu2*np.cos(phi2)**2+Hz2e0-2*self.Jbq/(d2*Ms2)*np.sin(phi1-phi2)**2        
+
+            A = np.array([[0    , AX1Y1, AX1X2, AX1Y2],
+                          [AY1X1, 0    , AY1X2, AY1Y2],
+                          [AX2X1, AX2Y1, 0    , AX2Y2],
+                          [AY2X1, AY2Y1, AY2X2, 0    ]], dtype=complex)
+            w, v = LA.eig(A)
+            wV[:, idx] = np.sort(abs(w)*self.gamma*mu0)
+        return wV
+    def GetPhisSAFM(self):
+        def GetFreeEnergySAFM(phis, self):
+            phiAnis = np.pi/2 #EA along x direction
+            theta1 = np.pi/2 #No OOP magnetization
+            theta2 = np.pi/2
+            Ks1 = 0 #No surface anisotropy
+            Ks2 = 0
+            
+            phi1, phi2 = phis
+            H = self.Bext/mu0
+            EJ1 = -self.Jbl*(np.sin(theta1)*np.sin(theta2)*np.cos(phi1-phi2)+np.cos(theta1)*np.cos(theta2)) - self.Jbq*(np.sin(theta1)*np.sin(theta2)*np.cos(phi1-phi2)+np.cos(theta1)*np.cos(theta2))**2
+            
+            Eaniso1 = -(2*np.pi*self.Ms**2-Ks1)*np.sin(theta1)**2-self.Ku*np.sin(theta1)**2*np.cos(phi1-phiAnis)**2
+            Eaniso2 = -(2*np.pi*self.Ms2**2-Ks2)*np.sin(theta2)**2-self.Ku*np.sin(theta2)**2*np.cos(phi2-phiAnis)**2
+            
+            E = EJ1 + self.d1*(-self.Ms*mu0*H*(np.sin(theta1)*np.sin(self.theta)*np.cos(phi1-self.phi) + np.cos(theta1)*np.cos(self.theta)) + Eaniso1) + self.d2*(-self.Ms2*mu0*H*(np.sin(theta2)*np.sin(self.theta)*np.cos(phi2-self.phi) + np.cos(theta2)*np.cos(self.theta)) + Eaniso2)
+            return E
+        result = minimize(GetFreeEnergySAFM, x0=[np.pi/2+self.phi, -np.pi/2+self.phi], args=self, tol=1e-20, method='Nelder-Mead', bounds=((-np.pi, np.pi), (-np.pi, np.pi)))
+        phis = result.x
+        return phis
+    
+    # bounds=([-np.pi, np.pi], [-np.pi. np.pi])
+        
+    
+    
+        
 #    def GetDispersionNumeric(self, n=0, nc=-1, nT=0):
 #        """ Gives frequencies for defined k (Dispersion relation) \n
 #        The returned value is in the rad Hz \n
