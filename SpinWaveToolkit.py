@@ -609,6 +609,21 @@ class DispersionCharacteristic:
         self.w0 = w0Ori
         lifetime = ((self.alpha*self.GetDispersion(n = n, nc = nc, nT = nT) + self.gamma*self.mu0dH0)*(dw0p001 - dw0p999)/(w0Ori*1.0000001 - w0Ori*0.9999999))**-1
         return lifetime
+    def GetLifetimeSAFM(self, n):
+        """ Gives lifetimes for defined k \n
+        lifetime is computed as tau = (alpha*w*dw/dw0)^-1
+        Arguments: \n
+        n -- Quantization number \n
+        """
+        BextOri = self.Bext
+        self.Bext = BextOri-0.001
+        dw0p999 = self.GetDispersionSAFMNumeric()
+        self.Bext = BextOri+0.001
+        dw0p001 = self.GetDispersionSAFMNumeric()
+        self.Bext = BextOri
+        w = self.GetDispersionSAFMNumeric()
+        lifetime = ((self.alpha*w[n] + self.gamma*self.mu0dH0)*(dw0p001[n] - dw0p999[n])/(0.2))**-1
+        return lifetime
     def GetPropLen(self, n=0, nc=-1, nT=0):
         """ Give propagation lengths for defined k \n
         propagation length is computed as lambda = vg*tau
