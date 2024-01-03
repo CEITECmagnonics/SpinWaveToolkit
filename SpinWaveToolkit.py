@@ -72,7 +72,7 @@ class DispersionCharacteristic:
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
     propLen = NiFeChar.GetPropLen()*1e6 #um \n
     """
-    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0, Ku = 0, Ku2 = 0,  Jbl=0, Jbq=0, s=0, d2=0, material2=0, JblDyn=1, JbqDyn=1, phiAnis=np.pi/2):
+    def __init__(self, Bext, material, d, kxi = np.linspace(1e-12, 25e6, 200), theta = np.pi/2, phi = np.pi/2, weff = 3e-6, boundaryCond = 1, dp=0, Ku = 0, Ku2 = 0,  Jbl=0, Jbq=0, s=0, d2=0, material2=0, JblDyn=1, JbqDyn=1, phiAnis1=np.pi/2, phiAnis2=np.pi/2):
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi= phi
@@ -92,7 +92,8 @@ class DispersionCharacteristic:
         
         self.Ms = material.Ms
         self.Hani = 2*Ku/material.Ms/mu0
-        self.phiAnis = phiAnis
+        self.phiAnis1 = phiAnis1
+        self.phiAnis2 = phiAnis2
         if d2==0:
             self.d2=d
         else:
@@ -413,6 +414,8 @@ class DispersionCharacteristic:
         Hu2 = self.Hani2
         d1 = self.d1
         d2 = self.d2
+        phiAnis1 = self.phiAnis1
+        phiAnis2 = self.phiAnis2
         
         Hs1 = 0 #Surface anisotropy of the first layer
         Hs2 = 0 #Surface anisotropy of the second layer
@@ -425,13 +428,13 @@ class DispersionCharacteristic:
             Zet1 = np.sinh(k*self.d1/2)/(k*self.d1/2)*np.exp(-abs(k)*self.d1/2)
             Zet2 = np.sinh(k*self.d2/2)/(k*self.d2/2)*np.exp(-abs(k)*self.d2/2)
             
-            Hz1e0 = self.Bext/mu0*np.cos(wrapAngle(self.phi - phi1)) + Hu1*np.sin(phi1)**2 + (self.JblDyn*np.cos(wrapAngle(phi1-phi2)) + 2*self.JbqDyn*np.cos(wrapAngle(phi1-phi2))**2)/(d1*Ms1*mu0)
-            Hz2e0 = self.Bext/mu0*np.cos(wrapAngle(self.phi - phi2)) + Hu2*np.sin(phi2)**2 + (self.JblDyn*np.cos(wrapAngle(phi1-phi2)) + 2*self.JbqDyn*np.cos(wrapAngle(phi1-phi2))**2)/(d2*Ms2*mu0)
+            Hz1e0 = self.Bext/mu0*np.cos(wrapAngle(self.phi - phi1)) + Hu1*np.cos(phi1-phiAnis1)**2 + (self.JblDyn*np.cos(wrapAngle(phi1-phi2)) + 2*self.JbqDyn*np.cos(wrapAngle(phi1-phi2))**2)/(d1*Ms1*mu0)
+            Hz2e0 = self.Bext/mu0*np.cos(wrapAngle(self.phi - phi2)) + Hu2*np.cos(phi2-phiAnis2)**2 + (self.JblDyn*np.cos(wrapAngle(phi1-phi2)) + 2*self.JbqDyn*np.cos(wrapAngle(phi1-phi2))**2)/(d2*Ms2*mu0)
             
             AX1Y1 = -Ms1*Zet1-Ms1*A1*k**2 - Hz1e0 - Hs1
             AX1X2 = 1j*Ms1*np.sin(phi2)*k*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
             AX1Y2 = Ms1*abs(k)*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)+(self.JblDyn+2*self.JbqDyn*np.cos(wrapAngle(phi1-phi2)))/(d1*Ms2*mu0)
-            AY1X1 = Ms1*np.sin(phi1)**2*(1-Zet1)+Ms1*A1*k**2-Hu1*np.cos(phi1)**2+Hz1e0-2*self.JbqDyn/(d1*Ms1*mu0)*np.sin(wrapAngle(phi1-phi2))**2
+            AY1X1 = Ms1*np.sin(phi1)**2*(1-Zet1)+Ms1*A1*k**2-Hu1*np.sin(phi1-phiAnis1)**2+Hz1e0-2*self.JbqDyn/(d1*Ms1*mu0)*np.sin(wrapAngle(phi1-phi2))**2
             AY1X2 = Ms1*np.sin(phi1)*np.sin(phi2)*abs(k)*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s) - (self.JblDyn*np.cos(wrapAngle(phi2-phi1))+2*self.JbqDyn*np.cos(wrapAngle(2*(phi1-phi2))))/(d1*Ms2*mu0) #mozna tady
             AY1Y2 = -1j*Ms1*np.sin(phi1)*k*d2/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
             AX2X1 = -1j*Ms2*np.sin(phi1)*k*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
@@ -439,7 +442,7 @@ class DispersionCharacteristic:
             AX2Y2 = -Ms2*Zet2-Ms2*A2*k**2-Hz2e0+Hs2
             AY2X1 = Ms2*np.sin(phi1)*np.sin(phi2)*abs(k)*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)-(self.JblDyn*np.cos(wrapAngle(phi1-phi2))+2*self.JbqDyn*np.cos(wrapAngle(2*(phi1-phi2))))/(d2*Ms1*mu0) #a tady
             AY2Y1 = 1j*Ms2*np.sin(phi2)*k*d1/2*Zet1*Zet2*np.exp(-abs(k)*self.s)
-            AY2X2 = Ms2*np.sin(phi2)**2*(1-Zet2)+Ms2*A2*k**2-Hu2*np.cos(phi2)**2+Hz2e0-2*self.JbqDyn/(d2*Ms2*mu0)*np.sin(wrapAngle(phi1-phi2))**2   
+            AY2X2 = Ms2*np.sin(phi2)**2*(1-Zet2)+Ms2*A2*k**2-Hu2*np.sin(phi2-phiAnis2)**2+Hz2e0-2*self.JbqDyn/(d2*Ms2*mu0)*np.sin(wrapAngle(phi1-phi2))**2   
             
 
             A = np.array([[0    , AX1Y1, AX1X2, AX1Y2],
@@ -483,12 +486,12 @@ class DispersionCharacteristic:
         ks = self.kxi
         wV = np.zeros((4, np.size(ks,0)))
         for idx, k in enumerate(ks):
-            H1=H0*np.cos(phi1-self.phi)+Hac1/4*(3+np.cos(4*phi1))+Hau1*np.cos(phi1-self.phiAnis)**2-Has1+Ms1*(1-k*d1/2)+A1*k**2+Hex1bl*np.cos(phi1-phi2)-2*Hex1bq*np.cos(phi1-phi2)**2
-            G1=H0*np.cos(phi2-self.phi)+Hac2/4*(3+np.cos(4*phi2))+Hau2*np.cos(phi2-self.phiAnis)**2-Has2+Ms2*(1-k*d2/2)+A2*k**2+Hex2bl*np.cos(phi2-phi1)-2*Hex2bq*np.cos(phi2-phi1)**2
+            H1=H0*np.cos(phi1-self.phi)+Hac1/4*(3+np.cos(4*phi1))+Hau1*np.cos(phi1-self.phiAnis1)**2-Has1+Ms1*(1-k*d1/2)+A1*k**2+Hex1bl*np.cos(phi1-phi2)-2*Hex1bq*np.cos(phi1-phi2)**2
+            G1=H0*np.cos(phi2-self.phi)+Hac2/4*(3+np.cos(4*phi2))+Hau2*np.cos(phi2-self.phiAnis2)**2-Has2+Ms2*(1-k*d2/2)+A2*k**2+Hex2bl*np.cos(phi2-phi1)-2*Hex2bq*np.cos(phi2-phi1)**2
             H2=-Hex2bl-1/2*Ms1*k*d1*(1-k*d2/2)*np.exp(-k*self.s)+2*Hex2bq*np.cos(phi1-phi2)
             G2=-Hex1bl-1/2*Ms2*k*d2*(1-k*d1/2)*np.exp(-k*self.s)+2*Hex1bq*np.cos(phi2-phi1)
-            H3=H0*np.cos(phi1-self.phi)+Hac1*np.cos(4*phi1)+Hau1*np.cos(2*(phi1-self.phiAnis))+1/2*Ms1*k*d1*np.cos(phi1-self.phi)**2+A1*k**2+Hex1bl*np.cos(phi1-phi2)-2*Hex1bq*np.cos(2*(phi1-phi2))
-            G3=H0*np.cos(phi2-self.phi)+Hac2*np.cos(4*phi2)+Hau2*np.cos(2*(phi2-self.phiAnis))+1/2*Ms2*k*d2*np.cos(phi2-self.phi)**2+A2*k**2+Hex2bl*np.cos(phi2-phi1)-2*Hex2bq*np.cos(2*(phi2-phi1))
+            H3=H0*np.cos(phi1-self.phi)+Hac1*np.cos(4*phi1)+Hau1*np.cos(2*(phi1-self.phiAnis1))+1/2*Ms1*k*d1*np.cos(phi1-self.phi)**2+A1*k**2+Hex1bl*np.cos(phi1-phi2)-2*Hex1bq*np.cos(2*(phi1-phi2))
+            G3=H0*np.cos(phi2-self.phi)+Hac2*np.cos(4*phi2)+Hau2*np.cos(2*(phi2-self.phiAnis2))+1/2*Ms2*k*d2*np.cos(phi2-self.phi)**2+A2*k**2+Hex2bl*np.cos(phi2-phi1)-2*Hex2bq*np.cos(2*(phi2-phi1))
             H4=Hex2bl*np.cos(phi1-phi2)-1/2*Ms1*k*d1*(1-k*d2/2)*np.exp(-k*self.s)*np.cos(phi1-self.phi)*np.cos(phi2-self.phi)-2*Hex2bq*np.cos(2*(phi1-phi2))
             G4=Hex1bl*np.cos(phi2-phi1)-1/2*Ms2*k*d2*(1-k*d1/2)*np.exp(-k*self.s)*np.cos(phi2-self.phi)*np.cos(phi1-self.phi)-2*Hex1bq*np.cos(2*(phi2-phi1))
             H5=-1/2*Ms1*k*d1*(1-k*d2/2)*np.exp(-k*self.s)*np.cos(phi2-self.phi)
@@ -510,13 +513,14 @@ class DispersionCharacteristic:
         return wV
     
     def GetPhisSAFM(self):  
-        phi1x0 = wrapAngle(self.phiAnis + np.pi/2 - 0.01)
-        phi2x0 = wrapAngle(self.phiAnis+np.pi + np.pi/2 +0.01)
+        phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
+        phi2x0 = wrapAngle(self.phiAnis2 + 0.1)
         result = minimize(self.GetFreeEnergySAFM, x0=[phi1x0, phi2x0], tol=1e-20, method='Nelder-Mead', bounds=((0, 2*np.pi), (0, 2*np.pi)))
         phis = wrapAngle(result.x)
         return phis
     def GetFreeEnergySAFM(self, phis):
-        phiAnis = self.phiAnis #EA along x direction
+        phiAnis1 = self.phiAnis1 #EA along x direction
+        phiAnis2 = self.phiAnis2 #EA along x direction
         theta1 = np.pi/2 #No OOP magnetization
         theta2 = np.pi/2
         Ks1 = 0  #No surface anisotropy
@@ -526,8 +530,8 @@ class DispersionCharacteristic:
         H = self.Bext/mu0
         EJ1 = -self.Jbl*(np.sin(theta1)*np.sin(theta2)*np.cos(wrapAngle(phi1-phi2))+np.cos(theta1)*np.cos(theta2)) - self.Jbq*(np.sin(theta1)*np.sin(theta2)*np.cos(wrapAngle(phi1-phi2))+np.cos(theta1)*np.cos(theta2))**2
         
-        Eaniso1 = -(2*np.pi*self.Ms**2-Ks1)*np.sin(theta1)**2-self.Ku*np.sin(theta1)**2*np.cos(wrapAngle(phi1-phiAnis))**2
-        Eaniso2 = -(2*np.pi*self.Ms2**2-Ks2)*np.sin(theta2)**2-self.Ku*np.sin(theta2)**2*np.cos(wrapAngle(phi2-phiAnis))**2
+        Eaniso1 = -(2*np.pi*self.Ms**2-Ks1)*np.sin(theta1)**2-self.Ku*np.sin(theta1)**2*np.cos(wrapAngle(phi1-phiAnis1))**2
+        Eaniso2 = -(2*np.pi*self.Ms2**2-Ks2)*np.sin(theta2)**2-self.Ku*np.sin(theta2)**2*np.cos(wrapAngle(phi2-phiAnis2))**2
         
         E = EJ1 + self.d1*(-self.Ms*mu0*H*(np.sin(theta1)*np.sin(self.theta)*np.cos(wrapAngle(phi1-self.phi)) + np.cos(theta1)*np.cos(self.theta)) + Eaniso1) + self.d2*(-self.Ms2*mu0*H*(np.sin(theta2)*np.sin(self.theta)*np.cos(wrapAngle(phi2-self.phi)) + np.cos(theta2)*np.cos(self.theta)) + Eaniso2)
         return E
