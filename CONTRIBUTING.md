@@ -1,6 +1,6 @@
 # Rules and documentation logic for contributors
 
-> [!INFO]
+> [!NOTE]
 > Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch will be allowed until a stable state of the repository is reached. Since then, only changes based on Branch & Pull Request workflow will be allowed.
 
 We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open new Issues to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues.
@@ -27,10 +27,10 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 - Work on assigned [Issues] (based on their priority if possible). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
 - When working on some critical file (e.g. [SpinWaveToolkit.py][SWTpy]), it's good to let other know, e.g. via MS Teams, to prevent conflicts.
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs).
-> [!INFO]
+> [!NOTE]
 > The usage of [black] might become compulsory in the future for united formatting.
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
-> [!INFO]
+> [!NOTE]
 > JKL: I'm not sure if [black] also helps with this or not. I will update this when I find out.
 - Use [Pylint] for checking code errors and formatting issues (best if rated 10/10).
 
