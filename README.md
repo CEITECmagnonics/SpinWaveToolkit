@@ -1,7 +1,22 @@
 # SpinWaveToolkit
 
 > [!WARNING]
-> This page needs updating which is currently WIP.
+> This page needs updating, which is currently WIP. If you are a contributor, see [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
+
+## Installation
+
+Copy the [SpinWaveToolkit.py][SWTpy] file to your `site-packages` folder. Usually (on Windows machines) located at
+```
+C:\Users\<user>\AppData\Roaming\Python\Python<python-version>\site-packages
+```
+for user-installed modules, or at 
+```
+C:\<python-installation-folder>\Python<python-version>\Lib\site-packages
+```
+for global modules.
+
+
+<hr>
 
 This module provides analytical tools in Spin wave physics <br/>
 
@@ -22,7 +37,7 @@ import SpinWaveToolkit as SWT <br/>
 import numpy as np <br/>
 
 \~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ <br/>
-# Here is an example of code <br/>
+## Here is an example of code <br/>
 
 import SpinWaveToolkit as SWT <br/>
 import numpy as np <br/>
@@ -34,3 +49,6 @@ DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz <br/>
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s <br/>
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns <br/>
 propLen = NiFeChar.GetPropLen()*1e6 #um <br/>
+
+
+[SWTpy]:SpinWaveToolkit.py
