@@ -3,10 +3,6 @@
 > [!WARNING]
 > This page needs updating which is currently WIP.
 
-## Rules and documentation logic (for contributors)
-
-
-
 This module provides analytical tools in Spin wave physics <br/>
 
 Available classes are: <br/>
