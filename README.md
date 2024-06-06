@@ -15,6 +15,14 @@ C:\<python-installation-folder>\Python<python-version>\Lib\site-packages
 ```
 for global modules.
 
+## Dependencies
+
+> [!WARNING]
+> This section lacks proof, completeness, and was not much checked.
+
+The SpinWaveToolkit module is compatible with Python >3.X, and uses the following modules:
+- [numpy] !add minimal version!
+- [scipy] !add minimal version!
 
 <hr>
 
@@ -52,3 +60,6 @@ propLen = NiFeChar.GetPropLen()*1e6 #um <br/>
 
 
 [SWTpy]:SpinWaveToolkit.py
+[numpy]:https://numpy.org/
+[scipy]:https://scipy.org/
+
