@@ -105,6 +105,7 @@ class DispersionCharacteristic:
     propLen = NiFeChar.GetPropLen()*1e6  # um
     ```
     """
+
     def __init__(
         self,
         Bext,
@@ -203,7 +204,7 @@ class DispersionCharacteristic:
         self.wM = material.Ms * material.gamma * MU0
         self.w0 = material.gamma * Bext
         self.wU = material.gamma * 2 * Ku / material.Ms
-        self.A = material.Aex * 2 / (material.Ms ** 2 * MU0)
+        self.A = material.Aex * 2 / (material.Ms**2 * MU0)
         self._Bext = Bext
         self.dp = dp
         self.gamma = material.gamma
@@ -222,11 +223,11 @@ class DispersionCharacteristic:
         if material2 is None:
             self.Ms2 = material.Ms
             self.Hani2 = 2 * Ku / material.Ms / MU0
-            self.A2 = material.Aex * 2 / (material.Ms ** 2 * MU0)
+            self.A2 = material.Aex * 2 / (material.Ms**2 * MU0)
         else:
             self.Ms2 = material2.Ms
             self.Hani2 = 2 * Ku2 / material2.Ms / MU0
-            self.A2 = material2.Aex * 2 / (material2.Ms ** 2 * MU0)
+            self.A2 = material2.Aex * 2 / (material2.Ms**2 * MU0)
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
@@ -247,7 +248,7 @@ class DispersionCharacteristic:
     @Bext.setter
     def Bext(self, val):
         self._Bext = val
-        self.w0 = self.gamma*val
+        self.w0 = self.gamma * val
 
     def GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
@@ -881,20 +882,20 @@ class DispersionCharacteristic:
             * np.exp(-abs(self.kxi) * self.d / 2)
         )
         g = (
-                MU0
-                * self.Ms
-                * Zet ** 2
-                * np.exp(-abs(self.kxi) * self.s)
-                * self.kxi
-                * self.d
-                / 2
+            MU0
+            * self.Ms
+            * Zet**2
+            * np.exp(-abs(self.kxi) * self.s)
+            * self.kxi
+            * self.d
+            / 2
         )
         p = (
-                MU0 * self.Hani
-                + MU0 * self.Ms * self.kxi ** 2 * self.A
-                + MU0 * self.Ms * (1 - Zet)
+            MU0 * self.Hani
+            + MU0 * self.Ms * self.kxi**2 * self.A
+            + MU0 * self.Ms * (1 - Zet)
         )
-        q = MU0 * self.Hani + MU0 * self.Ms * self.kxi ** 2 * self.A + MU0 * self.Ms * Zet
+        q = MU0 * self.Hani + MU0 * self.Ms * self.kxi**2 * self.A + MU0 * self.Ms * Zet
         Cj = (self.Jbl - 2 * self.Jbq) / (self.Ms * self.d)
 
         if n == 0:
@@ -939,22 +940,22 @@ class DispersionCharacteristic:
             )
 
             Hz1e0 = (
-                    self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi1))
-                    + Hu1 * np.cos(phi1 - phiAnis1) ** 2
-                    + (
+                self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi1))
+                + Hu1 * np.cos(phi1 - phiAnis1) ** 2
+                + (
                     self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                     + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
                 )
-                    / (d1 * Ms1 * MU0)
+                / (d1 * Ms1 * MU0)
             )
             Hz2e0 = (
-                    self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi2))
-                    + Hu2 * np.cos(phi2 - phiAnis2) ** 2
-                    + (
+                self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi2))
+                + Hu2 * np.cos(phi2 - phiAnis2) ** 2
+                + (
                     self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                     + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
                 )
-                    / (d2 * Ms2 * MU0)
+                / (d2 * Ms2 * MU0)
             )
 
             AX1Y1 = -Ms1 * Zet1 - Ms1 * A1 * k**2 - Hz1e0 - Hs1
@@ -988,7 +989,7 @@ class DispersionCharacteristic:
                 self.JblDyn * np.cos(wrapAngle(phi2 - phi1))
                 + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
             ) / (
-                    d1 * Ms2 * MU0
+                d1 * Ms2 * MU0
             )  # mozna tady
             AY1Y2 = (
                 -1j
@@ -1022,7 +1023,7 @@ class DispersionCharacteristic:
                 self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                 + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
             ) / (
-                    d2 * Ms1 * MU0
+                d2 * Ms1 * MU0
             )  # a tady
             AY2Y1 = (
                 1j
@@ -1275,29 +1276,29 @@ class DispersionCharacteristic:
             EJ1
             + self.d1
             * (
-                    -self.Ms
-                    * MU0
-                    * H
-                    * (
+                -self.Ms
+                * MU0
+                * H
+                * (
                     np.sin(theta1)
                     * np.sin(self.theta)
                     * np.cos(wrapAngle(phi1 - self.phi))
                     + np.cos(theta1) * np.cos(self.theta)
                 )
-                    + Eaniso1
+                + Eaniso1
             )
             + self.d2
             * (
-                    -self.Ms2
-                    * MU0
-                    * H
-                    * (
+                -self.Ms2
+                * MU0
+                * H
+                * (
                     np.sin(theta2)
                     * np.sin(self.theta)
                     * np.cos(wrapAngle(phi2 - self.phi))
                     + np.cos(theta2) * np.cos(self.theta)
                 )
-                    + Eaniso2
+                + Eaniso2
             )
         )
         return E
@@ -1326,37 +1327,37 @@ class DispersionCharacteristic:
         )
 
         Eaniso1 = (
-                -(0.5 * MU0 * self.Ms ** 2 - Ks1) * np.sin(theta1) ** 2
-                - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis)) ** 2
+            -(0.5 * MU0 * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
+            - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis)) ** 2
         )
         Eaniso2 = (
-                -(0.5 * MU0 * self.Ms2 ** 2 - Ks2) * np.sin(theta2) ** 2
-                - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis)) ** 2
+            -(0.5 * MU0 * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
+            - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis)) ** 2
         )
 
         E = (
             EJ1
             + self.d1
             * (
-                    -self.Ms
-                    * MU0
-                    * H
-                    * (
+                -self.Ms
+                * MU0
+                * H
+                * (
                     np.sin(theta1) * np.sin(self.theta)
                     + np.cos(theta1) * np.cos(self.theta)
                 )
-                    + Eaniso1
+                + Eaniso1
             )
             + self.d2
             * (
-                    -self.Ms2
-                    * MU0
-                    * H
-                    * (
+                -self.Ms2
+                * MU0
+                * H
+                * (
                     np.sin(theta2) * np.sin(self.theta)
                     + np.cos(theta2) * np.cos(self.theta)
                 )
-                    + Eaniso2
+                + Eaniso2
             )
         )
         return E
@@ -1595,8 +1596,10 @@ class DispersionCharacteristic:
                 )
             )
         else:
-            raise Exception("Sorry, for degenerate perturbation you have"
-                            + " to choose theta = pi/2 or 0.")
+            raise Exception(
+                "Sorry, for degenerate perturbation you have"
+                + " to choose theta = pi/2 or 0."
+            )
         return (wdn, wdnc)
 
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
@@ -1625,12 +1628,12 @@ class DispersionCharacteristic:
         return (
             self.w0
             + self.wM * self.A * self.kxi**2
-            + self.wM / 2 * (gk * np.sin(self.phi)**2 + (1 - gk))
+            + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
         )
 
     def GetBk(self):
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return self.wM / 2 * (gk * np.sin(self.phi)**2 - (1 - gk))
+        return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
 
     def GetEllipticity(self):
         return 2 * abs(self.GetBk()) / (self.GetAk() + abs(self.GetBk()))
