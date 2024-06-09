@@ -43,6 +43,16 @@ mu0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
 
 class DispersionCharacteristic:
+    """Compute spin wave characteristic in dependance to k-vector
+    (wavenumber) such as frequency, group velocity, lifetime and
+    propagation length.
+    The model uses famous Slavin-Kalinikos equation from
+    https://doi.org/10.1088/0022-3719/19/35/014
+
+    Attributes
+    ----------
+
+    """
     def __init__(
         self,
         Bext,
@@ -68,11 +78,7 @@ class DispersionCharacteristic:
         phiInit1=np.pi / 2,
         phiInit2=-np.pi / 2,
     ):
-        """Compute spin wave characteristic in dependance to k-vector
-        (wavenumber) such as frequency, group velocity, lifetime and
-        propagation length.
-        The model uses famous Slavin-Kalinikos equation from
-        https://doi.org/10.1088/0022-3719/19/35/014
+        """
 
         Most parameters can be specified as vectors (ndarrays) of the
         same shape.
@@ -141,6 +147,7 @@ class DispersionCharacteristic:
         self.w0 = material.gamma * Bext
         self.wU = material.gamma * 2 * Ku / material.Ms
         self.A = material.Aex * 2 / (material.Ms**2 * mu0)
+        self._Bext = Bext
         self.dp = dp
         self.gamma = material.gamma
         self.mu0dH0 = material.mu0dH0
@@ -166,7 +173,6 @@ class DispersionCharacteristic:
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
-        self.Bext = Bext
         self.Ku = Ku
         self.Ku2 = Ku2
         if JblDyn == 1:
@@ -175,6 +181,16 @@ class DispersionCharacteristic:
             JbqDyn = Jbq
         self.JblDyn = JblDyn
         self.JbqDyn = JbqDyn
+
+    @property
+    def Bext(self):
+        """external field value (T)"""
+        return self._Bext
+
+    @Bext.setter
+    def Bext(self, val):
+        self._Bext = val
+        self.w0 = self.gamma*val
 
     def GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector
