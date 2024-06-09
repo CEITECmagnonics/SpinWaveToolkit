@@ -24,7 +24,7 @@ import numpy as np
 kxi = np.linspace(1e-12, 10e6, 150)
 NiFeChar = SWT.DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
                                         n=0, d=10e-9, weff=2e-6, nT=1,
-                                        boundaryCond=2, Bext=20e-3,
+                                        boundary_cond=2, Bext=20e-3,
                                         material=SWT.NiFe)
 DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s
@@ -43,52 +43,6 @@ mu0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
 
 class DispersionCharacteristic:
-    """Compute spin wave characteristic in dependance to k-vector
-    (wavenumber) such as frequency, group velocity, lifetime and
-    propagation length.
-    The model uses famous Slavin-Kalinikos equation from
-    https://doi.org/10.1088/0022-3719/19/35/014
-
-    Keyword arguments:
-    kxi -- k-vector (wavenumber) in rad/m, usually vector (default linspace(1e-12, 25e6, 200))
-    theta -- out of plane angle in rad, pi/2 is totally inplane magnetization (default pi/2)
-    phi -- in-plane angle in rad, pi/2 is DE geometry (default pi/2)
-    n -- the quantization number in z (out-of-plane) direction (default 0)
-    d -- thickness of layer in m (in z direction)
-    weff -- effective width of the waveguide in um (optional, default 3e-6 um)
-    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned
-    dp -- for 4 BC, pinning parameter ranges from 0 to inf. 0 means totally unpinned
-
-    w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext
-    wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms
-    A -- parameter in Slavin-Kalinikos equation A = Aex*2/(Ms**2*mu0)
-
-    Availible methods:
-    GetDisperison
-    GetLifetime
-    GetGroupVelocity
-    GetPropLen
-    GetPropagationVector
-    GetPropagationQVector
-    GetSecondPerturbation
-    GetDensityOfStates
-
-    Code example:
-    ```Python
-    #Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
-
-    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                        n=0, d=30e-9, weff=2e-6, nT=0,
-                                        boundaryCond=2, Bext=20e-3,
-                                        material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
-    ```
-    """
-
     def __init__(
         self,
         Bext,
@@ -98,7 +52,7 @@ class DispersionCharacteristic:
         theta=np.pi / 2,
         phi=np.pi / 2,
         weff=3e-6,
-        boundaryCond=1,
+        boundary_cond=1,
         dp=0,
         Ku=0,
         Ku2=0,
@@ -106,7 +60,7 @@ class DispersionCharacteristic:
         Jbq=0,
         s=0,
         d2=0,
-        material2=0,
+        material2=None,
         JblDyn=1,
         JbqDyn=1,
         phiAnis1=np.pi / 2,
@@ -114,13 +68,73 @@ class DispersionCharacteristic:
         phiInit1=np.pi / 2,
         phiInit2=-np.pi / 2,
     ):
+        """Compute spin wave characteristic in dependance to k-vector
+        (wavenumber) such as frequency, group velocity, lifetime and
+        propagation length.
+        The model uses famous Slavin-Kalinikos equation from
+        https://doi.org/10.1088/0022-3719/19/35/014
+
+        Most parameters can be specified as vectors (ndarrays) of the
+        same shape.
+
+        Keyword arguments
+        -----------------
+        d : float
+            (m) layer thickness (in z direction)
+        kxi : float or ndarray, default linspace(1e-12, 25e6, 200)
+            (rad/m) k-vector (wavenumber), usually a vector
+        theta : float, default np.pi/2
+            (rad) out of plane angle, pi/2 is totally inplane
+            magnetization
+        phi : float or ndarray, default np.pi/2
+            (rad) in-plane angle, pi/2 is DE geometry
+        weff : float, optional
+            (m) effective width of the waveguide (not used for zeroth
+            order width modes)
+        boundary_cond : {1, 2, 3, 4}, default 1
+            boundary conditions (BCs), 1 is totally unpinned and 2 is
+            totally pinned BC, 3 is a long wave limit, 4 is partially
+            pinned BC
+        dp : float, optional
+            pinning parameter for 4 BC, ranges from 0 to inf,
+            0 means totally unpinned
+
+        w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext
+        wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms
+        A -- parameter in Slavin-Kalinikos equation A = Aex*2/(Ms**2*mu0)
+
+        Availible methods:
+        GetDisperison
+        GetLifetime
+        GetGroupVelocity
+        GetPropLen
+        GetPropagationVector
+        GetPropagationQVector
+        GetSecondPerturbation
+        GetDensityOfStates
+
+        Code example:
+        ```Python
+        #Here is an example of code
+        kxi = np.linspace(1e-12, 150e6, 150)
+
+        NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
+                                            n=0, d=30e-9, weff=2e-6, nT=0,
+                                            boundary_cond=2, Bext=20e-3,
+                                            material=SWT.NiFe)
+        DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+        vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
+        propLen = NiFeChar.GetPropLen()*1e6  # um
+        ```
+        """
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
         self.d = d
         self.d1 = d
         self.weff = weff
-        self.boundaryCond = boundaryCond
+        self.boundary_cond = boundary_cond
         self.alpha = material.alpha
         # Compute Slavin-Kalinikos parameters wM, w0 A
         self.wM = material.Ms * material.gamma * mu0
@@ -141,7 +155,7 @@ class DispersionCharacteristic:
             self.d2 = d
         else:
             self.d2 = d2
-        if material2 == 0:
+        if material2 is None:
             self.Ms2 = material.Ms
             self.Hani2 = 2 * Ku / material.Ms / mu0
             self.A2 = material.Aex * 2 / (material.Ms**2 * mu0)
@@ -178,7 +192,7 @@ class DispersionCharacteristic:
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
-        if self.boundaryCond == 1:
+        if self.boundary_cond == 1:
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             if n == 0 and nc == 0:
                 Pnn = (kxi**2) / (kc**2) - (kxi**4) / (
@@ -200,7 +214,7 @@ class DispersionCharacteristic:
             else:
                 Pnn = -(kxi**4) / (k**2 * kc**2) * ((1 + (-1) ** (n + nc)) / 2) * Fn
         # Totally pinned boundary condition
-        elif self.boundaryCond == 2:
+        elif self.boundary_cond == 2:
             if n == nc:
                 Pnn = (kxi**2) / (kc**2) + (kxi**2) / (k**2) * (
                     kappa * kappac
@@ -219,13 +233,13 @@ class DispersionCharacteristic:
                     * (1 - (-1) ** n * np.exp(-kxi * self.d))
                 )
         # Totally unpinned condition - long wave limit
-        elif self.boundaryCond == 3:
+        elif self.boundary_cond == 3:
             if n == 0:
                 Pnn = kxi * self.d / 2
             else:
                 Pnn = (kxi * self.d) ** 2 / (n**2 * np.pi**2)
         # Partially pinned boundary condition
-        elif self.boundaryCond == 4:
+        elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(
                 n
@@ -325,7 +339,7 @@ class DispersionCharacteristic:
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
-        if self.boundaryCond == 1:
+        if self.boundary_cond == 1:
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             Qnn = (
                 kxi**2
@@ -336,7 +350,7 @@ class DispersionCharacteristic:
                 )
                 * ((1 - (-1) ** (n + nc)) / 2)
             )
-        elif self.boundaryCond == 4:
+        elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
             kappac = self.GetPartiallyPinnedKappa(nc)
@@ -460,7 +474,7 @@ class DispersionCharacteristic:
         nT(optional) -- Waveguide (transversal) quantization number"""
         if nc == -1:
             nc = n
-        if self.boundaryCond == 4:
+        if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
         else:
             kappa = n * np.pi / self.d
@@ -586,7 +600,7 @@ class DispersionCharacteristic:
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
-        if self.boundaryCond == 1:
+        if self.boundary_cond == 1:
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             if n == 0 and nc == 0:
                 Pnn = (kxi**2) / (kc**2) - (kxi**4) / (
@@ -608,7 +622,7 @@ class DispersionCharacteristic:
             else:
                 Pnn = -(kxi**4) / (k**2 * kc**2) * ((1 + (-1) ** (n + nc)) / 2) * Fn
         # Totally pinned boundary condition
-        elif self.boundaryCond == 2:
+        elif self.boundary_cond == 2:
             if n == nc:
                 Pnn = (kxi**2) / (kc**2) + (kxi**2) / (k**2) * (
                     kappa * kappac
@@ -652,7 +666,7 @@ class DispersionCharacteristic:
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
-        if self.boundaryCond == 1:
+        if self.boundary_cond == 1:
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             Qnn = (
                 kxi**2
@@ -663,7 +677,7 @@ class DispersionCharacteristic:
                 )
                 * ((1 - (-1) ** (n + nc)) / 2)
             )
-        elif self.boundaryCond == 4:
+        elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
             kappac = self.GetPartiallyPinnedKappa(nc)
@@ -1258,7 +1272,7 @@ class DispersionCharacteristic:
     #        nT(optional) -- Waveguide (transversal) quantization number """
     #        if nc == -1:
     #            nc = n
-    #        if self.boundaryCond == 4:
+    #        if self.boundary_cond == 4:
     #            kappa = self.GetPartiallyPinnedKappa(n)
     #        else:
     #            kappa = n*np.pi/self.d
@@ -1354,7 +1368,7 @@ class DispersionCharacteristic:
         Arguments:
         n -- Quantization number
         nc -- Quantization number of crossing mode """
-        if self.boundaryCond == 4:
+        if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
             kappac = self.GetPartiallyPinnedKappa(nc)
         else:

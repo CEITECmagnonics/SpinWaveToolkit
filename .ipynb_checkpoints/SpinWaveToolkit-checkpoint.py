@@ -21,7 +21,7 @@ import numpy as np
 import SpinWaveToolkit as SWT \n
 import numpy as np \n
 kxi = np.linspace(1e-12, 10e6, 150) \n
-NiFeChar = SWT.DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundaryCond = 2, Bext = 20e-3, material = SWT.NiFe) \n
+NiFeChar = SWT.DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundary_cond = 2, Bext = 20e-3, material = SWT.NiFe) \n
 DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
@@ -46,7 +46,7 @@ class DispersionCharacteristic:
     n -- the quantization number in z (out-of-plane) direction (default 0) \n
     d -- thickness of layer in m (in z direction) \n
     weff -- effective width of the waveguide in um (optional, default 3e-6 um) \n
-    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned \n
+    boundary_cond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned \n
     dp -- for 4 BC, pinning parameter ranges from 0 to inf. 0 means totally unpinned \n
     
     w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext \n
@@ -66,7 +66,7 @@ class DispersionCharacteristic:
     #Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150) \n
      \n
-    NiFeChar = DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 30e-9, weff = 2e-6, nT = 0, boundaryCond = 2, Bext = 20e-3, material = NiFe) \n
+    NiFeChar = DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 30e-9, weff = 2e-6, nT = 0, boundary_cond = 2, Bext = 20e-3, material = NiFe) \n
     DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
     vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
     lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
@@ -569,7 +569,7 @@ class DispersionCharacteristic:
 #        nT(optional) -- Waveguide (transversal) quantization number """
 #        if nc == -1:
 #            nc = n
-#        if self.boundaryCond == 4:
+#        if self.boundary_cond == 4:
 #            kappa = self.GetPartiallyPinnedKappa(n)
 #        else:
 #            kappa = n*np.pi/self.d
