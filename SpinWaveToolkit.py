@@ -8,16 +8,17 @@ Available classes are:
     Material -- Class for magnetic materials used in spin wave resreach
     
 Available constants:
-    mu0 -- Magnetic permeability
+    MU0 -- Magnetic permeability
     
 Available functions:
     wavenumberToWavelength -- Convert wavelength to wavenumber
     wavelengthTowavenumber -- Convert wavenumber to wavelength
     
 Example code for obtaining propagation lenght and dispersion charactetristic:
+```Python
 import SpinWaveToolkit as SWT
 import numpy as np
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 #Here is an example of code
 import SpinWaveToolkit as SWT
 import numpy as np
@@ -30,7 +31,7 @@ DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns
 propLen = NiFeChar.GetPropLen()*1e6 #um
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
@@ -39,7 +40,7 @@ from numpy import linalg
 
 # from scipy.integrate import trapz
 
-mu0 = 4 * np.pi * 1e-7  # Magnetic permeability
+MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
 
 class DispersionCharacteristic:
@@ -49,9 +50,60 @@ class DispersionCharacteristic:
     The model uses famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
-    Attributes
-    ----------
+    Attributes (same as initial arguments, plus these)
+    --------------------------------------------------
+    alpha : float
+        () Gilbert damping
+    w0 : float
+        (rad*Hz/T) parameter in Slavin-Kalinikos equation,
+        w0 = MU0*gamma*Hext
+    wM : float
+        (rad*Hz/T) parameter in Slavin-Kalinikos equation,
+        w0 = MU0*gamma*Ms
+    A : float
+        (m^2) parameter in Slavin-Kalinikos equation,
+        A = Aex*2/(Ms**2*MU0)
+    Hani : float
+        (A/m) uniaxial anisotropy field of corresponding Ku,
+        Hani = 2*Ku/material.Ms/MU0
 
+    Methods
+    -------
+    # sort these and check completeness, make some maybe private
+    GetDisperison
+    GetLifetime
+    GetGroupVelocity
+    GetPropLen
+    GetPropagationVector
+    GetPropagationQVector
+    GetSecondPerturbation
+    GetDensityOfStates
+    GetDispersionSAFM
+    GetDispersionSAFMNumeric
+    GetDispersionSAFMNumericRezende
+    GetDispersionTacchi
+    GetEllipticity
+    GetExchangeLen
+    GetFreeEnergySAFM
+    GetFreeEnergySAFMOOP
+    GetLifetimeSAFM
+    GetThresholdField
+
+    Code example
+    ------------
+    ```Python
+    #Here is an example of code
+    kxi = np.linspace(1e-12, 150e6, 150)
+
+    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
+                                        n=0, d=30e-9, weff=2e-6, nT=0,
+                                        boundary_cond=2, Bext=20e-3,
+                                        material=SWT.NiFe)
+    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
+    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
+    propLen = NiFeChar.GetPropLen()*1e6  # um
+    ```
     """
     def __init__(
         self,
@@ -79,19 +131,18 @@ class DispersionCharacteristic:
         phiInit2=-np.pi / 2,
     ):
         """
-
-        Most parameters can be specified as vectors (ndarrays) of the
-        same shape.
+        Most parameters can be specified as vectors (1d numpy arrays)
+        of the same shape. This functionality is not quaranteed.
 
         Keyword arguments
         -----------------
-        Bext : float or ndarray
+        Bext : float
             (T) external magnetic field
         material : Material
             instance of Material describing the magnetic layer material
         d : float
             (m) layer thickness (in z direction)
-        kxi : float or ndarray, default linspace(1e-12, 25e6, 200)
+        kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
             (rad/m) k-vector (wavenumber), usually a vector
         theta : float, default np.pi/2
             (rad) out of plane angle, pi/2 is totally inplane
@@ -113,52 +164,32 @@ class DispersionCharacteristic:
             (J/m^3) uniaxial anisotropy strength
         Ku2 : float, optional
             (J/m^3) uniaxial anisotropy strength of the second layer
-        Jbl : float
-            (J/m^2) bilinear coupling parameter
-        Jbq : float
-            (J/m^2) biquadratic coupling parameter
-        s : float
+        Jbl : float, optional
+            (J/m^2) bilinear RKKY coupling parameter
+        Jbq : float, optional
+            (J/m^2) biquadratic RKKY coupling parameter
+        s : float, optional
             (m) spacing layer thickness
-        d2 : float
+        d2 : float, optional
             (m) thickness of the second magnetic layer
         material2 : Material or None
             instance of Material describing the second magnetic layer,
             if None, `material` parameter is used instead
         JblDyn : float or None
-            (?) dynamic bilinear coupling parameter,
+            (J/m^2) dynamic bilinear RKKY coupling parameter,
             if None, same as `Jbl`
         JbqDyn : float or None
-            (?) dynamic biquadratic coupling parameter,
+            (J/m^2) dynamic biquadratic RKKY coupling parameter,
             if None, same as `Jbq`
-
-        w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext
-        wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms
-        A -- parameter in Slavin-Kalinikos equation A = Aex*2/(Ms**2*mu0)
-
-        Availible methods:
-        GetDisperison
-        GetLifetime
-        GetGroupVelocity
-        GetPropLen
-        GetPropagationVector
-        GetPropagationQVector
-        GetSecondPerturbation
-        GetDensityOfStates
-
-        Code example:
-        ```Python
-        #Here is an example of code
-        kxi = np.linspace(1e-12, 150e6, 150)
-
-        NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                            n=0, d=30e-9, weff=2e-6, nT=0,
-                                            boundary_cond=2, Bext=20e-3,
-                                            material=SWT.NiFe)
-        DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-        vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-        lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-        propLen = NiFeChar.GetPropLen()*1e6  # um
-        ```
+        phiAnis1, phiAnis2 : float, default np.pi/2
+            (rad) uniaxial anisotropy axis in-plane angle for
+            both magnetic layers (angle from Beff?)
+        phiInit1, phiInit2 : float, default np.pi/2
+            (rad) initial value of magnetization in-plane angle of the
+            first layer, used for energy minimization
+        phiInit2 : float, default -np.pi/2
+            (rad) initial value of magnetization in-plane angle of the
+            second layer, used for energy minimization
         """
         self.kxi = np.array(kxi)
         self.theta = theta
@@ -169,17 +200,17 @@ class DispersionCharacteristic:
         self.boundary_cond = boundary_cond
         self.alpha = material.alpha
         # Compute Slavin-Kalinikos parameters wM, w0, A
-        self.wM = material.Ms * material.gamma * mu0
+        self.wM = material.Ms * material.gamma * MU0
         self.w0 = material.gamma * Bext
         self.wU = material.gamma * 2 * Ku / material.Ms
-        self.A = material.Aex * 2 / (material.Ms**2 * mu0)
+        self.A = material.Aex * 2 / (material.Ms ** 2 * MU0)
         self._Bext = Bext
         self.dp = dp
         self.gamma = material.gamma
         self.mu0dH0 = material.mu0dH0
 
         self.Ms = material.Ms
-        self.Hani = 2 * Ku / material.Ms / mu0
+        self.Hani = 2 * Ku / material.Ms / MU0
         self.phiAnis1 = phiAnis1
         self.phiAnis2 = phiAnis2
         self.phiInit1 = phiInit1
@@ -190,12 +221,12 @@ class DispersionCharacteristic:
             self.d2 = d2
         if material2 is None:
             self.Ms2 = material.Ms
-            self.Hani2 = 2 * Ku / material.Ms / mu0
-            self.A2 = material.Aex * 2 / (material.Ms**2 * mu0)
+            self.Hani2 = 2 * Ku / material.Ms / MU0
+            self.A2 = material.Aex * 2 / (material.Ms ** 2 * MU0)
         else:
             self.Ms2 = material2.Ms
-            self.Hani2 = 2 * Ku2 / material2.Ms / mu0
-            self.A2 = material2.Aex * 2 / (material2.Ms**2 * mu0)
+            self.Hani2 = 2 * Ku2 / material2.Ms / MU0
+            self.A2 = material2.Aex * 2 / (material2.Ms ** 2 * MU0)
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
@@ -219,12 +250,17 @@ class DispersionCharacteristic:
         self.w0 = self.gamma*val
 
     def GetPropagationVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector
-        The boundary condition is chosen based on the object property
-        Arguments:
-        n -- Quantization number
-        nc(optional) -- Second quantization number. Used for hybridization
-        nT(optional) -- Waveguide (transversal) quantization number
+        """Gives dimensionless propagation vector.
+        The boundary condition is chosen based on the object property.
+
+        Arguments
+        ---------
+        n : int
+            quantization number
+        nc : int, optional
+            second quantization number, used for hybridization
+        nT : int, optional
+            waveguide (transversal) quantization number
         """
         if nc == -1:
             nc = n
@@ -361,13 +397,18 @@ class DispersionCharacteristic:
         return Pnn
 
     def GetPropagationQVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector Q
-        This vector accounts for interaction between odd and even spin wave mode
-        The boundary condition is chosen based on the object property
-        Arguments:
-        n -- Quantization number
-        nc(optional) -- Second quantization number. Used for hybridization
-        nT(optional) -- Waveguide (transversal) quantization number
+        """Gives dimensionless propagation vector Q.  This vector
+        accounts for interaction between odd and even spin wave modes.
+        The boundary condition is chosen based on the object property.
+
+        Arguments
+        ---------
+        n : int
+            quantization number
+        nc : int, optional
+            second quantization number, used for hybridization
+        nT : int, optional
+            waveguide (transversal) quantization number
         """
         if nc == -1:
             nc = n
@@ -487,9 +528,12 @@ class DispersionCharacteristic:
     #        Tnn = 1/self.d*trapz(y = Phin*Phinc, x = zeta)
     #        return Tnn
     def GetPartiallyPinnedKappa(self, n):
-        """Gives kappa from the transverse equation
-        Arguments:
-        n -- Quantization number
+        """Gives kappa from the transverse equation.
+
+        Arguments
+        ---------
+        n : int
+            quantization number
         """
 
         def transEq(kappa, d, dp):
@@ -508,12 +552,18 @@ class DispersionCharacteristic:
         return kappa
 
     def GetDispersion(self, n=0, nc=-1, nT=0):
-        """Gives frequencies for defined k (Dispersion relation)
-        The returned value is in the rad Hz
-        Arguments:
-        n -- Quantization number
-        nc(optional) -- Second quantization number. Used for hybridization
-        nT(optional) -- Waveguide (transversal) quantization number"""
+        """Gives frequencies for defined k (Dispersion relation).
+        The returned value is in the rad*Hz.
+
+        Arguments
+        ---------
+        n : int
+            quantization number
+        nc : int, optional
+            second quantization number, used for hybridization
+        nT : int, optional
+            waveguide (transversal) quantization number
+        """
         if nc == -1:
             nc = n
         if self.boundary_cond == 4:
@@ -540,6 +590,10 @@ class DispersionCharacteristic:
     def GetDispersionTacchi(self):
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in the rad*Hz.
+
+        ### Update the description! I don't understand anything.
+        Are quantization numbers fixed? Why? Can this be generalized? ###
+
         Arguments:
         n -- Quantization number
         nc(optional) -- Second quantization number. Used for hybridization
@@ -699,8 +753,7 @@ class DispersionCharacteristic:
             quantization number
         nc : int, optional
             second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        kxi
         """
         # The totally pinned BC should be added
         kappa = n * np.pi / self.d
@@ -828,20 +881,20 @@ class DispersionCharacteristic:
             * np.exp(-abs(self.kxi) * self.d / 2)
         )
         g = (
-            mu0
-            * self.Ms
-            * Zet**2
-            * np.exp(-abs(self.kxi) * self.s)
-            * self.kxi
-            * self.d
-            / 2
+                MU0
+                * self.Ms
+                * Zet ** 2
+                * np.exp(-abs(self.kxi) * self.s)
+                * self.kxi
+                * self.d
+                / 2
         )
         p = (
-            mu0 * self.Hani
-            + mu0 * self.Ms * self.kxi**2 * self.A
-            + mu0 * self.Ms * (1 - Zet)
+                MU0 * self.Hani
+                + MU0 * self.Ms * self.kxi ** 2 * self.A
+                + MU0 * self.Ms * (1 - Zet)
         )
-        q = mu0 * self.Hani + mu0 * self.Ms * self.kxi**2 * self.A + mu0 * self.Ms * Zet
+        q = MU0 * self.Hani + MU0 * self.Ms * self.kxi ** 2 * self.A + MU0 * self.Ms * Zet
         Cj = (self.Jbl - 2 * self.Jbq) / (self.Ms * self.d)
 
         if n == 0:
@@ -886,22 +939,22 @@ class DispersionCharacteristic:
             )
 
             Hz1e0 = (
-                self.Bext / mu0 * np.cos(wrapAngle(self.phi - phi1))
-                + Hu1 * np.cos(phi1 - phiAnis1) ** 2
-                + (
+                    self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi1))
+                    + Hu1 * np.cos(phi1 - phiAnis1) ** 2
+                    + (
                     self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                     + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
                 )
-                / (d1 * Ms1 * mu0)
+                    / (d1 * Ms1 * MU0)
             )
             Hz2e0 = (
-                self.Bext / mu0 * np.cos(wrapAngle(self.phi - phi2))
-                + Hu2 * np.cos(phi2 - phiAnis2) ** 2
-                + (
+                    self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi2))
+                    + Hu2 * np.cos(phi2 - phiAnis2) ** 2
+                    + (
                     self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                     + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
                 )
-                / (d2 * Ms2 * mu0)
+                    / (d2 * Ms2 * MU0)
             )
 
             AX1Y1 = -Ms1 * Zet1 - Ms1 * A1 * k**2 - Hz1e0 - Hs1
@@ -918,7 +971,7 @@ class DispersionCharacteristic:
             )
             AX1Y2 = Ms1 * abs(k) * d2 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) + (
                 self.JblDyn + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2))
-            ) / (d1 * Ms2 * mu0)
+            ) / (d1 * Ms2 * MU0)
             AY1X1 = (
                 Ms1 * np.sin(phi1) ** 2 * (1 - Zet1)
                 + Ms1 * A1 * k**2
@@ -926,7 +979,7 @@ class DispersionCharacteristic:
                 + Hz1e0
                 - 2
                 * self.JbqDyn
-                / (d1 * Ms1 * mu0)
+                / (d1 * Ms1 * MU0)
                 * np.sin(wrapAngle(phi1 - phi2)) ** 2
             )
             AY1X2 = Ms1 * np.sin(phi1) * np.sin(phi2) * abs(
@@ -935,7 +988,7 @@ class DispersionCharacteristic:
                 self.JblDyn * np.cos(wrapAngle(phi2 - phi1))
                 + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
             ) / (
-                d1 * Ms2 * mu0
+                    d1 * Ms2 * MU0
             )  # mozna tady
             AY1Y2 = (
                 -1j
@@ -961,7 +1014,7 @@ class DispersionCharacteristic:
             )
             AX2Y1 = Ms2 * abs(k) * d1 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) + (
                 self.JblDyn + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2))
-            ) / (d2 * Ms1 * mu0)
+            ) / (d2 * Ms1 * MU0)
             AX2Y2 = -Ms2 * Zet2 - Ms2 * A2 * k**2 - Hz2e0 + Hs2
             AY2X1 = Ms2 * np.sin(phi1) * np.sin(phi2) * abs(
                 k
@@ -969,7 +1022,7 @@ class DispersionCharacteristic:
                 self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
                 + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
             ) / (
-                d2 * Ms1 * mu0
+                    d2 * Ms1 * MU0
             )  # a tady
             AY2Y1 = (
                 1j
@@ -989,7 +1042,7 @@ class DispersionCharacteristic:
                 + Hz2e0
                 - 2
                 * self.JbqDyn
-                / (d2 * Ms2 * mu0)
+                / (d2 * Ms2 * MU0)
                 * np.sin(wrapAngle(phi1 - phi2)) ** 2
             )
 
@@ -1003,7 +1056,7 @@ class DispersionCharacteristic:
                 dtype=complex,
             )
             w, v = linalg.eig(A)
-            wV[:, idx] = np.sort(np.imag(w) * self.gamma * mu0)
+            wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)
         return wV
 
     def GetDispersionSAFMNumericRezende(self):
@@ -1018,11 +1071,11 @@ class DispersionCharacteristic:
         Hau2 = self.Hani2
         d1 = self.d1
         d2 = self.d2
-        H0 = self.Bext / mu0
-        Hex1bl = self.JblDyn / (d1 * Ms1 * mu0)
-        Hex2bl = self.JblDyn / (d2 * Ms2 * mu0)
-        Hex1bq = self.JbqDyn / (d1 * Ms1 * mu0)
-        Hex2bq = self.JbqDyn / (d2 * Ms2 * mu0)
+        H0 = self.Bext / MU0
+        Hex1bl = self.JblDyn / (d1 * Ms1 * MU0)
+        Hex2bl = self.JblDyn / (d2 * Ms2 * MU0)
+        Hex1bq = self.JbqDyn / (d1 * Ms1 * MU0)
+        Hex2bq = self.JbqDyn / (d2 * Ms2 * MU0)
         # gamma1 = self.gamma
         # gamma2 = self.gamma
 
@@ -1162,12 +1215,12 @@ class DispersionCharacteristic:
                 dtype=complex,
             )
             w, v = linalg.eig(A)
-            wV[:, idx] = np.sort(np.sqrt(w * np.conj(w)) * self.gamma * mu0)
+            wV[:, idx] = np.sort(np.sqrt(w * np.conj(w)) * self.gamma * MU0)
 
             # a=(G2*H4+G4*H2+G5*H5+G6*H6)/gamma1/gamma2-H1*H3/(gamma2**2)-G1*G3/(gamma1**2)
             # b=(G3*G5*H2+G1*G4*H5-G1*G6*H4-G2*G3*H6)/(gamma1)+(G6*H2*H3+G4*H1*H6-G5*H1*H4-G2*H3*H5)/gamma2
             # c=G1*G6*H3*H5+G1*G3*H1*H3+G5*G6*H5*H6+G5*G6*H2*H4+G3*G5*H1*H6+G2*G4*H2*H4-G2*G3*H2*H3-G1*G4*H1*H4+G2*G4*H5*H6
-            # wV[:, idx] = np.roots([1/(gamma1**2*gamma2**2), 0, a*mu0**2, b*mu0**3, c*mu0**4])
+            # wV[:, idx] = np.roots([1/(gamma1**2*gamma2**2), 0, a*MU0**2, b*MU0**3, c*MU0**4])
         return wV
 
     def GetPhisSAFM(self):
@@ -1194,7 +1247,7 @@ class DispersionCharacteristic:
         Ks2 = 0
 
         phi1, phi2 = phis
-        H = self.Bext / mu0
+        H = self.Bext / MU0
         EJ1 = (
             -self.Jbl
             * (
@@ -1222,29 +1275,29 @@ class DispersionCharacteristic:
             EJ1
             + self.d1
             * (
-                -self.Ms
-                * mu0
-                * H
-                * (
+                    -self.Ms
+                    * MU0
+                    * H
+                    * (
                     np.sin(theta1)
                     * np.sin(self.theta)
                     * np.cos(wrapAngle(phi1 - self.phi))
                     + np.cos(theta1) * np.cos(self.theta)
                 )
-                + Eaniso1
+                    + Eaniso1
             )
             + self.d2
             * (
-                -self.Ms2
-                * mu0
-                * H
-                * (
+                    -self.Ms2
+                    * MU0
+                    * H
+                    * (
                     np.sin(theta2)
                     * np.sin(self.theta)
                     * np.cos(wrapAngle(phi2 - self.phi))
                     + np.cos(theta2) * np.cos(self.theta)
                 )
-                + Eaniso2
+                    + Eaniso2
             )
         )
         return E
@@ -1257,7 +1310,7 @@ class DispersionCharacteristic:
         Ks2 = 0
 
         theta1, theta2 = thetas
-        H = self.Bext / mu0
+        H = self.Bext / MU0
         EJ1 = (
             -self.Jbl
             * (
@@ -1273,37 +1326,37 @@ class DispersionCharacteristic:
         )
 
         Eaniso1 = (
-            -(0.5 * mu0 * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
-            - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis)) ** 2
+                -(0.5 * MU0 * self.Ms ** 2 - Ks1) * np.sin(theta1) ** 2
+                - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis)) ** 2
         )
         Eaniso2 = (
-            -(0.5 * mu0 * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
-            - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis)) ** 2
+                -(0.5 * MU0 * self.Ms2 ** 2 - Ks2) * np.sin(theta2) ** 2
+                - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis)) ** 2
         )
 
         E = (
             EJ1
             + self.d1
             * (
-                -self.Ms
-                * mu0
-                * H
-                * (
+                    -self.Ms
+                    * MU0
+                    * H
+                    * (
                     np.sin(theta1) * np.sin(self.theta)
                     + np.cos(theta1) * np.cos(self.theta)
                 )
-                + Eaniso1
+                    + Eaniso1
             )
             + self.d2
             * (
-                -self.Ms2
-                * mu0
-                * H
-                * (
+                    -self.Ms2
+                    * MU0
+                    * H
+                    * (
                     np.sin(theta2) * np.sin(self.theta)
                     + np.cos(theta2) * np.cos(self.theta)
                 )
-                + Eaniso2
+                    + Eaniso2
             )
         )
         return E
