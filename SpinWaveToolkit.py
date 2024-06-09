@@ -1,79 +1,92 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug 25 \n
+Created on Tue Aug 25
 This module provides analytical tools in Spin wave physics
 Available classes are:
-    DispersionCharacteristic -- Compute spin wave characteristic in dependance to k-vector \n
+    DispersionCharacteristic -- Compute spin wave characteristic in
+        dependance to k-vector
     Material -- Class for magnetic materials used in spin wave resreach
     
-Available constants: \n
+Available constants:
     mu0 -- Magnetic permeability
     
-Available functions: \n
-    wavenumberToWavelength -- Convert wavelength to wavenumber \n
-    wavelengthTowavenumber -- Convert wavenumber to wavelength \n
+Available functions:
+    wavenumberToWavelength -- Convert wavelength to wavenumber
+    wavelengthTowavenumber -- Convert wavenumber to wavelength
     
-Example code for obtaining propagation lenght and dispersion charactetristic: \n
+Example code for obtaining propagation lenght and dispersion charactetristic:
 import SpinWaveToolkit as SWT
 import numpy as np
-\~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n
-#Here is an example of code    \n
-import SpinWaveToolkit as SWT \n
-import numpy as np \n
-kxi = np.linspace(1e-12, 10e6, 150) \n
-NiFeChar = SWT.DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 10e-9, weff = 2e-6, nT = 1, boundaryCond = 2, Bext = 20e-3, material = SWT.NiFe) \n
-DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
-vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
-lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
-propLen = NiFeChar.GetPropLen()*1e6 #um \n
-\~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Here is an example of code
+import SpinWaveToolkit as SWT
+import numpy as np
+kxi = np.linspace(1e-12, 10e6, 150)
+NiFeChar = SWT.DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
+                                        n=0, d=10e-9, weff=2e-6, nT=1,
+                                        boundaryCond=2, Bext=20e-3,
+                                        material=SWT.NiFe)
+DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz
+vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s
+lifetimePy = NiFeChar.GetLifetime()*1e9 #ns
+propLen = NiFeChar.GetPropLen()*1e6 #um
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
 from scipy.optimize import fsolve, minimize
-from numpy import linalg as LA
+from numpy import linalg
 
 # from scipy.integrate import trapz
 
-mu0 = 4 * np.pi * 1e-7
-# Magnetic permeability
+mu0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
 
 class DispersionCharacteristic:
-    """Compute spin wave characteristic in dependance to k-vector (wavenumber) such as frequency, group velocity, lifetime and propagation length
-    #The model uses famous Slavin-Kalinikos equation from https://doi.org/10.1088%2F0022-3719%2F19%2F35%2F014
-    Keyword arguments: \n
-    kxi -- k-vector (wavenumber) in rad/m, usually vector (default linspace(1e-12, 25e6, 200)) \n
-    theta -- out of plane angle in rad, pi/2 is totally inplane magnetization (default pi/2) \n
-    phi -- in-plane angle in rad, pi/2 is DE geometry (default pi/2) \n
-    n -- the quantization number in z (out-of-plane) direction (default 0) \n
-    d -- thickness of layer in m (in z direction) \n
-    weff -- effective width of the waveguide in um (optional, default 3e-6 um) \n
-    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned \n
-    dp -- for 4 BC, pinning parameter ranges from 0 to inf. 0 means totally unpinned \n
+    """Compute spin wave characteristic in dependance to k-vector
+    (wavenumber) such as frequency, group velocity, lifetime and
+    propagation length.
+    The model uses famous Slavin-Kalinikos equation from
+    https://doi.org/10.1088/0022-3719/19/35/014
 
-    w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext \n
-    wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms \n
-    A -- parameter in Slavin-Kalinikos equation A = Aex*2/(Ms**2*mu0) \n
+    Keyword arguments:
+    kxi -- k-vector (wavenumber) in rad/m, usually vector (default linspace(1e-12, 25e6, 200))
+    theta -- out of plane angle in rad, pi/2 is totally inplane magnetization (default pi/2)
+    phi -- in-plane angle in rad, pi/2 is DE geometry (default pi/2)
+    n -- the quantization number in z (out-of-plane) direction (default 0)
+    d -- thickness of layer in m (in z direction)
+    weff -- effective width of the waveguide in um (optional, default 3e-6 um)
+    boundaryCond -- 1 is is totally unpinned and 2 is totally pinned boundary condition, 3 is a long wave limit, 4 is partially pinned
+    dp -- for 4 BC, pinning parameter ranges from 0 to inf. 0 means totally unpinned
 
-    Availible methods: \n
-    GetDisperison \n
-    GetLifetime \n
-    GetGroupVelocity \n
-    GetPropLen \n
-    GetPropagationVector \n
-    GetPropagationQVector \n
-    GetSecondPerturbation \n
-    GetDensityOfStates \n
-    Code example: \n
+    w0 -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Hext
+    wM -- parameter in Slavin-Kalinikos equation in rad*Hz/T w0 = mu0*gamma*Ms
+    A -- parameter in Slavin-Kalinikos equation A = Aex*2/(Ms**2*mu0)
+
+    Availible methods:
+    GetDisperison
+    GetLifetime
+    GetGroupVelocity
+    GetPropLen
+    GetPropagationVector
+    GetPropagationQVector
+    GetSecondPerturbation
+    GetDensityOfStates
+
+    Code example:
+    ```Python
     #Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150) \n
-     \n
-    NiFeChar = DispersionCharacteristic(kxi = kxi, theta = np.pi/2, phi = np.pi/2,n =  0, d = 30e-9, weff = 2e-6, nT = 0, boundaryCond = 2, Bext = 20e-3, material = NiFe) \n
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz \n
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s \n
-    lifetimePy = NiFeChar.GetLifetime()*1e9 #ns \n
-    propLen = NiFeChar.GetPropLen()*1e6 #um \n
+    kxi = np.linspace(1e-12, 150e6, 150)
+
+    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
+                                        n=0, d=30e-9, weff=2e-6, nT=0,
+                                        boundaryCond=2, Bext=20e-3,
+                                        material=SWT.NiFe)
+    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
+    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
+    propLen = NiFeChar.GetPropLen()*1e6  # um
+    ```
     """
 
     def __init__(
@@ -150,11 +163,11 @@ class DispersionCharacteristic:
         self.JbqDyn = JbqDyn
 
     def GetPropagationVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector \n
-        The boundary condition is chosen based on the object property \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives dimensionless propagation vector
+        The boundary condition is chosen based on the object property
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number
         """
         if nc == -1:
@@ -292,12 +305,12 @@ class DispersionCharacteristic:
         return Pnn
 
     def GetPropagationQVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector Q \n
-        This vector accounts for interaction between odd and even spin wave mode \n
-        The boundary condition is chosen based on the object property \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives dimensionless propagation vector Q
+        This vector accounts for interaction between odd and even spin wave mode
+        The boundary condition is chosen based on the object property
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number
         """
         if nc == -1:
@@ -418,9 +431,9 @@ class DispersionCharacteristic:
     #        Tnn = 1/self.d*trapz(y = Phin*Phinc, x = zeta)
     #        return Tnn
     def GetPartiallyPinnedKappa(self, n):
-        """Gives kappa from the transverse equation \n
-        Arguments: \n
-        n -- Quantization number \n
+        """Gives kappa from the transverse equation
+        Arguments:
+        n -- Quantization number
         """
 
         def transEq(kappa, d, dp):
@@ -439,11 +452,11 @@ class DispersionCharacteristic:
         return kappa
 
     def GetDispersion(self, n=0, nc=-1, nT=0):
-        """Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the rad Hz \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives frequencies for defined k (Dispersion relation)
+        The returned value is in the rad Hz
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number"""
         if nc == -1:
             nc = n
@@ -469,11 +482,11 @@ class DispersionCharacteristic:
         return f
 
     def GetDispersionTacchi(self):
-        """Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the rad Hz \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives frequencies for defined k (Dispersion relation)
+        The returned value is in the rad Hz
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number"""
         ks = np.sqrt(np.power(self.kxi, 2))
         phi = self.phi
@@ -532,7 +545,7 @@ class DispersionCharacteristic:
                 ],
                 dtype=float,
             )
-            w, v = LA.eig(Ck)
+            w, v = linalg.eig(Ck)
             wV[:, idx] = np.sort(w)
         return wV
 
@@ -561,11 +574,11 @@ class DispersionCharacteristic:
         return b
 
     def PnncTacchi(self, n, nc, kxi):
-        """Gives dimensionless propagation vector \n
-        The boundary condition is chosen based on the object property \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives dimensionless propagation vector
+        The boundary condition is chosen based on the object property
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number
         """
         kappa = n * np.pi / self.d
@@ -621,12 +634,12 @@ class DispersionCharacteristic:
         return Pnn
 
     def QnncTacchi(self, n, nc, kxi):
-        """Gives dimensionless propagation vector Q \n
-        This vector accounts for interaction between odd and even spin wave mode \n
-        The boundary condition is chosen based on the object property \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Gives dimensionless propagation vector Q
+        This vector accounts for interaction between odd and even spin wave mode
+        The boundary condition is chosen based on the object property
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number
         """
         # The totally pinned BC should be added
@@ -740,10 +753,10 @@ class DispersionCharacteristic:
         return Qnn
 
     def GetDispersionSAFM(self, n=0):
-        """Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the rad Hz \n
-        Seems that this model has huge aproximation and I recomend to not use it \n
-        Arguments: \n
+        """Gives frequencies for defined k (Dispersion relation)
+        The returned value is in the rad Hz
+        Seems that this model has huge aproximation and I recomend to not use it
+        Arguments:
         n -- number of mode - 0 - acoustic"""
         Zet = (
             np.sinh(self.kxi * self.d / 2)
@@ -774,9 +787,9 @@ class DispersionCharacteristic:
         return f
 
     def GetDispersionSAFMNumeric(self):
-        """Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the rad Hz \n
-        Arguments: \n
+        """Gives frequencies for defined k (Dispersion relation)
+        The returned value is in the rad Hz
+        Arguments:
         n -- number of mode - 0 - acoustic"""
 
         Ms1 = self.Ms
@@ -926,14 +939,14 @@ class DispersionCharacteristic:
                 ],
                 dtype=complex,
             )
-            w, v = LA.eig(A)
+            w, v = linalg.eig(A)
             wV[:, idx] = np.sort(np.imag(w) * self.gamma * mu0)
         return wV
 
     def GetDispersionSAFMNumericRezende(self):
-        """Gives frequencies for defined k (Dispersion relation) \n
-        The returned value is in the rad Hz \n
-        Arguments: \n
+        """Gives frequencies for defined k (Dispersion relation)
+        The returned value is in the rad Hz
+        Arguments:
         n -- number of mode - 0 - acoustic"""
 
         Ms1 = self.Ms
@@ -1087,7 +1100,7 @@ class DispersionCharacteristic:
                 ],
                 dtype=complex,
             )
-            w, v = LA.eig(A)
+            w, v = linalg.eig(A)
             wV[:, idx] = np.sort(np.sqrt(w * np.conj(w)) * self.gamma * mu0)
 
             # a=(G2*H4+G4*H2+G5*H5+G6*H6)/gamma1/gamma2-H1*H3/(gamma2**2)-G1*G3/(gamma1**2)
@@ -1237,11 +1250,11 @@ class DispersionCharacteristic:
         # bounds=((-np.pi, np.pi), (-np.pi, np.pi))
 
     #    def GetDispersionNumeric(self, n=0, nc=-1, nT=0):
-    #        """ Gives frequencies for defined k (Dispersion relation) \n
-    #        The returned value is in the rad Hz \n
-    #        Arguments: \n
-    #        n -- Quantization number \n
-    #        nc(optional) -- Second quantization number. Used for hybridization \n
+    #        """ Gives frequencies for defined k (Dispersion relation)
+    #        The returned value is in the rad Hz
+    #        Arguments:
+    #        n -- Quantization number
+    #        nc(optional) -- Second quantization number. Used for hybridization
     #        nT(optional) -- Waveguide (transversal) quantization number """
     #        if nc == -1:
     #            nc = n
@@ -1264,11 +1277,11 @@ class DispersionCharacteristic:
     #        f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
     #        return f
     def GetGroupVelocity(self, n=0, nc=-1, nT=0):
-        """Gives group velocities for defined k \n
+        """Gives group velocities for defined k
         The group velocity is computed as vg = dw/dk
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number
         """
         if nc == -1:
@@ -1278,11 +1291,11 @@ class DispersionCharacteristic:
         return vg
 
     def GetLifetime(self, n=0, nc=-1, nT=0):
-        """Gives lifetimes for defined k \n
+        """Gives lifetimes for defined k
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number"""
         if nc == -1:
             nc = n
@@ -1303,10 +1316,10 @@ class DispersionCharacteristic:
         return lifetime
 
     def GetLifetimeSAFM(self, n):
-        """Gives lifetimes for defined k \n
+        """Gives lifetimes for defined k
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1
-        Arguments: \n
-        n -- Quantization number \n
+        Arguments:
+        n -- Quantization number
         """
         BextOri = self.Bext
         self.Bext = BextOri - 0.001
@@ -1323,11 +1336,11 @@ class DispersionCharacteristic:
         return lifetime
 
     def GetPropLen(self, n=0, nc=-1, nT=0):
-        """Give propagation lengths for defined k \n
+        """Give propagation lengths for defined k
         propagation length is computed as lambda = vg*tau
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number"""
         if nc == -1:
             nc = n
@@ -1337,10 +1350,10 @@ class DispersionCharacteristic:
         return propLen
 
     def GetSecondPerturbation(self, n, nc):
-        """Give degenerate dispersion relation based on the secular equation 54 \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc -- Quantization number of crossing mode \n"""
+        """Give degenerate dispersion relation based on the secular equation 54
+        Arguments:
+        n -- Quantization number
+        nc -- Quantization number of crossing mode """
         if self.boundaryCond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
             kappac = self.GetPartiallyPinnedKappa(nc)
@@ -1448,11 +1461,11 @@ class DispersionCharacteristic:
         return (wdn, wdnc)
 
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
-        """Give density of states for \n
-        Density of states is computed as DoS = 1/vg \n
-        Arguments: \n
-        n -- Quantization number \n
-        nc(optional) -- Second quantization number. Used for hybridization \n
+        """Give density of states for
+        Density of states is computed as DoS = 1/vg
+        Arguments:
+        n -- Quantization number
+        nc(optional) -- Second quantization number. Used for hybridization
         nT(optional) -- Waveguide (transversal) quantization number"""
         if nc == -1:
             nc = n
@@ -1492,9 +1505,9 @@ class DispersionCharacteristic:
 def wavenumberToWavelength(wavenumber):
     """Convert wavelength to wavenumber
     lambda = 2*pi/k
-    Arguments: \n
+    Arguments:
     wavenumber -- wavenumber of the wave (rad/m)
-    Return: \n
+    Return:
     wavelength (m)"""
     return 2 * np.pi / np.array(wavenumber)
 
@@ -1502,9 +1515,9 @@ def wavenumberToWavelength(wavenumber):
 def wavelengthTowavenumber(wavelength):
     """Convert wavenumber to wavelength
     k = 2*pi/lambda
-    Arguments: \n
+    Arguments:
     wavelength -- wavelength of the wave (m)
-    Return: \n
+    Return:
     wavenumber (rad/m)"""
     return 2 * np.pi / np.array(wavelength)
 
@@ -1515,16 +1528,16 @@ def wrapAngle(angle):
 
 
 class Material:
-    """Class for magnetic materials used in spin wave resreach \n
-    To define custom material please type MyNewMaterial = Material(Ms = MyMS, Aex = MyAex, alpha = MyAlpha, gamma = MyGamma) \n
-    Keyword arguments: \n
-    Ms -- Saturation magnetization (A/m) \n
-    Aex -- Exchange constant (J/m) \n
-    alpha -- Gilbert damping ()\n
-    gamma -- Gyromagnetic ratio (rad*GHz/T) (default 28.1*pi) \n \n
-    Predefined materials are: \n
-    NiFe (Permalloy)\n
-    CoFeB\n
+    """Class for magnetic materials used in spin wave resreach
+    To define custom material please type MyNewMaterial = Material(Ms = MyMS, Aex = MyAex, alpha = MyAlpha, gamma = MyGamma)
+    Keyword arguments:
+    Ms -- Saturation magnetization (A/m)
+    Aex -- Exchange constant (J/m)
+    alpha -- Gilbert damping ()
+    gamma -- Gyromagnetic ratio (rad*GHz/T) (default 28.1*pi)
+    Predefined materials are:
+    NiFe (Permalloy)
+    CoFeB
     FeNi (Metastable iron)"""
 
     def __init__(self, Ms, Aex, alpha, mu0dH0=0, gamma=28.1 * 2 * np.pi * 1e9, Ku=0):
