@@ -91,7 +91,7 @@ disable=
     too-few-public-methods,          # it helps our materials
     too-many-locals,                 # complex dispersion computations
     too-many-arguments,              # complex dispersion computations
-    missing-docstring,               # replace with missing-module-docstring ?
+    # missing-docstring,               # replace with missing-module-docstring ?
     attribute-defined-outside-init,  # we may consider deleting this
 
 
@@ -440,7 +440,6 @@ max-bool-expr=5
 # ignore when counting public methods (see R0903).
 exclude-too-few-public-methods=
 
-max-complexity=10
 
 [CLASSES]
 
@@ -505,23 +504,6 @@ preferred-modules=
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception"
 overgeneral-exceptions=builtins.BaseException,builtins.Exception
-
-
-[TYPING]
-
-# Set to ``no`` if the app / library does **NOT** need to support runtime
-# introspection of type annotations. If you use type annotations
-# **exclusively** for type checking of an application, you're probably fine.
-# For libraries, evaluate if some users what to access the type hints at
-# runtime first, e.g., through ``typing.get_type_hints``. Applies to Python
-# versions 3.7 - 3.9
-runtime-typing = no
-
-
-[DEPRECATED_BUILTINS]
-
-# List of builtins function names that should not be used, separated by a comma
-bad-functions=map,input             # may change in the future
 
 
 [REFACTORING]

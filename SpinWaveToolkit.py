@@ -1,18 +1,25 @@
 """
-Created on Tue Aug 25
-This module provides analytical tools in Spin wave physics
+This module provides analytical tools in spin-wave physics.
 
 Classes
 -------
 DispersionCharacteristic
-    Compute spin wave characteristic in dependance to k-vector.
+    Compute spin-wave characteristic in dependance to k-vector.
 Material
     Class for magnetic materials used in spin wave research.
     
 Constants
 ---------
-MU0
+MU0 : float
     magnetic permeability
+NiFe : Material
+    predefined material NiFe (Permalloy)
+CoFeB : Material
+    predefined material CoFeB
+FeNi : Material
+    predefined material FeNi (Metastable iron)
+YIG : Material
+    predefined material YIG
     
 Functions
 ---------
@@ -59,49 +66,133 @@ class DispersionCharacteristic:
     The model uses famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
-    Attributes (same as initial arguments, plus these)
-    --------------------------------------------------
+    Most parameters can be specified as vectors (1d numpy arrays)
+    of the same shape. This functionality is not quaranteed.
+
+    Parameters
+    ----------
+    Bext : float
+        (T) external magnetic field
+    material : Material
+        instance of `Material` describing the magnetic layer material
+    d : float
+        (m) layer thickness (in z direction)
+    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+        (rad/m) k-vector (wavenumber), usually a vector
+    theta : float, default np.pi/2
+        (rad) out of plane angle, pi/2 is totally inplane
+        magnetization
+    phi : float or ndarray, default np.pi/2
+        (rad) in-plane angle, pi/2 is DE geometry
+    weff : float, optional
+        (m) effective width of the waveguide (not used for zeroth
+        order width modes)
+    boundary_cond : {1, 2, 3, 4}, default 1
+        boundary conditions (BCs), 1 is totally unpinned and 2 is
+        totally pinned BC, 3 is a long wave limit, 4 is partially
+        pinned BC
+    dp : float, optional
+        pinning parameter for 4 BC, ranges from 0 to inf,
+        0 means totally unpinned
+    Ku : float, optional
+        (J/m^3) uniaxial anisotropy strength
+    Ku2 : float, optional
+        (J/m^3) uniaxial anisotropy strength of the second layer
+    Jbl : float, optional
+        (J/m^2) bilinear RKKY coupling parameter
+    Jbq : float, optional
+        (J/m^2) biquadratic RKKY coupling parameter
+    s : float, optional
+        (m) spacing layer thickness
+    d2 : float, optional
+        (m) thickness of the second magnetic layer
+    material2 : Material or None
+        instance of `Material` describing the second magnetic
+        layer, if None, `material` parameter is used instead
+    JblDyn : float or None
+        (J/m^2) dynamic bilinear RKKY coupling parameter,
+        if None, same as `Jbl`
+    JbqDyn : float or None
+        (J/m^2) dynamic biquadratic RKKY coupling parameter,
+        if None, same as `Jbq`
+    phiAnis1, phiAnis2 : float, default np.pi/2
+        (rad) uniaxial anisotropy axis in-plane angle for
+        both magnetic layers (angle from Beff?)
+    phiInit1, phiInit2 : float, default np.pi/2
+        (rad) initial value of magnetization in-plane angle of the
+        first layer, used for energy minimization
+    phiInit2 : float, default -np.pi/2
+        (rad) initial value of magnetization in-plane angle of the
+        second layer, used for energy minimization
+
+    Attributes (same as Parameters, plus these)
+    -------------------------------------------
     alpha : float
         () Gilbert damping
+    gamma : float
+        (rad*Hz/T) gyromagnetic ratio (positive convention)
+    mu0dH0 : float
+        (T) inhomogeneous broadening
     w0 : float
-        (rad*Hz/T) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Slavin-Kalinikos equation,
         w0 = MU0*gamma*Hext
     wM : float
-        (rad*Hz/T) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Slavin-Kalinikos equation,
         w0 = MU0*gamma*Ms
-    A : float
+    A, A2 : float
         (m^2) parameter in Slavin-Kalinikos equation,
         A = Aex*2/(Ms**2*MU0)
-    Hani : float
+    wU : float
+        (rad*Hz) circular frequency of surface anisotropy field,
+        used in the Tacchi model
+    Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,
         Hani = 2*Ku/material.Ms/MU0
+    Ms, Ms2 : float
+        (A/m) saturation magnetization
 
     Methods
     -------
     # sort these and check completeness, make some maybe private
+    GetPartiallyPinnedKappa
     GetDisperison
-    GetLifetime
-    GetGroupVelocity
-    GetPropLen
-    GetPropagationVector
-    GetPropagationQVector
-    GetSecondPerturbation
-    GetDensityOfStates
+    GetDisperisonTacchi
     GetDispersionSAFM
     GetDispersionSAFMNumeric
     GetDispersionSAFMNumericRezende
-    GetDispersionTacchi
-    GetEllipticity
-    GetExchangeLen
+    GetPhisSAFM
     GetFreeEnergySAFM
     GetFreeEnergySAFMOOP
+    GetGroupVelocity
+    GetLifetime
     GetLifetimeSAFM
+    GetPropLen
+    GetSecondPerturbation
+    GetDensityOfStates
+    GetExchangeLen
+    GetEllipticity
+    GetCouplingParam
     GetThresholdField
+
+    Proposed private methods (requires approval to make them private)
+    -----------------------------------------------------------------
+    GetPropagationVector
+    GetPropagationQVector
+    CnncTacchi
+    pnncTacchi
+    qnncTacchi
+    OmegankTacchi
+    ankTacchi
+    bTacchi
+    PnncTacchi
+    QnncTacchi
+    GetAk
+    GetBk
 
     Code example
     ------------
     ``
-    #Here is an example of code
+    # Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150)
 
     NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
@@ -140,67 +231,6 @@ class DispersionCharacteristic:
         phiInit1=np.pi / 2,
         phiInit2=-np.pi / 2,
     ):
-        """
-        Most parameters can be specified as vectors (1d numpy arrays)
-        of the same shape. This functionality is not quaranteed.
-
-        Keyword arguments
-        -----------------
-        Bext : float
-            (T) external magnetic field
-        material : Material
-            instance of `Material` describing the magnetic layer
-            material
-        d : float
-            (m) layer thickness (in z direction)
-        kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
-            (rad/m) k-vector (wavenumber), usually a vector
-        theta : float, default np.pi/2
-            (rad) out of plane angle, pi/2 is totally inplane
-            magnetization
-        phi : float or ndarray, default np.pi/2
-            (rad) in-plane angle, pi/2 is DE geometry
-        weff : float, optional
-            (m) effective width of the waveguide (not used for zeroth
-            order width modes)
-        boundary_cond : {1, 2, 3, 4}, default 1
-            boundary conditions (BCs), 1 is totally unpinned and 2 is
-            totally pinned BC, 3 is a long wave limit, 4 is partially
-            pinned BC
-        dp : float, optional
-            pinning parameter for 4 BC, ranges from 0 to inf,
-            0 means totally unpinned
-        Ku : float, optional
-            (J/m^3) uniaxial anisotropy strength
-        Ku2 : float, optional
-            (J/m^3) uniaxial anisotropy strength of the second layer
-        Jbl : float, optional
-            (J/m^2) bilinear RKKY coupling parameter
-        Jbq : float, optional
-            (J/m^2) biquadratic RKKY coupling parameter
-        s : float, optional
-            (m) spacing layer thickness
-        d2 : float, optional
-            (m) thickness of the second magnetic layer
-        material2 : Material or None
-            instance of `Material` describing the second magnetic
-            layer, if None, `material` parameter is used instead
-        JblDyn : float or None
-            (J/m^2) dynamic bilinear RKKY coupling parameter,
-            if None, same as `Jbl`
-        JbqDyn : float or None
-            (J/m^2) dynamic biquadratic RKKY coupling parameter,
-            if None, same as `Jbq`
-        phiAnis1, phiAnis2 : float, default np.pi/2
-            (rad) uniaxial anisotropy axis in-plane angle for
-            both magnetic layers (angle from Beff?)
-        phiInit1, phiInit2 : float, default np.pi/2
-            (rad) initial value of magnetization in-plane angle of the
-            first layer, used for energy minimization
-        phiInit2 : float, default -np.pi/2
-            (rad) initial value of magnetization in-plane angle of the
-            second layer, used for energy minimization
-        """
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -263,8 +293,8 @@ class DispersionCharacteristic:
         """Gives dimensionless propagation vector.
         The boundary condition is chosen based on the object property.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -402,7 +432,7 @@ class DispersionCharacteristic:
             else:
                 Pnn = Pnnc
         else:
-            raise Exception("Sorry, there is no boundary condition with this number.")
+            raise ValueError("Sorry, there is no boundary condition with this number.")
 
         return Pnn
 
@@ -411,8 +441,8 @@ class DispersionCharacteristic:
         accounts for interaction between odd and even spin wave modes.
         The boundary condition is chosen based on the object property.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -527,7 +557,7 @@ class DispersionCharacteristic:
                 )
             )
         else:
-            raise Exception("Sorry, there is no boundary condition with this number.")
+            raise ValueError("Sorry, there is no boundary condition with this number.")
         return Qnn
 
     #    def GetTVector(self, n, nc, kappan, kappanc):
@@ -540,8 +570,8 @@ class DispersionCharacteristic:
     def GetPartiallyPinnedKappa(self, n):
         """Gives kappa from the transverse equation.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         """
@@ -565,8 +595,8 @@ class DispersionCharacteristic:
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in the rad*Hz.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -665,7 +695,7 @@ class DispersionCharacteristic:
                 ],
                 dtype=float,
             )
-            w, v = linalg.eig(Ck)
+            w, _ = linalg.eig(Ck)
             wV[:, idx] = np.sort(w)
         return wV
 
@@ -691,8 +721,8 @@ class DispersionCharacteristic:
         """Gives dimensionless propagation vector.
         The boundary condition is chosen based on the object property.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int
@@ -746,8 +776,9 @@ class DispersionCharacteristic:
                     * (1 - (-1) ** n * np.exp(-kxi * self.d))
                 )
         else:
-            raise Exception(
-                "Sorry, there is no boundary condition with this number for Tacchi numeric solution."
+            raise ValueError(
+                "Sorry, there is no boundary condition with this number for"
+                + "the Tacchi numeric solution."
             )
 
         return Pnn
@@ -757,8 +788,8 @@ class DispersionCharacteristic:
         This vector accounts for interaction between odd and even
         spin wave modes.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -870,8 +901,9 @@ class DispersionCharacteristic:
                 )
             )
         else:
-            raise Exception(
-                "Sorry, there is no boundary condition with this number for Tacchi numeric solution."
+            raise ValueError(
+                "Sorry, there is no boundary condition with this number for "
+                + "the Tacchi numeric solution."
             )
         return Qnn
 
@@ -881,8 +913,8 @@ class DispersionCharacteristic:
         Seems that this model has huge approximation and I recomend
         to not use it.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : {0, 1}
             mode number, 0 - acoustic, 1 - optic"""
         Zet = (
@@ -912,12 +944,13 @@ class DispersionCharacteristic:
         elif n == 1:
             f = self.gamma * (-g + np.sqrt((q + g) * (p + g - 2 * Cj)))
         else:
-            raise Exception(f"Invalid mode with n = {n}.")
+            raise ValueError(f"Invalid mode with n = {n}.")
         return f
 
     def GetDispersionSAFMNumeric(self):
         """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz."""
+        The returned value is in the rad*Hz.
+        """
         Ms1 = self.Ms
         Ms2 = self.Ms2
         A1 = self.A
@@ -1065,7 +1098,7 @@ class DispersionCharacteristic:
                 ],
                 dtype=complex,
             )
-            w, v = linalg.eig(A)
+            w, _ = linalg.eig(A)
             wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)
         return wV
 
@@ -1224,7 +1257,7 @@ class DispersionCharacteristic:
                 ],
                 dtype=complex,
             )
-            w, v = linalg.eig(A)
+            w, _ = linalg.eig(A)
             wV[:, idx] = np.sort(np.sqrt(w * np.conj(w)) * self.gamma * MU0)
 
             # a=(G2*H4+G4*H2+G5*H5+G6*H6)/gamma1/gamma2-H1*H3/(gamma2**2)-G1*G3/(gamma1**2)
@@ -1404,8 +1437,8 @@ class DispersionCharacteristic:
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -1423,8 +1456,8 @@ class DispersionCharacteristic:
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -1454,8 +1487,8 @@ class DispersionCharacteristic:
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         """
@@ -1477,8 +1510,8 @@ class DispersionCharacteristic:
         """Give propagation lengths for defined k.
         Propagation length is computed as lambda = v_g*tau.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -1497,8 +1530,8 @@ class DispersionCharacteristic:
         """Give degenerate dispersion relation based on the secular
         equation (54).
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int
@@ -1605,7 +1638,7 @@ class DispersionCharacteristic:
                 )
             )
         else:
-            raise Exception(
+            raise ValueError(
                 "Sorry, for degenerate perturbation you have"
                 + " to choose theta = pi/2 or 0."
             )
@@ -1615,8 +1648,8 @@ class DispersionCharacteristic:
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int
             quantization number
         nc : int, optional
@@ -1632,7 +1665,7 @@ class DispersionCharacteristic:
     def GetExchangeLen(self):
         return np.sqrt(self.A)
 
-    def GetAk(self):
+    def __GetAk(self):
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
         return (
             self.w0
@@ -1645,7 +1678,7 @@ class DispersionCharacteristic:
         return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
 
     def GetEllipticity(self):
-        return 2 * abs(self.GetBk()) / (self.GetAk() + abs(self.GetBk()))
+        return 2 * abs(self.GetBk()) / (self.__GetAk() + abs(self.GetBk()))
 
     def GetCouplingParam(self):
         return self.gamma * self.GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
@@ -1662,8 +1695,8 @@ def wavenumber2wavelength(wavenumber):
     """Convert wavelength to wavenumber.
     lambda = 2*pi/k
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wavenumber : float or array_like
         (rad/m) wavenumber of the wave
 
@@ -1679,8 +1712,8 @@ def wavelength2wavenumber(wavelength):
     """Convert wavenumber to wavelength.
     k = 2*pi/lambda
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wavelength : float or ndarray
         (m) wavelength of the wave
 
@@ -1693,40 +1726,56 @@ def wavelength2wavenumber(wavelength):
 
 
 def wrapAngle(angle):
+    """Wrap angle in radians to range [0, 2*np.pi).
+
+    Parameters
+    ----------
+    angle : float or array_like
+        (rad) angle to wrap
+
+    Returns
+    -------
+    wrapped_angle : float or ndarray
+        (rad) angle wrapped to [0, 2*np.pi)
+    """
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
 
 
 class Material:
+    """Class for magnetic materials used in spin wave research.
+    To define a custom material, type
+    ```
+    MyNewMaterial = Material(Ms=MyMS, Aex=MyAex, alpha=MyAlpha, gamma=MyGamma)
+    ```
+
+    Parameters
+    ----------
+    Ms : float
+        (A/m) saturation magnetization
+    Aex : float
+        (J/m) exchange constant
+    alpha : float
+        () Gilbert damping
+    gamma : float, default 28.1e9*2*np.pi
+        (rad*Hz/T) gyromagnetic ratio
+    mu0dH0 : float
+        (T) inhomogeneous broadening
+    Ku : float
+        (J/m^3) surface anisotropy strength
+
+    Attributes
+    ----------
+    same as Parameters
+
+    Predefined materials (as module constants)
+    ------------------------------------------
+    NiFe (Permalloy)
+    CoFeB
+    FeNi (Metastable iron)
+    YIG
+    """
     def __init__(self, Ms, Aex, alpha, mu0dH0=0, gamma=28.1 * 2 * np.pi * 1e9, Ku=0):
-        """Class for magnetic materials used in spin wave research.
-        To define a custom material, type
-        ```
-        MyNewMaterial = Material(Ms=MyMS, Aex=MyAex, alpha=MyAlpha, gamma=MyGamma)
-        ```
-
-        Keyword arguments
-        -----------------
-        Ms : float
-            (A/m) saturation magnetization
-        Aex : float
-            (J/m) exchange constant
-        alpha : float
-            () Gilbert damping
-        gamma : float, default 28.1e9*2*np.pi
-            (rad*Hz/T) gyromagnetic ratio
-        mu0dH0 : float
-            (T) inhomogeneous broadening
-        Ku : float
-            (J/m^3) surface anisotropy strength
-
-        Predefined materials (as module constants)
-        ------------------------------------------
-        NiFe (Permalloy)
-        CoFeB
-        FeNi (Metastable iron)
-        YIG
-        """
         self.Ms = Ms
         self.Aex = Aex
         self.alpha = alpha
