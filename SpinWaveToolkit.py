@@ -50,6 +50,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
 ``
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
+
 import numpy as np
 from scipy.optimize import fsolve, minimize
 from numpy import linalg
@@ -1775,6 +1776,7 @@ class Material:
     FeNi (Metastable iron)
     YIG
     """
+
     def __init__(self, Ms, Aex, alpha, mu0dH0=0, gamma=28.1 * 2 * np.pi * 1e9, Ku=0):
         self.Ms = Ms
         self.Aex = Aex
