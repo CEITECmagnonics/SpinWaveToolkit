@@ -86,17 +86,13 @@ enable=
 # --disable=W"
 
 disable=
-    attribute-defined-outside-init,
-    invalid-name,
-    missing-docstring,
-    protected-access,
-    too-few-public-methods,
-    # handled by black
-    format,
-    # We anticipate #3512 where it will become optional
-    fixme,
-    cyclic-import,
-    import-error,
+    format,                          # handled by black
+    invalid-name,                    # scientific software can't work without it
+    too-few-public-methods,          # it helps our materials
+    too-many-locals,                 # complex dispersion computations
+    too-many-arguments,              # complex dispersion computations
+    missing-docstring,               # replace with missing-module-docstring ?
+    attribute-defined-outside-init,  # we may consider deleting this
 
 
 [REPORTS]
@@ -109,8 +105,8 @@ output-format=text
 # Tells whether to display a full report or only the messages
 reports=no
 
-# Python expression which should return a note less than 10 (10 is the highest
-# note). You have access to the variables 'fatal', 'error', 'warning', 'refactor', 'convention'
+# Python expression which should return a score less than or equal to 10. You
+# have access to the variables 'fatal', 'error', 'warning', 'refactor', 'convention'
 # and 'info', which contain the number of messages in each category, as
 # well as 'statement', which is the total number of statements analyzed. This
 # score is used by the global evaluation report (RP0004).
@@ -197,7 +193,7 @@ redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=90
+max-line-length=100
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -431,8 +427,8 @@ ignored-parents=
 # Maximum number of attributes for a class (see R0902).
 max-attributes=11
 
-# Minimum number of public methods for a class (see R0903). Default 2.
-min-public-methods=0
+# Minimum number of public methods for a class (see R0903).
+min-public-methods=2
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=25
@@ -508,7 +504,7 @@ preferred-modules=
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception"
-overgeneral-exceptions=builtins.Exception
+overgeneral-exceptions=builtins.BaseException,builtins.Exception
 
 
 [TYPING]
@@ -525,7 +521,7 @@ runtime-typing = no
 [DEPRECATED_BUILTINS]
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,input
+bad-functions=map,input             # may change in the future
 
 
 [REFACTORING]

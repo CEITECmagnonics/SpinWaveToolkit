@@ -1,21 +1,30 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Aug 25
 This module provides analytical tools in Spin wave physics
-Available classes are:
-    DispersionCharacteristic -- Compute spin wave characteristic in
-        dependance to k-vector
-    Material -- Class for magnetic materials used in spin wave resreach
+
+Classes
+-------
+DispersionCharacteristic
+    Compute spin wave characteristic in dependance to k-vector.
+Material
+    Class for magnetic materials used in spin wave research.
     
-Available constants:
-    MU0 -- Magnetic permeability
+Constants
+---------
+MU0
+    magnetic permeability
     
-Available functions:
-    wavenumberToWavelength -- Convert wavelength to wavenumber
-    wavelengthTowavenumber -- Convert wavenumber to wavelength
-    
-Example code for obtaining propagation lenght and dispersion charactetristic:
-```Python
+Functions
+---------
+wavenumber2wavelength(wavenumber)
+    Convert wavenumber to wavelength.
+wavelength2wavenumber(wavelength)
+    Convert wavelength to wavenumber.
+
+Example
+-------
+Example code for obtaining propagation length and dispersion charactetristic:
+``
 import SpinWaveToolkit as SWT
 import numpy as np
 
@@ -31,7 +40,7 @@ DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi) #GHz
 vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns
 propLen = NiFeChar.GetPropLen()*1e6 #um
-```
+``
 @author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
 """
 import numpy as np
@@ -91,7 +100,7 @@ class DispersionCharacteristic:
 
     Code example
     ------------
-    ```Python
+    ``
     #Here is an example of code
     kxi = np.linspace(1e-12, 150e6, 150)
 
@@ -103,7 +112,7 @@ class DispersionCharacteristic:
     vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
     lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
     propLen = NiFeChar.GetPropLen()*1e6  # um
-    ```
+    ``
     """
 
     def __init__(
@@ -140,7 +149,8 @@ class DispersionCharacteristic:
         Bext : float
             (T) external magnetic field
         material : Material
-            instance of Material describing the magnetic layer material
+            instance of `Material` describing the magnetic layer
+            material
         d : float
             (m) layer thickness (in z direction)
         kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
@@ -160,7 +170,6 @@ class DispersionCharacteristic:
         dp : float, optional
             pinning parameter for 4 BC, ranges from 0 to inf,
             0 means totally unpinned
-
         Ku : float, optional
             (J/m^3) uniaxial anisotropy strength
         Ku2 : float, optional
@@ -174,8 +183,8 @@ class DispersionCharacteristic:
         d2 : float, optional
             (m) thickness of the second magnetic layer
         material2 : Material or None
-            instance of Material describing the second magnetic layer,
-            if None, `material` parameter is used instead
+            instance of `Material` describing the second magnetic
+            layer, if None, `material` parameter is used instead
         JblDyn : float or None
             (J/m^2) dynamic bilinear RKKY coupling parameter,
             if None, same as `Jbl`
