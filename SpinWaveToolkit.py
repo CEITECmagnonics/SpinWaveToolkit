@@ -48,7 +48,11 @@ vgPy = NiFeChar.GetGroupVelocity()*1e-3 # km/s
 lifetimePy = NiFeChar.GetLifetime()*1e9 #ns
 propLen = NiFeChar.GetPropLen()*1e6 #um
 ``
-@author: Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
+@authors: 
+    Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
+    Jan Klima, jan.klima4@vutbr.cz
+    Dominik Pavelka, dominik.pavelka@vutbr.cz
+    Michal Urbanek,  michal.urbanek@ceitec.vutbr.cz
 """
 
 import numpy as np
