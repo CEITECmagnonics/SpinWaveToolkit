@@ -103,6 +103,8 @@ class DispersionCharacteristic:
         (J/m^3) uniaxial anisotropy strength
     Ku2 : float, optional
         (J/m^3) uniaxial anisotropy strength of the second layer
+    KuOOP : float, optional
+        (J/m^3) OOP anisotropy strength used in Tacchi model
     Jbl : float, optional
         (J/m^2) bilinear RKKY coupling parameter
     Jbq : float, optional
@@ -224,6 +226,7 @@ class DispersionCharacteristic:
         dp=0,
         Ku=0,
         Ku2=0,
+        KuOOP=0,
         Jbl=0,
         Jbq=0,
         s=0,
@@ -247,7 +250,7 @@ class DispersionCharacteristic:
         # Compute Slavin-Kalinikos parameters wM, w0, A
         self.wM = material.Ms * material.gamma * MU0
         self.w0 = material.gamma * Bext
-        self.wU = material.gamma * 2 * Ku / material.Ms
+        self.wU = material.gamma * 2 * KuOOP / material.Ms #Only for Tacchi
         self.A = material.Aex * 2 / (material.Ms**2 * MU0)
         self._Bext = Bext
         self.dp = dp
