@@ -57,7 +57,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
 
 import numpy as np
 from scipy.optimize import fsolve, minimize
-from numpy import linalg
+from numpy import linalg as LA
 
 # from scipy.integrate import trapz
 
@@ -638,18 +638,20 @@ class DispersionCharacteristic:
 
     def GetDispersionTacchi(self):
         """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz.
-
-        ### Update the description! I don't understand anything.
-        Are quantization numbers fixed? Why? Can this be generalized? ###
-
-        Arguments:
-        n -- Quantization number
-        nc(optional) -- Second quantization number. Used for hybridization
-        nT(optional) -- Waveguide (transversal) quantization number"""
+        The  model formulate system matrix and then numerically solve its 
+        eigenvalues and eigenvectors.
+        The eigenvalues represent the dispersion relation (as the matrix is
+        6x6 it has 6 eigenvalues.) The eigen values represent 3 lowest spin
+        -wave modes (3 with negative and positive frequency).
+        The eigenvector represent the amplitude of the individual spin-wave
+        modes and can be used to calculate spin-wave profile (see example 
+        NumericCalculationofDispersionModeProfiles.py)
+        The returned value of eigenvalue is in the rad*Hz.
+        """
         ks = np.sqrt(np.power(self.kxi, 2))
         phi = self.phi
         wV = np.zeros((6, np.size(ks, 0)))
+        vV = np.zeros((6,6, np.size(ks,0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
                 [
@@ -704,10 +706,13 @@ class DispersionCharacteristic:
                 ],
                 dtype=float,
             )
-            w, _ = linalg.eig(Ck)
-            wV[:, idx] = np.sort(w)
-        return wV
+            w, v = LA.eig(Ck)
+            indi = np.argsort(w)
+            wV[:, idx] = w[indi] # These are eigenvalues (dispersion)
+            vV[:,:, idx] = v[:,indi] #These are eigenvectors (mode profiles)
+        return wV, vV
 
+        
     def CnncTacchi(self, n, nc, k, phi):
         return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.PnncTacchi(n, nc, k)
 
