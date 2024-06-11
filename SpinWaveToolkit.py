@@ -462,7 +462,7 @@ class DispersionCharacteristic:
             kappac = 1
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-        # Totally unpinned boundary condition
+        # Totally unpinned boundary conditions
         if self.boundary_cond == 1:
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             Qnn = (
@@ -474,6 +474,7 @@ class DispersionCharacteristic:
                 )
                 * ((1 - (-1) ** (n + nc)) / 2)
             )
+        # Partially pinned boundary conditions
         elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -962,7 +963,7 @@ class DispersionCharacteristic:
         d2 = self.d2
         phiAnis1 = self.phiAnis1
         phiAnis2 = self.phiAnis2
-
+        # Surface anisotropies are currently not implemented
         Hs1 = 0  # Surface anisotropy of the first layer
         Hs2 = 0  # Surface anisotropy of the second layer
 
@@ -1106,6 +1107,8 @@ class DispersionCharacteristic:
     def GetDispersionSAFMNumericRezende(self):
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in rad*Hz.
+        This model does not give results which are in agreement with experiment
+        and thus we do not recomend to use it
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -1268,6 +1271,12 @@ class DispersionCharacteristic:
         return wV
 
     def GetPhisSAFM(self):
+        """Gives angles of magnetization in both SAF layers.
+        The returned value is in rad.
+        Function finds the energy minimum
+        If there are problems with energy minimalization I recomend to 
+        try different methods (but Nelder-Mead seems to work in most scenarios)
+        """
         # phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
         # phi2x0 = wrapAngle(self.phiAnis2 + 0.1)
         phi1x0 = wrapAngle(self.phiInit1)
@@ -1283,6 +1292,13 @@ class DispersionCharacteristic:
         return phis
 
     def GetFreeEnergySAFM(self, phis):
+        """Gives overall energy of SAF system
+        The returned value is in Joule.
+        This function is used during fidning of the angles of magnetization
+        Only works, when the out-of-plane tilt is not expected
+        Function does not minimize the OOP angles, just assumes completelly
+        in-plane magnetization
+        """
         phiAnis1 = self.phiAnis1  # EA along x direction
         phiAnis2 = self.phiAnis2  # EA along x direction
         theta1 = np.pi / 2  # No OOP magnetization
@@ -1347,6 +1363,11 @@ class DispersionCharacteristic:
         return E
 
     def GetFreeEnergySAFMOOP(self, thetas):
+        """Gives overall energy of SAF system
+        The returned value is in Joule.
+        This function is used during fidning of the angles of magnetization
+        This function assumes fixed in-plane angle of the magnetization 
+        """
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
         phi2 = -np.pi / 2
@@ -1405,38 +1426,10 @@ class DispersionCharacteristic:
         )
         return E
 
-        # bounds=((-np.pi, np.pi), (-np.pi, np.pi))
-
-    #    def GetDispersionNumeric(self, n=0, nc=-1, nT=0):
-    #        """ Gives frequencies for defined k (Dispersion relation)
-    #        The returned value is in the rad Hz
-    #        Arguments:
-    #        n -- Quantization number
-    #        nc(optional) -- Second quantization number. Used for hybridization
-    #        nT(optional) -- Waveguide (transversal) quantization number """
-    #        if nc == -1:
-    #            nc = n
-    #        if self.boundary_cond == 4:
-    #            kappa = self.GetPartiallyPinnedKappa(n)
-    #        else:
-    #            kappa = n*np.pi/self.d
-    #        kxi = np.sqrt(self.kxi**2 + (nT*np.pi/self.weff)**2)
-    #        k = np.sqrt(np.power(kxi,2) + kappa**2)
-    #        phi = np.arctan((nT*np.pi/self.weff)/self.kxi) - self.phi
-    #        Pnn = self.GetPropagationVector(n = n, nc = nc, nT = nT)
-    #
-    #        A = np.cos(self.phi)**2 - np.sin(self.theta)**2*(1 - np.cos(self.phi)**2)
-    #        B = -2*np.cos(self.phi)*np.sin(2*self.theta)
-    #        C = np.cos(self.theta)*np.sin(self.phi)*np.cos(self.phi)
-    #        D = -2*np.sin(self.theta)*np.sin(self.phi)
-    #        E = np.sin(self.phi)**2
-    #
-    #        Fnn = Pnn + np.power(np.sin(self.theta),2)*(1-Pnn*(1+np.power(np.cos(phi),2)) + self.wM*(Pnn*(1 - Pnn)*np.power(np.sin(phi),2))/(self.w0 + self.A*self.wM*np.power(k,2)))
-    #        f = np.sqrt((self.w0 + self.A*self.wM*np.power(k,2))*(self.w0 + self.A*self.wM*np.power(k,2) + self.wM*Fnn))
-    #        return f
     def GetGroupVelocity(self, n=0, nc=-1, nT=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
+        The result is given in m/s
 
         Parameters
         ----------
@@ -1456,7 +1449,7 @@ class DispersionCharacteristic:
     def GetLifetime(self, n=0, nc=-1, nT=0):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-
+        The output is in s
         Parameters
         ----------
         n : int
@@ -1487,7 +1480,7 @@ class DispersionCharacteristic:
     def GetLifetimeSAFM(self, n):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-
+        Output is given in s
         Parameters
         ----------
         n : int
@@ -1510,7 +1503,8 @@ class DispersionCharacteristic:
     def GetPropLen(self, n=0, nc=-1, nT=0):
         """Give propagation lengths for defined k.
         Propagation length is computed as lambda = v_g*tau.
-
+        Output is given in m
+        
         Parameters
         ----------
         n : int
@@ -1530,6 +1524,8 @@ class DispersionCharacteristic:
     def GetSecondPerturbation(self, n, nc):
         """Give degenerate dispersion relation based on the secular
         equation (54).
+        Output is dispersion relation in the vicinity of the crossing of
+        the two different modes
 
         Parameters
         ----------
@@ -1648,6 +1644,7 @@ class DispersionCharacteristic:
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
+        Out is density of states in 1D for given dispersion characteristics
 
         Parameters
         ----------
