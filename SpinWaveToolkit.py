@@ -57,7 +57,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
 
 import numpy as np
 from scipy.optimize import fsolve, minimize
-from numpy import linalg as LA
+from numpy import linalg
 
 # from scipy.integrate import trapz
 
@@ -104,7 +104,7 @@ class DispersionCharacteristic:
     Ku2 : float, optional
         (J/m^3) uniaxial anisotropy strength of the second layer
     KuOOP : float, optional
-        (J/m^3) OOP anisotropy strength used in Tacchi model
+        (J/m^3) OOP anisotropy strength used in the Tacchi model
     Jbl : float, optional
         (J/m^2) bilinear RKKY coupling parameter
     Jbq : float, optional
@@ -181,20 +181,20 @@ class DispersionCharacteristic:
     GetCouplingParam
     GetThresholdField
 
-    Proposed private methods (requires approval to make them private)
-    -----------------------------------------------------------------
-    GetPropagationVector
-    GetPropagationQVector
-    CnncTacchi
-    pnncTacchi
-    qnncTacchi
-    OmegankTacchi
-    ankTacchi
-    bTacchi
-    PnncTacchi
-    QnncTacchi
-    GetAk
-    GetBk
+    Private methods
+    ---------------
+    __GetPropagationVector
+    __GetPropagationQVector
+    __CnncTacchi
+    __pnncTacchi
+    __qnncTacchi
+    __OmegankTacchi
+    __ankTacchi
+    __bTacchi
+    __PnncTacchi
+    __QnncTacchi
+    __GetAk
+    __GetBk
 
     Code example
     ------------
@@ -250,7 +250,7 @@ class DispersionCharacteristic:
         # Compute Slavin-Kalinikos parameters wM, w0, A
         self.wM = material.Ms * material.gamma * MU0
         self.w0 = material.gamma * Bext
-        self.wU = material.gamma * 2 * KuOOP / material.Ms #Only for Tacchi
+        self.wU = material.gamma * 2 * KuOOP / material.Ms  # only for Tacchi
         self.A = material.Aex * 2 / (material.Ms**2 * MU0)
         self._Bext = Bext
         self.dp = dp
@@ -297,7 +297,7 @@ class DispersionCharacteristic:
         self._Bext = val
         self.w0 = self.gamma * val
 
-    def GetPropagationVector(self, n=0, nc=-1, nT=0):
+    def __GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
         The boundary condition is chosen based on the object property.
 
@@ -444,7 +444,7 @@ class DispersionCharacteristic:
 
         return Pnn
 
-    def GetPropagationQVector(self, n=0, nc=-1, nT=0):
+    def __GetPropagationQVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector Q.  This vector
         accounts for interaction between odd and even spin wave modes.
         The boundary condition is chosen based on the object property.
@@ -622,7 +622,7 @@ class DispersionCharacteristic:
         kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
-        Pnn = self.GetPropagationVector(n=n, nc=nc, nT=nT)
+        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
         Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
             1
             - Pnn * (1 + np.power(np.cos(phi), 2))
@@ -638,100 +638,109 @@ class DispersionCharacteristic:
 
     def GetDispersionTacchi(self):
         """Gives frequencies for defined k (Dispersion relation).
-        The  model formulate system matrix and then numerically solve its 
-        eigenvalues and eigenvectors.
-        The eigenvalues represent the dispersion relation (as the matrix is
-        6x6 it has 6 eigenvalues.) The eigen values represent 3 lowest spin
-        -wave modes (3 with negative and positive frequency).
-        The eigenvector represent the amplitude of the individual spin-wave
-        modes and can be used to calculate spin-wave profile (see example 
+        Based on the model in:
+        https://doi.org/10.1103/PhysRevB.100.104406
+
+        The model formulates a system matrix and then numerically solves
+        its eigenvalues and eigenvectors. The eigenvalues represent the
+        dispersion relation (as the matrix is 6x6 it has 6 eigenvalues).
+        The eigen values represent 3 lowest spin-wave modes
+        (3 with negative and positive frequency).  The eigenvectors
+        represent the amplitude of the individual spin-wave modes and
+        can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py)
+
         The returned value of eigenvalue is in the rad*Hz.
         """
-        ks = np.sqrt(np.power(self.kxi, 2))
+        ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
         wV = np.zeros((6, np.size(ks, 0)))
-        vV = np.zeros((6,6, np.size(ks,0)))
+        vV = np.zeros((6, 6, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
                 [
                     [
-                        -(self.ankTacchi(0, k) + self.CnncTacchi(0, 0, k, phi)),
-                        -(self.bTacchi() + self.pnncTacchi(0, 0, k, phi)),
+                        -(self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k,
+                                                                     phi)),
+                        -(self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
                         0,
-                        -self.qnncTacchi(1, 0, k, phi),
-                        -self.CnncTacchi(2, 0, k, phi),
-                        -self.pnncTacchi(2, 0, k, phi),
+                        -self.__qnncTacchi(1, 0, k, phi),
+                        -self.__CnncTacchi(2, 0, k, phi),
+                        -self.__pnncTacchi(2, 0, k, phi),
                     ],
                     [
-                        (self.bTacchi() + self.pnncTacchi(0, 0, k, phi)),
-                        (self.ankTacchi(0, k) + self.CnncTacchi(0, 0, k, phi)),
-                        -self.qnncTacchi(1, 0, k, phi),
+                        (self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
+                        (self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
+                        -self.__qnncTacchi(1, 0, k, phi),
                         0,
-                        self.pnncTacchi(2, 0, k, phi),
-                        self.CnncTacchi(2, 0, k, phi),
+                        self.__pnncTacchi(2, 0, k, phi),
+                        self.__CnncTacchi(2, 0, k, phi),
                     ],
                     [
                         0,
-                        -self.qnncTacchi(0, 1, k, phi),
-                        -(self.ankTacchi(1, k) + self.CnncTacchi(1, 1, k, phi)),
-                        -(self.bTacchi() + self.pnncTacchi(1, 1, k, phi)),
+                        -self.__qnncTacchi(0, 1, k, phi),
+                        -(self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k,
+                                                                     phi)),
+                        -(self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
                         0,
-                        -self.qnncTacchi(2, 1, k, phi),
+                        -self.__qnncTacchi(2, 1, k, phi),
                     ],
                     [
-                        -self.qnncTacchi(0, 1, k, phi),
+                        -self.__qnncTacchi(0, 1, k, phi),
                         0,
-                        (self.bTacchi() + self.pnncTacchi(1, 1, k, phi)),
-                        (self.ankTacchi(1, k) + self.CnncTacchi(1, 1, k, phi)),
-                        -self.qnncTacchi(2, 1, k, phi),
+                        (self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
+                        (self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
+                        -self.__qnncTacchi(2, 1, k, phi),
                         0,
                     ],
                     [
-                        -self.CnncTacchi(0, 2, k, phi),
-                        -self.pnncTacchi(0, 2, k, phi),
+                        -self.__CnncTacchi(0, 2, k, phi),
+                        -self.__pnncTacchi(0, 2, k, phi),
                         0,
-                        -self.qnncTacchi(1, 2, k, phi),
-                        -(self.ankTacchi(2, k) + self.CnncTacchi(2, 2, k, phi)),
-                        -(self.bTacchi() + self.pnncTacchi(2, 2, k, phi)),
+                        -self.__qnncTacchi(1, 2, k, phi),
+                        -(self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k,
+                                                                     phi)),
+                        -(self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
                     ],
                     [
-                        self.pnncTacchi(0, 2, k, phi),
-                        self.CnncTacchi(0, 2, k, phi),
-                        -self.qnncTacchi(1, 2, k, phi),
+                        self.__pnncTacchi(0, 2, k, phi),
+                        self.__CnncTacchi(0, 2, k, phi),
+                        -self.__qnncTacchi(1, 2, k, phi),
                         0,
-                        (self.bTacchi() + self.pnncTacchi(2, 2, k, phi)),
-                        (self.ankTacchi(2, k) + self.CnncTacchi(2, 2, k, phi)),
+                        (self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
+                        (self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
                     ],
                 ],
                 dtype=float,
             )
-            w, v = LA.eig(Ck)
+            w, v = linalg.eig(Ck)
             indi = np.argsort(w)
             wV[:, idx] = w[indi] # These are eigenvalues (dispersion)
             vV[:,:, idx] = v[:,indi] #These are eigenvectors (mode profiles)
         return wV, vV
 
         
-    def CnncTacchi(self, n, nc, k, phi):
-        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.PnncTacchi(n, nc, k)
+    def __CnncTacchi(self, n, nc, k, phi):
+        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc,
+                                                                         k)
 
-    def pnncTacchi(self, n, nc, k, phi):
-        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.PnncTacchi(n, nc, k)
+    def __pnncTacchi(self, n, nc, k, phi):
+        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.__PnncTacchi(n, nc,
+                                                                         k)
 
-    def qnncTacchi(self, n, nc, k, phi):
-        return -self.wM / 2 * np.sin(phi) * self.QnncTacchi(n, nc, k)
+    def __qnncTacchi(self, n, nc, k, phi):
+        return -self.wM / 2 * np.sin(phi) * self.__QnncTacchi(n, nc, k)
 
-    def OmegankTacchi(self, n, k):
+    def __OmegankTacchi(self, n, k):
         return self.w0 + self.wM * self.A * (k**2 + (n * np.pi / self.d) ** 2)
 
-    def ankTacchi(self, n, k):
-        return self.OmegankTacchi(n, k) + self.wM / 2 - self.wU / 2
+    def __ankTacchi(self, n, k):
+        return self.__OmegankTacchi(n, k) + self.wM / 2 - self.wU / 2
 
-    def bTacchi(self):
+    def __bTacchi(self):
         return self.wM / 2 - self.wU / 2
 
-    def PnncTacchi(self, n, nc, kxi):
+    def __PnncTacchi(self, n, nc, kxi):
         """Gives dimensionless propagation vector.
         The boundary condition is chosen based on the object property.
 
@@ -797,7 +806,7 @@ class DispersionCharacteristic:
 
         return Pnn
 
-    def QnncTacchi(self, n, nc, kxi):
+    def __QnncTacchi(self, n, nc, kxi):
         """Gives dimensionless propagation vector Q.
         This vector accounts for interaction between odd and even
         spin wave modes.
@@ -1119,8 +1128,8 @@ class DispersionCharacteristic:
     def GetDispersionSAFMNumericRezende(self):
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in rad*Hz.
-        This model does not give results which are in agreement with experiment
-        and thus we do not recomend to use it
+        This model does not give results which are in agreement with
+        experiment and thus we do not recomend using it.
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -1554,10 +1563,10 @@ class DispersionCharacteristic:
             kappac = nc * np.pi / self.d
         Om = self.w0 + self.wM * self.A * (kappa**2 + self.kxi**2)
         Omc = self.w0 + self.wM * self.A * (kappac**2 + self.kxi**2)
-        Pnnc = self.GetPropagationVector(n=n, nc=nc)
-        Pnn = self.GetPropagationVector(n=n, nc=n)
-        Pncnc = self.GetPropagationVector(n=nc, nc=nc)
-        Qnnc = self.GetPropagationQVector(n=n, nc=nc)
+        Pnnc = self.__GetPropagationVector(n=n, nc=nc)
+        Pnn = self.__GetPropagationVector(n=n, nc=n)
+        Pncnc = self.__GetPropagationVector(n=nc, nc=nc)
+        Qnnc = self.__GetPropagationQVector(n=n, nc=nc)
         wnn = self.GetDispersion(n=n, nc=n)
         wncnc = self.GetDispersion(n=nc, nc=nc)
         if self.theta == 0:
@@ -1683,15 +1692,15 @@ class DispersionCharacteristic:
             + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
         )
 
-    def GetBk(self):
+    def __GetBk(self):
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
         return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
 
     def GetEllipticity(self):
-        return 2 * abs(self.GetBk()) / (self.__GetAk() + abs(self.GetBk()))
+        return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 
     def GetCouplingParam(self):
-        return self.gamma * self.GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
+        return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
     def GetThresholdField(self):
         return (
