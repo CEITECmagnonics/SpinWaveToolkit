@@ -660,8 +660,7 @@ class DispersionCharacteristic:
             Ck = np.array(
                 [
                     [
-                        -(self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k,
-                                                                     phi)),
+                        -(self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
                         -(self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
                         0,
                         -self.__qnncTacchi(1, 0, k, phi),
@@ -679,8 +678,7 @@ class DispersionCharacteristic:
                     [
                         0,
                         -self.__qnncTacchi(0, 1, k, phi),
-                        -(self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k,
-                                                                     phi)),
+                        -(self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
                         -(self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
                         0,
                         -self.__qnncTacchi(2, 1, k, phi),
@@ -698,8 +696,7 @@ class DispersionCharacteristic:
                         -self.__pnncTacchi(0, 2, k, phi),
                         0,
                         -self.__qnncTacchi(1, 2, k, phi),
-                        -(self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k,
-                                                                     phi)),
+                        -(self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
                         -(self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
                     ],
                     [
@@ -715,18 +712,15 @@ class DispersionCharacteristic:
             )
             w, v = linalg.eig(Ck)
             indi = np.argsort(w)
-            wV[:, idx] = w[indi] # These are eigenvalues (dispersion)
-            vV[:,:, idx] = v[:,indi] #These are eigenvectors (mode profiles)
+            wV[:, idx] = w[indi]  # These are eigenvalues (dispersion)
+            vV[:, :, idx] = v[:, indi]  # These are eigenvectors (mode profiles)
         return wV, vV
 
-        
     def __CnncTacchi(self, n, nc, k, phi):
-        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc,
-                                                                         k)
+        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
 
     def __pnncTacchi(self, n, nc, k, phi):
-        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.__PnncTacchi(n, nc,
-                                                                         k)
+        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
 
     def __qnncTacchi(self, n, nc, k, phi):
         return -self.wM / 2 * np.sin(phi) * self.__QnncTacchi(n, nc, k)
@@ -1295,7 +1289,7 @@ class DispersionCharacteristic:
         """Gives angles of magnetization in both SAF layers.
         The returned value is in rad.
         Function finds the energy minimum
-        If there are problems with energy minimalization I recomend to 
+        If there are problems with energy minimalization I recomend to
         try different methods (but Nelder-Mead seems to work in most scenarios)
         """
         # phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
@@ -1387,7 +1381,7 @@ class DispersionCharacteristic:
         """Gives overall energy of SAF system
         The returned value is in Joule.
         This function is used during fidning of the angles of magnetization
-        This function assumes fixed in-plane angle of the magnetization 
+        This function assumes fixed in-plane angle of the magnetization
         """
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
@@ -1524,8 +1518,8 @@ class DispersionCharacteristic:
     def GetPropLen(self, n=0, nc=-1, nT=0):
         """Give propagation lengths for defined k.
         Propagation length is computed as lambda = v_g*tau.
-        Output is given in m
-        
+        Output is given in m.
+
         Parameters
         ----------
         n : int
@@ -1665,7 +1659,8 @@ class DispersionCharacteristic:
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion characteristics
+        Out is density of states in 1D for given dispersion
+        characteristics.
 
         Parameters
         ----------
