@@ -24,7 +24,7 @@ The SpinWaveToolkit repository adapts the following structure:
 
 All direct contributors ([CEITECmagnonics] members) are requested to use the following workflow:
 - Have this repository cloned to your local drive (simplest way to do this is using [GitHub Desktop] - ask colleagues for eventual help/introduction).
-- Work on assigned [Issues] (based on their priority if possible). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
+- Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
 - When working on some critical file (e.g. [SpinWaveToolkit.py][SWTpy]), it's good to let other know, e.g. via MS Teams, to prevent conflicts.
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs).
 > [!NOTE]
