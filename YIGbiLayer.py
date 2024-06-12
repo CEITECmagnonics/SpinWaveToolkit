@@ -44,8 +44,8 @@ plt.xlabel('k(rad/um)')
 # SAFMREA2 = np.zeros(np.size(Bexts))
 # SAFMRHA = np.zeros(np.size(Bexts))
 # for i, Bext in enumerate(Bexts):
-#     SAFMEA = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(0) , phiAnis=np.deg2rad(90), d = d1, boundaryCond = 1,  Bext = Bext, material = CoFeB, material2 = CoFeB2, Ku = Ku, Ku2 = Ku2, Jbl=Jbl, Jbq=Jbq, s=s, d2=d2, JblDyn=JblDyn, JbqDyn=JbqDyn)
-#     SAFMHA = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(90), phiAnis=np.deg2rad(90), d = d1, boundaryCond = 1,  Bext = Bext, material = CoFeB, material2 = CoFeB2, Ku = Ku, Ku2 = Ku2, Jbl=Jbl, Jbq=Jbq, s=s, d2=d2, JblDyn=JblDyn, JbqDyn=JbqDyn)
+#     SAFMEA = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(0) , phiAnis=np.deg2rad(90), d = d1, boundary_cond = 1,  Bext = Bext, material = CoFeB, material2 = CoFeB2, Ku = Ku, Ku2 = Ku2, Jbl=Jbl, Jbq=Jbq, s=s, d2=d2, JblDyn=JblDyn, JbqDyn=JbqDyn)
+#     SAFMHA = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(90), phiAnis=np.deg2rad(90), d = d1, boundary_cond = 1,  Bext = Bext, material = CoFeB, material2 = CoFeB2, Ku = Ku, Ku2 = Ku2, Jbl=Jbl, Jbq=Jbq, s=s, d2=d2, JblDyn=JblDyn, JbqDyn=JbqDyn)
 #     phi1, phi2 = SAFMHA.GetPhisSAFM()
 #     M1[i] = (np.cos(phi1) + fac*np.cos(phi2))
 #     M2[i] = (np.sin(phi1) + fac*np.sin(phi2))
@@ -117,7 +117,7 @@ plt.xlabel('k(rad/um)')
 # WaveB = np.array(bexts)
 
 # for idx, bext in enumerate(bexts):
-#     NiFeBextSweep = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(90), d = 34e-9, boundaryCond = 1, dp = 1e7, Bext = bext, material = NiFe)
+#     NiFeBextSweep = SWT.DispersionCharacteristic(kxi = kxi, theta = np.deg2rad(90), phi = np.deg2rad(90), d = 34e-9, boundary_cond = 1, dp = 1e7, Bext = bext, material = NiFe)
 #     wBextSweep = NiFeBextSweep.GetDispersion(n=0, nc=0, nT=0)/(1e9*2*np.pi)
 #     # ind = wBextSweep[np.abs(wBextSweep-14).argmin()]
 #     ind = min(range(len(wBextSweep)), key=lambda i: abs(wBextSweep[i]-14))
