@@ -26,12 +26,11 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 - Have this repository cloned to your local drive (simplest way to do this is using [GitHub Desktop] - ask colleagues for eventual help/introduction).
 - Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
 - When working on some critical file (e.g. [SpinWaveToolkit.py][SWTpy]), it's good to let other know, e.g. via MS Teams, to prevent conflicts.
-- When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs).
-> [!NOTE]
-> The usage of [black] might become compulsory in the future for united formatting.
+- When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module file(s). Examples and other scripts rely mostly on your feeling for nice code.
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
 > [!NOTE]
 > JKL: I'm not sure if [black] also helps with this or not. I will update this when I find out.
+> 
 > JKL update: No, [black] does not do anything with docstrings. (this note will be removed soon)
 - Use [Pylint] for checking code errors and formatting issues (best if rated 10/10).
 
