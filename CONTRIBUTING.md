@@ -32,6 +32,7 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
 > [!NOTE]
 > JKL: I'm not sure if [black] also helps with this or not. I will update this when I find out.
+> JKL update: No, [black] does not do anything with docstrings. (this note will be removed soon)
 - Use [Pylint] for checking code errors and formatting issues (best if rated 10/10).
 
 For others, the adhering to the same workflow is recommended. Not doing so might result in not accepting Pull Requests (or more precisely, in requiring modifications before accepting).
