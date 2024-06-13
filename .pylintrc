@@ -91,6 +91,7 @@ disable=
     too-few-public-methods,          # it helps our materials
     too-many-locals,                 # complex dispersion computations
     too-many-arguments,              # complex dispersion computations
+    too-many-instance-attributes,    # complex dispersion computations
     # missing-docstring,               # replace with missing-module-docstring ?
     attribute-defined-outside-init,  # we may consider deleting this
 
