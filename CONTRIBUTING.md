@@ -36,10 +36,34 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 
 For others, the adhering to the same workflow is recommended. Not doing so might result in not accepting Pull Requests (or more precisely, in requiring modifications before accepting).
 
+> [!TIP]
+> If you don't know how to use [black] and [pylint], check this [section](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CONTRIBUTING.md#example-of-use-for-black-and-pylint) below.
+
 ## Where to get inspiration
 Here is a list of some Python physics modules with nice documentation and development workflow:
 - **magpylib**: [GitHub][magpylib_gh], [ReadTheDocs][magpylib_rtd]
 - **TetraX**: [ReadTheDocs][tetrax_rtd]
+
+
+## Other notes
+
+### Example of use for [black] and [pylint]
+First of all, make sure you have these modules installed, e.g. by using `pip` and the command line
+```cmd
+py -m pip install black
+py -m pip install pylint
+```
+Then, if you want to apply them to some script, e.g. the [SpinWaveToolkit.py][SWTpy], open a command line and write
+```cmd
+cd <path to folder with SpinWaveToolkit.py>  &:: go to directory with desired script
+py -m black SpinWaveToolkit.py  &:: let black reformat the script
+py -m black SpinWaveToolkit.py  &:: let pylint rate the script
+```
+Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file set up to our needs.
+
+After this you might want to check the changes done by [black] and correct any errors suggested by [pylint].
+
+
 
 [CEITECmagnonics]:https://github.com/CEITECmagnonics
 [GitHub Desktop]:https://desktop.github.com/
