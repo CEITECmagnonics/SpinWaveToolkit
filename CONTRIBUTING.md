@@ -1,7 +1,7 @@
 # Rules and documentation logic for contributors
 
 > [!NOTE]
-> Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch will be allowed until a stable state of the repository is reached. Since then, only changes based on Branch & Pull Request workflow will be allowed.
+> Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch will be allowed until a stable state of the repository is reached. Since then, only changes based on Branch & Pull Request workflow will be allowed and `master` branch protection rules will be issued (at least minimum amount of approvals and requirement of pull requests).
 
 We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open new Issues to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues.
 
