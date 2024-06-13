@@ -59,7 +59,7 @@ cd <path to folder with SpinWaveToolkit.py>  &:: go to directory with desired sc
 py -m black SpinWaveToolkit.py  &:: let black reformat the script
 py -m black SpinWaveToolkit.py  &:: let pylint rate the script
 ```
-Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file set up to our needs.
+(The `&::` marks beginning of a comment, no need type comments into the command line.) Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file, set up to our needs.
 
 After this you might want to check the changes done by [black] and correct any errors suggested by [pylint].
 
