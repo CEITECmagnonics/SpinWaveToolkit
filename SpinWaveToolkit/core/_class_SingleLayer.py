@@ -3,8 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from scipy.optimize import fsolve, minimize
-from numpy import linalg
+from scipy.optimize import fsolve
 from ..helpers import *
 
 __all__ = ["SingleLayer"]
@@ -25,55 +24,55 @@ class SingleLayer:
     Bext : float
         (T) external magnetic field
     material : Material
-        instance of `Material` describing the magnetic layer material
+        instance of `Material` describing the magnetic layer material.
     d : float
-        (m) layer thickness (in z direction)
+        (m) layer thickness (in z direction).
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
-        (rad/m) k-vector (wavenumber), usually a vector
+        (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, default np.pi/2
         (rad) out of plane angle, pi/2 is totally inplane
-        magnetization
+        magnetization.
     phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry
+        (rad) in-plane angle, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
-        order width modes)
+        order width modes).
     boundary_cond : {1, 2, 3, 4}, default 1
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC
+        pinned BC.
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned
+        0 means totally unpinned.
     Ku : float, optional
-        (J/m^3) uniaxial anisotropy strength
+        (J/m^3) uniaxial anisotropy strength.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
     Ms : float
-        (A/m) saturation magnetization
+        (A/m) saturation magnetization.
     alpha : float
-        () Gilbert damping
+        () Gilbert damping.
     gamma : float
-        (rad*Hz/T) gyromagnetic ratio (positive convention)
+        (rad*Hz/T) gyromagnetic ratio (positive convention).
     mu0dH0 : float
-        (T) inhomogeneous broadening
+        (T) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Slavin-Kalinikos equation.
         w0 = MU0*gamma*Hext
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Slavin-Kalinikos equation.
         w0 = MU0*gamma*Ms
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation,
+        (m^2) parameter in Slavin-Kalinikos equation.
         A = Aex*2/(Ms**2*MU0)
     Hani : float
-        (A/m) uniaxial anisotropy field of corresponding Ku,
+        (A/m) uniaxial anisotropy field of corresponding Ku.
         Hani = 2*Ku/material.Ms/MU0
 
     Methods
     -------
-    # sort these and check completeness, make some maybe private
+    # ### sort these and check completeness
     GetPartiallyPinnedKappa
     GetDisperison
     GetGroupVelocity
@@ -162,11 +161,11 @@ class SingleLayer:
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number
         """
         if nc == -1:
             nc = n
@@ -310,11 +309,11 @@ class SingleLayer:
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -433,7 +432,7 @@ class SingleLayer:
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         """
 
         def transEq(kappa, d, dp):
@@ -453,16 +452,16 @@ class SingleLayer:
 
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz.
+        The returned values are in rad*Hz.
 
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -490,16 +489,16 @@ class SingleLayer:
     def GetGroupVelocity(self, n=0, nc=-1, nT=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
-        The result is given in m/s
+        The result is given in m/s.
 
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -510,15 +509,16 @@ class SingleLayer:
     def GetLifetime(self, n=0, nc=-1, nT=0):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-        The output is in s
+        The result is given in s.
+
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -541,16 +541,16 @@ class SingleLayer:
     def GetPropLen(self, n=0, nc=-1, nT=0):
         """Give propagation lengths for defined k.
         Propagation length is computed as lambda = v_g*tau.
-        Output is given in m.
+        The result is given  in m.
 
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -563,14 +563,14 @@ class SingleLayer:
         """Give degenerate dispersion relation based on the secular
         equation (54).
         Output is dispersion relation in the vicinity of the crossing of
-        the two different modes
+        the two different modes.
 
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int
-            quantization number of the crossing mode
+            Quantization number of the crossing mode.
         """
         if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -688,11 +688,11 @@ class SingleLayer:
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int, optional
-            second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -700,9 +700,15 @@ class SingleLayer:
         return DoS
 
     def GetExchangeLen(self):
+        """Calculate exchange length in meters from the parameter `A`."""
         return np.sqrt(self.A)
 
     def __GetAk(self):
+        """Calculate semi-major axis of the precession ellipse for
+        all `kxi`.
+        ### check correctness of the docstring!
+        ### add source
+        """
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
         return (
             self.w0
@@ -711,10 +717,20 @@ class SingleLayer:
         )
 
     def __GetBk(self):
+        """Calculate semi-minor axis of the precession ellipse for
+        all `kxi`.
+        ### check correctness of the docstring!
+        ### add source
+        """
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
         return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
 
     def GetEllipticity(self):
+        """Calculate ellipticity of the precession ellipse for
+        all `kxi`.
+        ### check correctness of the docstring!
+        ### add source
+        """
         return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 
     def GetCouplingParam(self):
