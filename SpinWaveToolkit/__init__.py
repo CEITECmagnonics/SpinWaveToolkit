@@ -58,6 +58,9 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
 
 
 # import all needed classes, functions, and constants
+from .helpers import *
+from .core._class_Material import *
+from .core._class_SingleLayer import *
 
 # if you add __all__ lists to all files, you can use wildcard imports and do not
 #   worry about importing also stuff like numpy as e.g `SWT.np` :D
