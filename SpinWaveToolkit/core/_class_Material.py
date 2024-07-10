@@ -4,7 +4,7 @@ Core (private) file for the `Material` class.
 
 import numpy as np
 
-# ### add __all__ ? ###
+__all__ = ["Material", "NiFe", "CoFeB", "FeNi", "YIG"]
 
 
 class Material:

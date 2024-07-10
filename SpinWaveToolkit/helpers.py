@@ -6,7 +6,7 @@ import numpy as np
 
 MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
-# ### add __all__ ? ###
+__all__ = ["MU0", "wavenumber2wavelength", "wavelength2wavenumber", "wrapAngle"]
 
 
 def wavenumber2wavelength(wavenumber):
