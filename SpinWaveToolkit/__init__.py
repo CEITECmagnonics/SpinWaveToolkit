@@ -32,8 +32,8 @@ Example
 -------
 Example code for obtaining propagation length and dispersion charactetristic:
 ``
-import SpinWaveToolkit as SWT
 import numpy as np
+import SpinWaveToolkit as SWT
 
 #Here is an example of code
 import SpinWaveToolkit as SWT
@@ -61,6 +61,8 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
 from .helpers import *
 from .core._class_Material import *
 from .core._class_SingleLayer import *
+from .core._class_SingleLayerNumeric import *
+from .core._class_DoubleLayerNumeric import *
 
 # if you add __all__ lists to all files, you can use wildcard imports and do not
-#   worry about importing also stuff like numpy as e.g `SWT.np` :D
+#   worry about importing also stuff like numpy as e.g. `SWT.np` :D
