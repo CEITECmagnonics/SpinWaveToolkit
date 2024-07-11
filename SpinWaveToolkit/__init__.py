@@ -54,6 +54,7 @@ propLen = NiFeChar.GetPropLen()*1e6 #um
     Dominik Pavelka, dominik.pavelka@vutbr.cz
     Michal Urbanek,  michal.urbanek@ceitec.vutbr.cz
 """
+
 # update the docstring when finished changing class names and variables...
 
 

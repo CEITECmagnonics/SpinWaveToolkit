@@ -580,8 +580,9 @@ class SingleLayer:
         """
         if nc == -1:
             nc = n
-        propLen = (self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1]
-                   * self.GetGroupVelocity(n=n, nc=nc, nT=nT))
+        propLen = self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1] * self.GetGroupVelocity(
+            n=n, nc=nc, nT=nT
+        )
         return propLen
 
     def GetSecondPerturbation(self, n, nc):
@@ -767,4 +768,3 @@ class SingleLayer:
             * np.pi
             / (self.GetLifetime(n=0, nc=0, nT=0) * abs(self.GetCouplingParam()))
         )
-
