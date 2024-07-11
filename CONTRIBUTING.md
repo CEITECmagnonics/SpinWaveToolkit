@@ -25,7 +25,7 @@ The SpinWaveToolkit repository adapts the following structure:
 All direct contributors ([CEITECmagnonics] members) are requested to use the following workflow:
 - Have this repository cloned to your local drive (simplest way to do this is using [GitHub Desktop] - ask colleagues for eventual help/introduction).
 - Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
-- When working on some critical file (e.g. [SpinWaveToolkit.py][SWTpy]), it's good to let other know, e.g. via MS Teams, to prevent conflicts.
+- When working on some critical file (e.g. [SpinWaveToolkit][SWTpy]), it's good to let others know, e.g. via MS Teams, to prevent conflicts.
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module file(s). Examples and other scripts rely mostly on your feeling for nice code.
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
 > [!NOTE]
@@ -53,22 +53,22 @@ First of all, make sure you have these modules installed, e.g. by using `pip` an
 py -m pip install black
 py -m pip install pylint
 ```
-Then, if you want to apply them to some script, e.g. the [SpinWaveToolkit.py][SWTpy], open a command line and write
+Then, if you want to apply them to some script or a folder with scripts such as a full module, e.g. the [SpinWaveToolkit][SWTpy], open a command line and write
 ```cmd
-cd <path to folder with SpinWaveToolkit.py>  &:: go to directory with desired script
-py -m black SpinWaveToolkit.py  &:: let black reformat the script
-py -m black SpinWaveToolkit.py  &:: let pylint rate the script
+cd <path to folder with SpinWaveToolkit>  &:: go to directory with desired script/folder
+py -m black SpinWaveToolkit  &:: let black reformat the script
+py -m pylint SpinWaveToolkit  &:: let pylint rate the script
 ```
-(The `&::` marks beginning of a comment, no need type comments into the command line.) Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file, set up to our needs.
+(The `&::` marks beginning of a comment, no need to type comments into the command line.) Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file, set up to our needs.
 
-After this you might want to check the changes done by [black] and correct any errors suggested by [pylint].
+After this you might want to check the changes done by [black] (easily done in GitHub Desktop) and correct any errors suggested by [pylint], and if you make some additional changes, do one more iteration of this process to check that everything is all right.
 
 
 
 [CEITECmagnonics]:https://github.com/CEITECmagnonics
 [GitHub Desktop]:https://desktop.github.com/
 [Issues]:https://github.com/CEITECmagnonics/SpinWaveToolkit/issues
-[SWTpy]:SpinWaveToolkit.py
+[SWTpy]:https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/reclass/SpinWaveToolkit
 [PEP8]:https://peps.python.org/pep-0008/
 [black]:https://black.readthedocs.io/en/stable/index.html
 [magpylib_gh]:https://github.com/magpylib/magpylib
