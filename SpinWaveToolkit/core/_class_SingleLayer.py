@@ -120,9 +120,11 @@ class SingleLayer:
         weff=3e-6,
         boundary_cond=1,
         dp=0,
-        Ku=0,
     ):
         self._Bext = Bext
+        self._Ms = material.Ms
+        self._gamma = material.gamma
+        self._Aex = material.Aex
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -130,18 +132,12 @@ class SingleLayer:
         self.weff = weff
         self.boundary_cond = boundary_cond
         self.dp = dp
-        self.Ms = material.Ms
         self.alpha = material.alpha
-        self.gamma = material.gamma
         self.mu0dH0 = material.mu0dH0
-        # ### add Aex as a direct attribute (to be able to recalculate A later)?
-        self.Ku = Ku  # ### currently unused, keep for later? (e.g. when anisotropy is added)
         # Compute Slavin-Kalinikos parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
-        self.w0 = self.gamma * Bext
-        self.A = material.Aex * 2 / (self.Ms**2 * MU0)
-
-        self.Hani = 2 * self.Ku / self.Ms / MU0  # ### same as self.Ku
+        self.w0 = self.gamma * self.Bext
+        self.A = self.Aex * 2 / (self.Ms**2 * MU0)
 
     @property
     def Bext(self):
@@ -152,6 +148,37 @@ class SingleLayer:
     def Bext(self, val):
         self._Bext = val
         self.w0 = self.gamma * val
+
+    @property
+    def Ms(self):
+        """saturation magnetization (A/m)"""
+        return self._Ms
+
+    @Ms.setter
+    def Ms(self, val):
+        self._Ms = val
+        self.wM = val * self.gamma * MU0
+        self.A = self.Aex * 2 / (val**2 * MU0)
+
+    @property
+    def gamma(self):
+        """gyromagnetic ratio (rad*Hz/T)"""
+        return self._gamma
+
+    @gamma.setter
+    def gamma(self, val):
+        self._gamma = val
+        self.wM = self.Ms * val * MU0
+        self.w0 = val * self.Bext
+
+    @property
+    def Aex(self):
+        return self._Aex
+
+    @Aex.setter
+    def Aex(self, val):
+        self._Aex = val
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
@@ -537,10 +564,10 @@ class SingleLayer:
         ) ** -1
         return lifetime
 
-    def GetPropLen(self, n=0, nc=-1, nT=0):
-        """Give propagation lengths for defined k.
+    def GetDecLen(self, n=0, nc=-1, nT=0):
+        """Give decay lengths for defined k.
         Propagation length is computed as lambda = v_g*tau.
-        The result is given  in m.
+        The result is given in m.
 
         Parameters
         ----------
@@ -553,9 +580,8 @@ class SingleLayer:
         """
         if nc == -1:
             nc = n
-        propLen = self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1] * self.GetGroupVelocity(
-            n=n, nc=nc, nT=nT
-        )
+        propLen = (self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1]
+                   * self.GetGroupVelocity(n=n, nc=nc, nT=nT))
         return propLen
 
     def GetSecondPerturbation(self, n, nc):

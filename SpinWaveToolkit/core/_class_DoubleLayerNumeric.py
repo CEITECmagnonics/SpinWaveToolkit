@@ -515,13 +515,6 @@ class DoubleLayerNumeric:
             raise ValueError("Sorry, there is no boundary condition with this number.")
         return Qnn
 
-    #    def GetTVector(self, n, nc, kappan, kappanc):
-    #        zeta = np.linspace(-self.d/2, self.d/2, 500)
-    #        An = 1
-    #        Phin = An*(np.cos(kappan)*(zeta + self.d/2) + self.dp/kappan*np.sin(kappan)*(zeta + self.d/2))
-    #        Phinc = An*(np.cos(kappanc)*(zeta + self.d/2) + self.dp/kappanc*np.sin(kappanc)*(zeta + self.d/2))
-    #        Tnn = 1/self.d*trapz(y = Phin*Phinc, x = zeta)
-    #        return Tnn
     def GetPartiallyPinnedKappa(self, n):
         """Gives kappa from the transverse equation.
 
@@ -1050,28 +1043,3 @@ class DoubleLayerNumeric:
 
     def GetExchangeLen(self):
         return np.sqrt(self.A)
-
-    def __GetAk(self):
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return (
-            self.w0
-            + self.wM * self.A * self.kxi**2
-            + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
-        )
-
-    def __GetBk(self):
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
-
-    def GetEllipticity(self):
-        return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
-
-    def GetCouplingParam(self):
-        return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
-
-    def GetThresholdField(self):
-        return (
-            2
-            * np.pi
-            / (self.GetLifetime(n=0, nc=0, nT=0) * abs(self.GetCouplingParam()))
-        )
