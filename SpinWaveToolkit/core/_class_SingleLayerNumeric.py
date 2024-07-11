@@ -23,90 +23,59 @@ class SingleLayerNumeric:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field
+        (T) external magnetic field.
     material : Material
-        instance of `Material` describing the magnetic layer material
+        instance of `Material` describing the magnetic layer material.
     d : float
         (m) layer thickness (in z direction)
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
-        (rad/m) k-vector (wavenumber), usually a vector
+        (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, default np.pi/2
         (rad) out of plane angle, pi/2 is totally inplane
-        magnetization
+        magnetization.
     phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry
+        (rad) in-plane angle, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
-        order width modes)
+        order width modes).
     boundary_cond : {1, 2, 3, 4}, default 1
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC
+        pinned BC.
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned
-    Ku : float, optional
-        (J/m^3) uniaxial anisotropy strength
-    Ku2 : float, optional
-        (J/m^3) uniaxial anisotropy strength of the second layer
+        0 means totally unpinned.
     KuOOP : float, optional
-        (J/m^3) OOP anisotropy strength used in the Tacchi model
+        (J/m^3) OOP anisotropy strength used in the Tacchi model.
         ### Should this be calculated from the surface anisotropy
             strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis'ies`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
-    Jbl : float, optional
-        (J/m^2) bilinear RKKY coupling parameter
-    Jbq : float, optional
-        (J/m^2) biquadratic RKKY coupling parameter
-    s : float, optional
-        (m) spacing layer thickness
-    d2 : float, optional
-        (m) thickness of the second magnetic layer
-    material2 : Material or None
-        instance of `Material` describing the second magnetic
-        layer, if None, `material` parameter is used instead
-    JblDyn : float or None
-        (J/m^2) dynamic bilinear RKKY coupling parameter,
-        if None, same as `Jbl`
-    JbqDyn : float or None
-        (J/m^2) dynamic biquadratic RKKY coupling parameter,
-        if None, same as `Jbq`
-    phiAnis1, phiAnis2 : float, default np.pi/2
-        (rad) uniaxial anisotropy axis in-plane angle for
-        both magnetic layers (angle from Beff?)
-    phiInit1, phiInit2 : float, default np.pi/2
-        (rad) initial value of magnetization in-plane angle of the
-        first layer, used for energy minimization
-    phiInit2 : float, default -np.pi/2
-        (rad) initial value of magnetization in-plane angle of the
-        second layer, used for energy minimization
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
-    alpha : float
-        () Gilbert damping
+    Ms : float
+        (A/m) saturation magnetization.
     gamma : float
-        (rad*Hz/T) gyromagnetic ratio (positive convention)
+        (rad*Hz/T) gyromagnetic ratio (positive convention).
+    Aex : float
+        (J/m) exchange stiffness constant.
+    alpha : float
+        () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening
+        (T) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Hext
+        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        `w0 = MU0*gamma*Hext`
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Ms
-    A, A2 : float
-        (m^2) parameter in Slavin-Kalinikos equation,
-        A = Aex*2/(Ms**2*MU0)
+        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        `w0 = MU0*gamma*Ms`
+    A : float
+        (m^2) parameter in Slavin-Kalinikos equation.
+        `A = Aex*2/(Ms**2*MU0)`
     wU : float
-        (rad*Hz) circular frequency of surface anisotropy field,
-        used in the Tacchi model
-    Hani, Hani2 : float
-        (A/m) uniaxial anisotropy field of corresponding Ku,
-        Hani = 2*Ku/material.Ms/MU0
-    Ms, Ms2 : float
-        (A/m) saturation magnetization
+        (rad*Hz) circular frequency of OOP anisotropy field,
+        used in the Tacchi model.
 
     Methods
     -------
@@ -174,32 +143,27 @@ class SingleLayerNumeric:
         weff=3e-6,
         boundary_cond=1,
         dp=0,
-        Ku=0,
         KuOOP=0,
     ):
-        # ### decide what structure should this model abide by
-
-        # ### sort these as in the SingleLayer class
+        self._Bext = Bext
+        self._Ms = material.Ms
+        self._gamma = material.gamma
+        self._Aex = material.Aex
+        self._KuOOP = KuOOP
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
         self.d = d
         self.weff = weff
         self.boundary_cond = boundary_cond
-        self.alpha = material.alpha
-        # Compute Slavin-Kalinikos parameters wM, w0, A
-        self.wM = material.Ms * material.gamma * MU0
-        self.w0 = material.gamma * Bext
-        self.wU = material.gamma * 2 * KuOOP / material.Ms  # only for Tacchi
-        self.A = material.Aex * 2 / (material.Ms**2 * MU0)
-        self._Bext = Bext
         self.dp = dp
-        self.gamma = material.gamma
+        self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-
-        self.Ms = material.Ms
-        self.Hani = 2 * Ku / material.Ms / MU0
-        self.Ku = Ku
+        # Compute Slavin-Kalinikos parameters wM, w0, A
+        self.wM = self.Ms * self.gamma * MU0
+        self.w0 = self.gamma * Bext
+        self.wU = self.gamma * 2 * self.KuOOP / self.Ms  # only for Tacchi
+        self.A = self.Aex * 2 / (self.Ms**2 * MU0)
 
     @property
     def Bext(self):
@@ -211,303 +175,49 @@ class SingleLayerNumeric:
         self._Bext = val
         self.w0 = self.gamma * val
 
-    def __GetPropagationVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector.
-        The boundary condition is chosen based on the object property.
+    @property
+    def Ms(self):
+        """saturation magnetization (A/m)"""
+        return self._Ms
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
-        kappa = n * np.pi / self.d
-        kappac = nc * np.pi / self.d
-        k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-        # Totally unpinned boundary condition
-        if self.boundary_cond == 1:
-            Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            if n == 0 and nc == 0:
-                Pnn = (kxi**2) / (kc**2) - (kxi**4) / (
-                    k**2 * kc**2
-                ) * 1 / 2 * ((1 + (-1) ** (n + nc)) / 2) * Fn
-            elif n == 0 and nc != 0 or nc == 0 and n != 0:
-                Pnn = (
-                    -(kxi**4)
-                    / (k**2 * kc**2)
-                    * 1
-                    / np.sqrt(2)
-                    * ((1 + (-1) ** (n + nc)) / 2)
-                    * Fn
-                )
-            elif n == nc:
-                Pnn = (kxi**2) / (kc**2) - (kxi**4) / (k**2 * kc**2) * (
-                    (1 + (-1) ** (n + nc)) / 2
-                ) * Fn
-            else:
-                Pnn = -(kxi**4) / (k**2 * kc**2) * ((1 + (-1) ** (n + nc)) / 2) * Fn
-        # Totally pinned boundary condition
-        elif self.boundary_cond == 2:
-            if n == nc:
-                Pnn = (kxi**2) / (kc**2) + (kxi**2) / (k**2) * (
-                    kappa * kappac
-                ) / (kc**2) * (1 + (-1) ** (n + nc) / 2) * 2 / (kxi * self.d) * (
-                    1 - (-1) ** n * np.exp(-kxi * self.d)
-                )
-            else:
-                Pnn = (
-                    (kxi**2)
-                    / (k**2)
-                    * (kappa * kappac)
-                    / (kc**2)
-                    * (1 + (-1) ** (n + nc) / 2)
-                    * 2
-                    / (kxi * self.d)
-                    * (1 - (-1) ** n * np.exp(-kxi * self.d))
-                )
-        # Totally unpinned condition - long wave limit
-        elif self.boundary_cond == 3:
-            if n == 0:
-                Pnn = kxi * self.d / 2
-            else:
-                Pnn = (kxi * self.d) ** 2 / (n**2 * np.pi**2)
-        # Partially pinned boundary condition
-        elif self.boundary_cond == 4:
-            dp = self.dp
-            kappa = self.GetPartiallyPinnedKappa(
-                n
-            )  # We have to get correct kappa from transversal eq.
-            kappac = self.GetPartiallyPinnedKappa(nc)
-            if kappa == 0:
-                kappa = 1e1
-            if kappac == 0:
-                kappac = 1e1
-            k = np.sqrt(np.power(kxi, 2) + kappa**2)
-            kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-            An = np.sqrt(
-                2
-                * (
-                    (kappa**2 + dp**2) / kappa**2
-                    + np.sin(kappa * self.d)
-                    / (kappa * self.d)
-                    * (
-                        (kappa**2 - dp**2) / kappa**2 * np.cos(kappa * self.d)
-                        + 2 * dp / kappa * np.sin(kappa * self.d)
-                    )
-                )
-                ** -1
-            )
-            Anc = np.sqrt(
-                2
-                * (
-                    (kappac**2 + dp**2) / kappac**2
-                    + np.sin(kappac * self.d)
-                    / (kappac * self.d)
-                    * (
-                        (kappac**2 - dp**2) / kappac**2 * np.cos(kappac * self.d)
-                        + 2 * dp / kappac * np.sin(kappac * self.d)
-                    )
-                )
-                ** -1
-            )
-            Pnnc = (
-                kxi
-                * An
-                * Anc
-                / (2 * self.d * k**2 * kc**2)
-                * (
-                    (kxi**2 - dp**2)
-                    * np.exp(-kxi * self.d)
-                    * (np.cos(kappa * self.d) + np.cos(kappac * self.d))
-                    + (kxi - dp)
-                    * np.exp(-kxi * self.d)
-                    * (
-                        (dp * kxi - kappa**2) * np.sin(kappa * self.d) / kappa
-                        + (dp * kxi - kappac**2) * np.sin(kappac * self.d) / kappac
-                    )
-                    - (kxi**2 - dp**2)
-                    * (1 + np.cos(kappa * self.d) * np.cos(kappac * self.d))
-                    + (kappa**2 * kappac**2 - dp**2 * kxi**2)
-                    * np.sin(kappa * self.d)
-                    / kappa
-                    * np.sin(kappac * self.d)
-                    / kappac
-                    - dp
-                    * (
-                        k**2 * np.cos(kappac * self.d) * np.sin(kappa * self.d) / kappa
-                        + kc**2
-                        * np.cos(kappa * self.d)
-                        * np.sin(kappac * self.d)
-                        / kappac
-                    )
-                )
-            )
-            if n == nc:
-                Pnn = kxi**2 / kc**2 + Pnnc
-            else:
-                Pnn = Pnnc
-        else:
-            raise ValueError("Sorry, there is no boundary condition with this number.")
+    @Ms.setter
+    def Ms(self, val):
+        self._Ms = val
+        self.wM = val * self.gamma * MU0
+        self.A = self.Aex * 2 / (val**2 * MU0)
+        self.wU = self.gamma * 2 * self.KuOOP / val
 
-        return Pnn
+    @property
+    def gamma(self):
+        """gyromagnetic ratio (rad*Hz/T)"""
+        return self._gamma
 
-    def __GetPropagationQVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector Q.  This vector
-        accounts for interaction between odd and even spin wave modes.
-        The boundary condition is chosen based on the object property.
+    @gamma.setter
+    def gamma(self, val):
+        self._gamma = val
+        self.wM = self.Ms * val * MU0
+        self.w0 = val * self.Bext
+        self.wU = val * 2 * self.KuOOP / self.Ms
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
-        kappa = n * np.pi / self.d
-        kappac = nc * np.pi / self.d
-        if kappa == 0:
-            kappa = 1
-        if kappac == 0:
-            kappac = 1
-        k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-        # Totally unpinned boundary conditions
-        if self.boundary_cond == 1:
-            Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            Qnn = (
-                kxi**2
-                / kc**2
-                * (
-                    kappac**2 / (kappac**2 - kappa**2) * 2 / (kxi * self.d)
-                    - kxi**2 / (2 * k**2) * Fn
-                )
-                * ((1 - (-1) ** (n + nc)) / 2)
-            )
-        # Partially pinned boundary conditions
-        elif self.boundary_cond == 4:
-            dp = self.dp
-            kappa = self.GetPartiallyPinnedKappa(n)
-            kappac = self.GetPartiallyPinnedKappa(nc)
-            if kappa == 0:
-                kappa = 1
-            if kappac == 0:
-                kappac = 1
-            An = np.sqrt(
-                2
-                * (
-                    (kappa**2 + dp**2) / kappa**2
-                    + np.sin(kappa * self.d)
-                    / (kappa * self.d)
-                    * (
-                        (kappa**2 - dp**2) / kappa**2 * np.cos(kappa * self.d)
-                        + 2 * dp / kappa * np.sin(kappa * self.d)
-                    )
-                )
-                ** -1
-            )
-            Anc = np.sqrt(
-                2
-                * (
-                    (kappac**2 + dp**2) / kappac**2
-                    + np.sin(kappac * self.d)
-                    / (kappac * self.d)
-                    * (
-                        (kappac**2 - dp**2) / kappac**2 * np.cos(kappac * self.d)
-                        + 2 * dp / kappac * np.sin(kappac * self.d)
-                    )
-                )
-                ** -1
-            )
-            Qnn = (
-                kxi
-                * An
-                * Anc
-                / (2 * self.d * k**2 * kc**2)
-                * (
-                    (kxi**2 - dp**2)
-                    * np.exp(-kxi * self.d)
-                    * (np.cos(kappa * self.d) - np.cos(kappac * self.d))
-                    + (kxi - dp)
-                    * np.exp(-kxi * self.d)
-                    * (
-                        (dp * kxi - kappa**2) * np.sin(kappa * self.d) / kappa
-                        - (dp * kxi - kappac**2) * np.sin(kappac * self.d) / kappac
-                    )
-                    + (kxi - dp)
-                    * (
-                        (dp * kxi - kappac**2)
-                        * np.cos(kappa * self.d)
-                        * np.sin(kappac * self.d)
-                        / kappac
-                        - (dp * kxi - kappa**2)
-                        * np.cos(kappac * self.d)
-                        * np.sin(kappa * self.d)
-                        / kappa
-                    )
-                    + (
-                        1
-                        - np.cos(kappac * self.d)
-                        * np.cos(kappa * self.d)
-                        * 2
-                        * (
-                            kxi**2 * dp**2
-                            + kappa**2 * kappac**2
-                            + (kappac**2 + kappa**2) * (kxi**2 + dp**2)
-                        )
-                        / (kappac**2 - kappa**2)
-                        - np.sin(kappa * self.d)
-                        * np.sin(kappac**2 * self.d)
-                        / (kappa * kappac * (kappac**2 - kappa**2))
-                        * (
-                            dp * kxi * (kappa**4 + kappac**4)
-                            + (dp**2 * kxi**2 - kappa**2 * kappac**2)
-                            * (kappa**2 + kappac**2)
-                            - 2 * kappa**2 * kappac**2 * (dp**2 + kxi**2 - dp * kxi)
-                        )
-                    )
-                )
-            )
-        else:
-            raise ValueError("Sorry, there is no boundary condition with this number.")
-        return Qnn
+    @property
+    def Aex(self):
+        return self._Aex
 
-    def GetPartiallyPinnedKappa(self, n):
-        """Gives kappa from the transverse equation.
+    @Aex.setter
+    def Aex(self, val):
+        self._Aex = val
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        """
+    @property
+    def KuOOP(self):
+        return self._KuOOP
 
-        def transEq(kappa, d, dp):
-            e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
-            return e
+    @KuOOP.setter
+    def KuOOP(self, val):
+        self._KuOOP = val
+        self.wU = self.gamma * 2 * val / self.Ms
 
-        # The classical thickness mode is given as starting point
-        kappa = fsolve(
-            transEq,
-            x0=(n * np.pi / self.d),
-            args=(self.d, self.dp),
-            maxfev=10000,
-            epsfcn=1e-10,
-            factor=0.1,
-        )
-        return kappa
-
-    def GetDispersion(self, n=0, nc=-1, nT=0):
+    def GetDispersion_old(self, n=0, nc=-1, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in the rad*Hz.
 
@@ -543,7 +253,7 @@ class SingleLayerNumeric:
         )
         return f
 
-    def GetDispersionTacchi(self):
+    def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).
         Based on the model in:
         https://doi.org/10.1103/PhysRevB.100.104406
@@ -555,9 +265,16 @@ class SingleLayerNumeric:
         (3 with negative and positive frequency).  The eigenvectors
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
-        NumericCalculationofDispersionModeProfiles.py)
+        NumericCalculationofDispersionModeProfiles.py).
 
-        The returned value of eigenvalue is in the rad*Hz.
+        Returns
+        -------
+        wV : ndarray
+            (rad*Hz) frequencies of the 3 lowest spin-wave modes.
+            Has a shape of `(6, N)`, where `N = kxi.shape[0]`.
+        vV : ndarray
+            (?) mode profiles of corresponding eigenfrequencies.
+            Has a shape of `(6, 6, N)`, where `N = kxi.shape[0]`.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
@@ -648,11 +365,11 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : int
-            quantization number
+            Quantization number.
         nc : int
-            second quantization number, used for hybridization
-        kxi
-            ???
+            Second quantization number, used for hybridization.
+        kxi : float
+            (rad/m) wavenumber.
         """
         kappa = n * np.pi / self.d
         kappac = nc * np.pi / self.d
@@ -715,10 +432,11 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        kxi
+            Quantization number.
+        nc : int
+            Second quantization number, used for hybridization.
+        kxi : float
+            (rad/m) wavenumber.
         """
         # The totally pinned BC should be added
         kappa = n * np.pi / self.d

@@ -22,7 +22,7 @@ class SingleLayer:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field
+        (T) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
     d : float
@@ -89,18 +89,17 @@ class SingleLayer:
 
     Code example
     ------------
-    ``
-    # Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
+    .. code-block:: python
+        # Here is an example of code
+        kxi = np.linspace(1e-12, 150e6, 150)
 
-    NiFeChar = SingleLayer(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                           n=0, d=30e-9, weff=2e-6, nT=0,
-                           boundary_cond=2, Bext=20e-3, material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    decLen = NiFeChar.GetDecLen()*1e6  # um
-    ``
+        NiFeChar = SingleLayer(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
+                               n=0, d=30e-9, weff=2e-6, nT=0,
+                               boundary_cond=2, Bext=20e-3, material=SWT.NiFe)
+        DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+        vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
+        decLen = NiFeChar.GetDecLen()*1e6  # um
 
     # ### update when finished adding/removing code
     # ### add 'See also' section
@@ -514,6 +513,9 @@ class SingleLayer:
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
+
         Parameters
         ----------
         n : int
@@ -522,6 +524,11 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
         """
         if nc == -1:
             nc = n
@@ -542,6 +549,11 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
         """
         if nc == -1:
             nc = n
@@ -575,6 +587,11 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        declen : ndarray
+            (m) decay lengths.
         """
         if nc == -1:
             nc = n
@@ -594,6 +611,12 @@ class SingleLayer:
             Quantization number.
         nc : int
             Quantization number of the crossing mode.
+
+        Returns
+        -------
+        wdn, wdnc : ndarray
+            (rad*Hz) frequencies of corresponding kxi for the two
+            crossing modes.
         """
         if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -700,7 +723,7 @@ class SingleLayer:
                 "Sorry, for degenerate perturbation you have"
                 + " to choose theta = pi/2 or 0."
             )
-        return (wdn, wdnc)
+        return wdn, wdnc
 
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """Give density of states for given mode.
