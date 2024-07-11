@@ -42,33 +42,30 @@ class SingleLayer:
         totally pinned BC, 3 is a long wave limit, 4 is partially
         pinned BC.
     dp : float, optional
-        pinning parameter for 4 BC, ranges from 0 to inf,
+        (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned.
-    Ku : float, optional
-        (J/m^3) uniaxial anisotropy strength.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
     Ms : float
         (A/m) saturation magnetization.
-    alpha : float
-        () Gilbert damping.
     gamma : float
         (rad*Hz/T) gyromagnetic ratio (positive convention).
+    Aex : float
+        (J/m) exchange stiffness constant.
+    alpha : float
+        () Gilbert damping.
     mu0dH0 : float
         (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        w0 = MU0*gamma*Hext
+        `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        w0 = MU0*gamma*Ms
+        `w0 = MU0*gamma*Ms`
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
-        A = Aex*2/(Ms**2*MU0)
-    Hani : float
-        (A/m) uniaxial anisotropy field of corresponding Ku.
-        Hani = 2*Ku/material.Ms/MU0
+        `A = Aex*2/(Ms**2*MU0)`
 
     Methods
     -------
@@ -77,7 +74,7 @@ class SingleLayer:
     GetDisperison
     GetGroupVelocity
     GetLifetime
-    GetPropLen
+    GetDecLen
     GetSecondPerturbation
     GetDensityOfStates
     GetExchangeLen
@@ -102,7 +99,7 @@ class SingleLayer:
     DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
     vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
     lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
+    decLen = NiFeChar.GetDecLen()*1e6  # um
     ``
 
     # ### update when finished adding/removing code
@@ -187,11 +184,11 @@ class SingleLayer:
         Parameters
         ----------
         n : int
-            Quantization number
+            Quantization number.
         nc : int, optional
-            Second quantization number, used for hybridization
+            Second quantization number, used for hybridization.
         nT : int, optional
-            Waveguide (transversal) quantization number
+            Waveguide (transversal) quantization number.
         """
         if nc == -1:
             nc = n
@@ -453,7 +450,7 @@ class SingleLayer:
         return Qnn
 
     def GetPartiallyPinnedKappa(self, n):
-        """Gives kappa from the transverse equation.
+        """Gives kappa from the transverse equation (in rad/m).
 
         Parameters
         ----------

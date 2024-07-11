@@ -19,7 +19,7 @@ class Material:
     Ms : float
         (A/m) saturation magnetization.
     Aex : float
-        (J/m) exchange constant.
+        (J/m) exchange stiffness constant.
     alpha : float
         () Gilbert damping.
     gamma : float, default 28.1e9*2*np.pi
@@ -27,7 +27,7 @@ class Material:
     mu0dH0 : float
         (T) inhomogeneous broadening.
     Ku : float
-        (J/m^3) surface anisotropy strength.
+        (J/m^2) surface anisotropy strength.
 
     Attributes
     ----------
@@ -55,12 +55,12 @@ class Material:
 
     def get_pinning(self):
         """Calculates the symmetric pinning parameter on a surface
-        with a given surface anisotropy.
-        `p=Ku/Aex`
-        Maybe should be rather `p=-Ku/Aex`, since Ku for OOP anisotropy
-        easy axsi is negative. ### check this
+        with a given surface anisotropy. The result is in rad/m.
+        `p=-2*pi*Ku/Aex`
+
+        https://doi.org/10.1103/PhysRevB.83.174417
         """
-        return self.Ku/self.Aex
+        return -2*np.pi*self.Ku/self.Aex
 
 
 # Predefined materials

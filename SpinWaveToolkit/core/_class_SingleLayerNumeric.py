@@ -51,6 +51,10 @@ class SingleLayerNumeric:
         (J/m^3) uniaxial anisotropy strength of the second layer
     KuOOP : float, optional
         (J/m^3) OOP anisotropy strength used in the Tacchi model
+        ### Should this be calculated from the surface anisotropy
+            strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis'ies`?,
+            where `d` is film thickness and `Ks` is the surface
+            anisotropy strength (same as material.Ku)
     Jbl : float, optional
         (J/m^2) bilinear RKKY coupling parameter
     Jbq : float, optional
