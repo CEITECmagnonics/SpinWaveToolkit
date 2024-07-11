@@ -33,6 +33,10 @@ class Material:
     ----------
     same as Parameters
 
+    Methods
+    -------
+    get_pinning
+
     Predefined materials (as module constants)
     ------------------------------------------
     NiFe (Permalloy)
@@ -48,6 +52,15 @@ class Material:
         self.gamma = gamma
         self.mu0dH0 = mu0dH0
         self.Ku = Ku
+
+    def get_pinning(self):
+        """Calculates the symmetric pinning parameter on a surface
+        with a given surface anisotropy.
+        `p=Ku/Aex`
+        Maybe should be rather `p=-Ku/Aex`, since Ku for OOP anisotropy
+        easy axsi is negative. ### check this
+        """
+        return self.Ku/self.Aex
 
 
 # Predefined materials

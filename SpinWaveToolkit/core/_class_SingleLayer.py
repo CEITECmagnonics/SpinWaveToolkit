@@ -529,7 +529,7 @@ class SingleLayer:
         if nc == -1:
             nc = n
         f = self.GetDispersion(n=n, nc=nc, nT=nT)
-        vg = np.diff(f) / (self.kxi[2] - self.kxi[1])  # maybe -> /diff(kxi)
+        vg = np.gradient(f) / np.gradient(self.kxi)
         return vg
 
     def GetLifetime(self, n=0, nc=-1, nT=0):
@@ -549,9 +549,10 @@ class SingleLayer:
         if nc == -1:
             nc = n
         w0Ori = self.w0
-        self.w0 = w0Ori * 0.9999999
+        step = 1e-5
+        self.w0 = w0Ori * (1 - step)
         dw0p999 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori * 1.0000001
+        self.w0 = w0Ori * (1 + step)
         dw0p001 = self.GetDispersion(n=n, nc=nc, nT=nT)
         self.w0 = w0Ori
         lifetime = (
@@ -560,7 +561,7 @@ class SingleLayer:
                 + self.gamma * self.mu0dH0
             )
             * (dw0p001 - dw0p999)
-            / (w0Ori * 1.0000001 - w0Ori * 0.9999999)
+            / (w0Ori * 2 * step)
         ) ** -1
         return lifetime
 
@@ -580,10 +581,9 @@ class SingleLayer:
         """
         if nc == -1:
             nc = n
-        propLen = self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1] * self.GetGroupVelocity(
+        return self.GetLifetime(n=n, nc=nc, nT=nT) * self.GetGroupVelocity(
             n=n, nc=nc, nT=nT
         )
-        return propLen
 
     def GetSecondPerturbation(self, n, nc):
         """Give degenerate dispersion relation based on the secular
@@ -722,8 +722,7 @@ class SingleLayer:
         """
         if nc == -1:
             nc = n
-        DoS = 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
-        return DoS
+        return 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
