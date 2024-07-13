@@ -94,6 +94,8 @@ disable=
     too-many-instance-attributes,    # complex dispersion computations
     # missing-docstring,               # replace with missing-module-docstring ?
     attribute-defined-outside-init,  # we may consider deleting this
+    wildcard-import,                 # we use wildcard imports with defined __all__
+    undefined-variable,              # due to wildcard imports
 
 
 [REPORTS]

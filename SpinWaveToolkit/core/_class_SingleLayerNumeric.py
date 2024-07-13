@@ -5,7 +5,7 @@ Core (private) file for the `SingleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import fsolve
-from ..helpers import *
+from SpinWaveToolkit.helpers import *
 
 __all__ = ["SingleLayerNumeric"]
 
@@ -80,30 +80,15 @@ class SingleLayerNumeric:
     Methods
     -------
     # sort these and check completeness, make some maybe private
-    GetPartiallyPinnedKappa
     GetDisperison
-    GetDisperisonTacchi
-    GetDispersionSAFM
-    GetDispersionSAFMNumeric
-    GetDispersionSAFMNumericRezende
-    GetPhisSAFM
-    GetFreeEnergySAFM
-    GetFreeEnergySAFMOOP
     GetGroupVelocity
     GetLifetime
-    GetLifetimeSAFM
-    GetPropLen
-    GetSecondPerturbation
+    GetDecLen
     GetDensityOfStates
     GetExchangeLen
-    GetEllipticity
-    GetCouplingParam
-    GetThresholdField
 
     Private methods
     ---------------
-    __GetPropagationVector
-    __GetPropagationQVector
     __CnncTacchi
     __pnncTacchi
     __qnncTacchi
@@ -112,8 +97,6 @@ class SingleLayerNumeric:
     __bTacchi
     __PnncTacchi
     __QnncTacchi
-    __GetAk
-    __GetBk
 
     Code example
     ------------
@@ -433,6 +416,30 @@ class SingleLayerNumeric:
                 + "the Tacchi numeric solution."
             )
         return Qnn
+
+    def GetPartiallyPinnedKappa(self, n):
+        """Gives kappa from the transverse equation (in rad/m).
+
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        """
+
+        def transEq(kappa, d, dp):
+            e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
+            return e
+
+        # The classical thickness mode is given as starting point
+        kappa = fsolve(
+            transEq,
+            x0=(n * np.pi / self.d),
+            args=(self.d, self.dp),
+            maxfev=10000,
+            epsfcn=1e-10,
+            factor=0.1,
+        )
+        return kappa
 
     def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).

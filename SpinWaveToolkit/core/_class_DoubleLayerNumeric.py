@@ -5,7 +5,7 @@ Core (private) file for the `DoubleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import fsolve, minimize
-from ..helpers import *
+from SpinWaveToolkit.helpers import *
 
 __all__ = ["DoubleLayerNumeric"]
 

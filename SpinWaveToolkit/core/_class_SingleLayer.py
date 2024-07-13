@@ -4,7 +4,7 @@ Core (private) file for the `SingleLayer` class.
 
 import numpy as np
 from scipy.optimize import fsolve
-from ..helpers import *
+from SpinWaveToolkit.helpers import *
 
 __all__ = ["SingleLayer"]
 
@@ -780,9 +780,11 @@ class SingleLayer:
         return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 
     def GetCouplingParam(self):
+        """### Add docstring!"""
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
     def GetThresholdField(self):
+        """### Add docstring!"""
         return (
             2
             * np.pi
