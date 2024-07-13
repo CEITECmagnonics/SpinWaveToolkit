@@ -96,6 +96,8 @@ disable=
     attribute-defined-outside-init,  # we may consider deleting this
     wildcard-import,                 # we use wildcard imports with defined __all__
     undefined-variable,              # due to wildcard imports
+    protected-access,                # access to protected classes in root __init__.py (might delete later)
+    duplicate-code,                  # lot of similarities across models
 
 
 [REPORTS]
