@@ -28,6 +28,7 @@ class Material:
         (T) inhomogeneous broadening.
     Ku : float
         (J/m^2) surface anisotropy strength.
+        (Currently unused in any dispersion calculations.)
 
     Attributes
     ----------

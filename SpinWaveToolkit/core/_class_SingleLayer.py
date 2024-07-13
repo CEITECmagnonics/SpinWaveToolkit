@@ -169,6 +169,7 @@ class SingleLayer:
 
     @property
     def Aex(self):
+        """Exchange stiffness constant (J/m)."""
         return self._Aex
 
     @Aex.setter
@@ -557,20 +558,20 @@ class SingleLayer:
         """
         if nc == -1:
             nc = n
-        w0Ori = self.w0
+        w0_ori = self.w0
         step = 1e-5
-        self.w0 = w0Ori * (1 - step)
-        dw0p999 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori * (1 + step)
-        dw0p001 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori
+        self.w0 = w0_ori * (1 - step)
+        dw_lo = self.GetDispersion(n=n, nc=nc, nT=nT)
+        self.w0 = w0_ori * (1 + step)
+        dw_hi = self.GetDispersion(n=n, nc=nc, nT=nT)
+        self.w0 = w0_ori
         lifetime = (
             (
                 self.alpha * self.GetDispersion(n=n, nc=nc, nT=nT)
                 + self.gamma * self.mu0dH0
             )
-            * (dw0p001 - dw0p999)
-            / (w0Ori * 2 * step)
+            * (dw_hi - dw_lo)
+            / (w0_ori * 2 * step)
         ) ** -1
         return lifetime
 
