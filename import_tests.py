@@ -7,3 +7,5 @@ from pprint import pprint
 import SpinWaveToolkit as SWT
 
 pprint(dir(SWT))
+pprint(SWT.__all__)
+print(f"{SWT.core._class_SingleLayer.MU0 = }")
