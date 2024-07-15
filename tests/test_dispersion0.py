@@ -8,7 +8,7 @@ class TestClass:
         show = False  # plot calculated params? (useful for debugging)
         # film and measurement parameters
         mat = SWT.NiFe
-        d = 10e-9
+        d = 10e-9  # must be thin so that hybridization is weak
         bext = 50e-3
         kxi = np.linspace(0, 25e6, 200)
         kxi[np.argmin(kxi)] += 1e-3
@@ -22,7 +22,7 @@ class TestClass:
         sln = SWT.SingleLayerNumeric(bext, mat, d, kxi, theta, phi,
                                     boundary_cond=bc)
         f_sln = sln.GetDispersion()[0]*1e-9/np.pi/2
-        zeroth = 3
+        zeroth = 3  # due to ordering of the eigenfrequencies
         if show:
             import matplotlib.pyplot as plt
             plt.plot(kxi, f_sl, label="SL")

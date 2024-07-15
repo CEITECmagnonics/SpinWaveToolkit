@@ -455,6 +455,10 @@ class SingleLayerNumeric:
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
 
+        The returned modes are sorted from low to high frequencies,
+        therefore the lowest order mode with positive frequency has
+        index 3.
+
         Returns
         -------
         wV : ndarray
@@ -528,7 +532,7 @@ class SingleLayerNumeric:
             vV[:, :, idx] = v[:, indi]  # These are eigenvectors (mode profiles)
         return wV, vV
 
-    def GetGroupVelocity(self, n=0):
+    def GetGroupVelocity(self, n=3):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
@@ -552,7 +556,7 @@ class SingleLayerNumeric:
             vg = np.gradient(w[n]) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=0):
+    def GetLifetime(self, n=3):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
@@ -584,7 +588,7 @@ class SingleLayerNumeric:
             return lifetime[n]
         return lifetime
 
-    def GetDecLen(self, n=0):
+    def GetDecLen(self, n=3):
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         Output is given in m.
@@ -601,7 +605,7 @@ class SingleLayerNumeric:
         # ### check if the usage of n is correct (how are the modes sorted?)
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
-    def GetDensityOfStates(self, n=0):
+    def GetDensityOfStates(self, n=3):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
         Out is density of states in 1D for given dispersion
