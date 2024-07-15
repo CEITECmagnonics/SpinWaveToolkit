@@ -306,7 +306,7 @@ class SingleLayerNumeric:
         kxi : float
             (rad/m) wavenumber.
         """
-        # The totally pinned BC should be added
+        # ### The totally pinned BC should be added
         kappa = n * np.pi / self.d
         kappac = nc * np.pi / self.d
         if kappa == 0:
@@ -584,9 +584,9 @@ class SingleLayerNumeric:
             return lifetime[n]
         return lifetime
 
-    def GetPropLen(self, n=0):
-        """Give propagation lengths for defined k.
-        Propagation length is computed as lambda = v_g*tau.
+    def GetDecLen(self, n=0):
+        """Give decay lengths for defined k.
+        Decay length is computed as lambda = v_g*tau.
         Output is given in m.
 
         .. warning::

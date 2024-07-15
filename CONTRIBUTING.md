@@ -32,12 +32,13 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 > JKL: I'm not sure if [black] also helps with this or not. I will update this when I find out.
 > 
 > JKL update: No, [black] does not do anything with docstrings. (this note will be removed soon)
-- Use [Pylint] for checking code errors and formatting issues (best if rated 10/10).
+- Use [pylint] for checking code errors and formatting issues (best if rated 10/10).
+- Use [pytest] to check the functionality of the module.
 
 For others, the adhering to the same workflow is recommended. Not doing so might result in not accepting Pull Requests (or more precisely, in requiring modifications before accepting).
 
 > [!TIP]
-> If you don't know how to use [black] and [pylint], check this [section](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CONTRIBUTING.md#example-of-use-for-black-and-pylint) below.
+> If you don't know how to use [black], [pylint], and [pytest], check this [section](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CONTRIBUTING.md#example-of-use-for-black-and-pylint) below.
 
 ## Where to get inspiration
 Here is a list of some Python physics modules with nice documentation and development workflow:
@@ -56,12 +57,13 @@ py -m pip install pylint
 Then, if you want to apply them to some script or a folder with scripts such as a full module, e.g. the [SpinWaveToolkit][SWTpy], open a command line and write
 ```cmd
 cd <path to folder with SpinWaveToolkit>  &:: go to directory with desired script/folder
-py -m black SpinWaveToolkit  &:: let black reformat the script
-py -m pylint SpinWaveToolkit  &:: let pylint rate the script
+py -m black SpinWaveToolkit  &:: let black reformat the module
+py -m pylint .\SpinWaveToolkit\**\*.py  &:: let pylint rate the full module
+py -m pytest  &:: let pytest execute all tests (located in the tests folder)
 ```
 (The `&::` marks beginning of a comment, no need to type comments into the command line.) Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file, set up to our needs.
 
-After this you might want to check the changes done by [black] (easily done in GitHub Desktop) and correct any errors suggested by [pylint], and if you make some additional changes, do one more iteration of this process to check that everything is all right.
+After this you might want to check the changes done by [black] (easily done in GitHub Desktop) and correct any errors suggested by [pylint] and inspect failed tests from [pytest], and if you make some additional changes, do one more iteration of this process to check that everything is all right.
 
 
 
@@ -74,6 +76,7 @@ After this you might want to check the changes done by [black] (easily done in G
 [magpylib_gh]:https://github.com/magpylib/magpylib
 [magpylib_rtd]:https://magpylib.readthedocs.io/en/latest/
 [tetrax_rtd]:https://tetrax.readthedocs.io/en/latest/index.html
-[Pylint]:https://pylint.readthedocs.io/en/stable/
+[pylint]:https://pylint.readthedocs.io/en/stable/
+[pytest]:https://docs.pytest.org/en/stable/contents.html
 
 

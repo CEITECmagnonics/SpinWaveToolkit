@@ -577,7 +577,7 @@ class SingleLayer:
 
     def GetDecLen(self, n=0, nc=-1, nT=0):
         """Give decay lengths for defined k.
-        Propagation length is computed as lambda = v_g*tau.
+        Decay length is computed as lambda = v_g*tau.
         The result is given in m.
 
         Parameters
