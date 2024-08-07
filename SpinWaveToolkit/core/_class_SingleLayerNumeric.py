@@ -4,7 +4,6 @@ Core (private) file for the `SingleLayerNumeric` class.
 
 import numpy as np
 from numpy import linalg
-from scipy.optimize import fsolve
 from SpinWaveToolkit.helpers import *
 
 __all__ = ["SingleLayerNumeric"]
@@ -426,20 +425,23 @@ class SingleLayerNumeric:
             Quantization number.
         """
 
-        def transEq(kappa, d, dp):
-            e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
+        def trans_eq(kappa, d, dp):
+            e = (kappa ** 2 - dp ** 2) * np.tan(kappa * d) - kappa * dp * 2
             return e
 
-        # The classical thickness mode is given as starting point
-        kappa = fsolve(
-            transEq,
-            x0=(n * np.pi / self.d),
-            args=(self.d, self.dp),
-            maxfev=10000,
-            epsfcn=1e-10,
-            factor=0.1,
-        )
-        return kappa
+        kappa0 = roots(trans_eq,
+                       n * np.pi / self.d,
+                       (n + 1) * np.pi / self.d,
+                       np.pi / self.d * 4e-4,
+                       # try decreasing dx if an error occurs
+                       np.pi / self.d * 1e-9,
+                       args=(self.d, self.dp))
+        for i in range(n + 1):
+            # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
+            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
+            kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
+        kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
+        return kappa0[0]
 
     def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).
