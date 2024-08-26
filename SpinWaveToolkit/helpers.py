@@ -5,8 +5,10 @@ Place for all helping functions and constants in this module.
 import numpy as np
 
 MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
+C = 299792458 # m/s Speed of light
 
-__all__ = ["MU0", "wavenumber2wavelength", "wavelength2wavenumber", "wrapAngle",
+
+__all__ = ["MU0", "C", "wavenumber2wavelength", "wavelength2wavenumber", "wrapAngle",
            "roots"]
 
 
