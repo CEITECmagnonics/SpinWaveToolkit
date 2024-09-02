@@ -61,7 +61,7 @@ class Material:
 
         https://doi.org/10.1103/PhysRevB.83.174417
         """
-        return -2*np.pi*self.Ku/self.Aex
+        return -2 * np.pi * self.Ku / self.Aex
 
 
 # Predefined materials

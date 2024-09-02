@@ -426,16 +426,18 @@ class SingleLayerNumeric:
         """
 
         def trans_eq(kappa, d, dp):
-            e = (kappa ** 2 - dp ** 2) * np.tan(kappa * d) - kappa * dp * 2
+            e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
             return e
 
-        kappa0 = roots(trans_eq,
-                       n * np.pi / self.d,
-                       (n + 1) * np.pi / self.d,
-                       np.pi / self.d * 4e-4,
-                       # try decreasing dx if an error occurs
-                       np.pi / self.d * 1e-9,
-                       args=(self.d, self.dp))
+        kappa0 = roots(
+            trans_eq,
+            n * np.pi / self.d,
+            (n + 1) * np.pi / self.d,
+            np.pi / self.d * 4e-4,
+            # try decreasing dx if an error occurs
+            np.pi / self.d * 1e-9,
+            args=(self.d, self.dp),
+        )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
             kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
@@ -578,10 +580,7 @@ class SingleLayerNumeric:
         self.w0 = w0_ori
         w_mid, _ = self.GetDispersion()
         lifetime = (
-            (
-                self.alpha * w_mid
-                + self.gamma * self.mu0dH0
-            )
+            (self.alpha * w_mid + self.gamma * self.mu0dH0)
             * (dw_hi - dw_lo)
             / (w0_ori * 2 * step)
         ) ** -1

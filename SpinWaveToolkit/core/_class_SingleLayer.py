@@ -464,12 +464,14 @@ class SingleLayer:
             e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
             return e
 
-        kappa0 = roots(trans_eq,
-                       n * np.pi / self.d,
-                       (n + 1) * np.pi / self.d,
-                       np.pi / self.d * 4e-4,  # try decreasing dx if an error occurs
-                       np.pi / self.d * 1e-9,
-                       args=(self.d, self.dp))
+        kappa0 = roots(
+            trans_eq,
+            n * np.pi / self.d,
+            (n + 1) * np.pi / self.d,
+            np.pi / self.d * 4e-4,  # try decreasing dx if an error occurs
+            np.pi / self.d * 1e-9,
+            args=(self.d, self.dp),
+        )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
             kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan

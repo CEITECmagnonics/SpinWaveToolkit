@@ -6,8 +6,13 @@ import numpy as np
 
 MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
 
-__all__ = ["MU0", "wavenumber2wavelength", "wavelength2wavenumber", "wrapAngle",
-           "roots"]
+__all__ = [
+    "MU0",
+    "wavenumber2wavelength",
+    "wavelength2wavenumber",
+    "wrapAngle",
+    "roots",
+]
 
 
 def wavenumber2wavelength(wavenumber):
@@ -139,11 +144,11 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     if f2 == 0.0:
         return x2
     if f1 * f2 > 0.0:
-        print('Root is not bracketed! (The interval is probably not correct.)')
+        print("Root is not bracketed! (The interval is probably not correct.)")
         return None
 
     x3 = x1
-    while np.abs(x1-x2) > epsilon:
+    while np.abs(x1 - x2) > epsilon:
         x3 = 0.5 * (x1 + x2)
         f3 = f(x3, *args)
         if f3 == 0.0:
