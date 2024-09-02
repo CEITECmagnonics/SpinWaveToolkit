@@ -92,16 +92,19 @@ class SingleLayer:
         # Here is an example of code
         kxi = np.linspace(1e-12, 150e6, 150)
 
-        NiFeChar = SingleLayer(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                               n=0, d=30e-9, weff=2e-6, nT=0,
-                               boundary_cond=2, Bext=20e-3, material=SWT.NiFe)
+        NiFeChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
+                               phi=np.pi/2, d=30e-9, weff=2e-6,
+                               boundary_cond=2, material=SWT.NiFe)
         DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
         vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
         lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
         decLen = NiFeChar.GetDecLen()*1e6  # um
 
+    See also
+    --------
+    SingleLayerNumeric, DoubleLayerNumeric, Material
+
     # ### update when finished adding/removing code
-    # ### add 'See also' section
     """
 
     def __init__(
