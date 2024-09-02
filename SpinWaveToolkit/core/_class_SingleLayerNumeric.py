@@ -440,7 +440,7 @@ class SingleLayerNumeric:
         )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
-            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
+            kappa0[np.isclose(kappa0, np.pi / self.d * (i + 0.5))] = np.nan
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]

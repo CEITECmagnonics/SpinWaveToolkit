@@ -23,7 +23,7 @@ class SingleLayer:
     Bext : float
         (T) external magnetic field.
     material : Material
-        instance of `Material` describing the magnetic layer material.
+        Instance of `Material` describing the magnetic layer material.
     d : float
         (m) layer thickness (in z direction).
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
@@ -123,6 +123,7 @@ class SingleLayer:
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
+
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -139,7 +140,7 @@ class SingleLayer:
 
     @property
     def Bext(self):
-        """external field value (T)"""
+        """External field value (T)."""
         return self._Bext
 
     @Bext.setter
@@ -149,7 +150,7 @@ class SingleLayer:
 
     @property
     def Ms(self):
-        """saturation magnetization (A/m)"""
+        """Saturation magnetization (A/m)."""
         return self._Ms
 
     @Ms.setter
@@ -160,7 +161,7 @@ class SingleLayer:
 
     @property
     def gamma(self):
-        """gyromagnetic ratio (rad*Hz/T)"""
+        """Gyromagnetic ratio (rad*Hz/T)."""
         return self._gamma
 
     @gamma.setter
@@ -474,7 +475,7 @@ class SingleLayer:
         )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
-            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
+            kappa0[np.isclose(kappa0, np.pi / self.d * (i + 0.5))] = np.nan
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]

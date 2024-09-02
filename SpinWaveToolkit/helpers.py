@@ -28,6 +28,10 @@ def wavenumber2wavelength(wavenumber):
     -------
     wavelength : float or ndarray
         (m) corresponding wavelength.
+
+    See also
+    --------
+    wavelength2wavenumber
     """
     return 2 * np.pi / np.array(wavenumber)
 
@@ -45,6 +49,10 @@ def wavelength2wavenumber(wavelength):
     -------
     wavenumber : float or ndarray
         (rad/m) wavenumber of the corresponding wavelength.
+
+    See also
+    --------
+    wavenumber2wavelength
     """
     return 2 * np.pi / np.array(wavelength)
 
