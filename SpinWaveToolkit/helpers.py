@@ -201,7 +201,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
         x1, x2 = rootsearch(f, a, b, dx, args)
         if x1 is None and x2 is None:  # no more roots
             break
-        elif x1 is None and x2 is not None:  # probably a divergence point
+        if x1 is None and x2 is not None:  # probably a divergence point
             a = x2
             continue  # skip this region and continue from next one
         a = x2
