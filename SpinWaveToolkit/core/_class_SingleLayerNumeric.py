@@ -13,8 +13,9 @@ class SingleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
-    The model uses famous Slavin-Kalinikos equation from
-    https://doi.org/10.1088/0022-3719/19/35/014
+
+    The dispersion model uses the approach of Tacchi, see:
+    https://doi.org/10.1103/PhysRevB.100.104406
 
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not quaranteed.
@@ -25,6 +26,7 @@ class SingleLayerNumeric:
         (T) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction)
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
@@ -68,7 +70,7 @@ class SingleLayerNumeric:
         `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Ms`
+        `wM = MU0*gamma*Ms`
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
         `A = Aex*2/(Ms**2*MU0)`
@@ -460,22 +462,22 @@ class SingleLayerNumeric:
         NumericCalculationofDispersionModeProfiles.py).
 
         The returned modes are sorted from low to high frequencies,
-        therefore the lowest order mode with positive frequency has
-        index 3.
+        omitting the negative-frequency modes.
 
         Returns
         -------
         wV : ndarray
             (rad*Hz) frequencies of the 3 lowest spin-wave modes.
-            Has a shape of `(6, N)`, where `N = kxi.shape[0]`.
+            Has a shape of `(3, N)`, where `N = kxi.shape[0]`.
         vV : ndarray
-            (?) mode profiles of corresponding eigenfrequencies.
-            Has a shape of `(6, 6, N)`, where `N = kxi.shape[0]`.
+            Mode profiles of corresponding eigenfrequencies,
+            given as Fourier coefficients for IP and OOP profiles.
+            Has a shape of `(6, 3, N)`, where `N = kxi.shape[0]`.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
         wV = np.zeros((6, np.size(ks, 0)))
-        vV = np.zeros((6, 6, np.size(ks, 0)))
+        vV = np.zeros((6, 3, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
                 [
@@ -531,12 +533,12 @@ class SingleLayerNumeric:
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
-            indi = np.argsort(w)
-            wV[:, idx] = w[indi]  # These are eigenvalues (dispersion)
-            vV[:, :, idx] = v[:, indi]  # These are eigenvectors (mode profiles)
+            indi = np.argsort(w)[3:]  # sort low-to-high and crop to positive
+            wV[:, idx] = w[indi]  # eigenvalues (dispersion)
+            vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
         return wV, vV
 
-    def GetGroupVelocity(self, n=3):
+    def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
@@ -546,9 +548,14 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2}, default 0
             Quantization number.  If -1, data
-            for all calculated modes are returned.
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
         """
         w, _ = self.GetDispersion()
         if n == -1:
@@ -556,20 +563,24 @@ class SingleLayerNumeric:
             for i in range(w.shape[0]):
                 vg[i] = np.gradient(w[i]) / np.gradient(self.kxi)
         else:
-            # ### check if the usage of n is correct (how are the modes sorted?)
             vg = np.gradient(w[n]) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=3):
+    def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2}, default 0
             Quantization number.  If -1, data
-            for all calculated modes are returned.
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -585,11 +596,10 @@ class SingleLayerNumeric:
             / (w0_ori * 2 * step)
         ) ** -1
         if n != -1:
-            # ### check if the usage of n is correct (how are the modes sorted?)
             return lifetime[n]
         return lifetime
 
-    def GetDecLen(self, n=3):
+    def GetDecLen(self, n=0):
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         Output is given in m.
@@ -599,17 +609,21 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2}, default 0
             Quantization number.  If -1, data
-            for all calculated modes are returned.
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        declen : ndarray
+            (m) decay length.
         """
-        # ### check if the usage of n is correct (how are the modes sorted?)
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
-    def GetDensityOfStates(self, n=3):
+    def GetDensityOfStates(self, n=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
 
         .. warning::
@@ -617,9 +631,14 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2}, default 0
             Quantization number.  If -1, data
-            for all calculated modes are returned.
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
 

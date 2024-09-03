@@ -14,8 +14,8 @@ class DoubleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
-    The model uses famous Slavin-Kalinikos equation from
-    https://doi.org/10.1088/0022-3719/19/35/014
+    
+    The model uses ### ADD SOURCE
 
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not quaranteed.
@@ -26,6 +26,7 @@ class DoubleLayerNumeric:
         (T) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction).
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
@@ -61,6 +62,7 @@ class DoubleLayerNumeric:
     material2 : Material or None
         instance of `Material` describing the second magnetic
         layer, if None, `material` parameter is used instead.
+        Its properties are saved as attributes, but this object is not.
     JblDyn : float or None
         (J/m^2) dynamic bilinear RKKY coupling parameter,
         if None, same as `Jbl`.
@@ -84,55 +86,31 @@ class DoubleLayerNumeric:
         (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Hext.
+        `w0 = MU0*gamma*Hext`.
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Ms.
+        `wM = MU0*gamma*Ms`.
     A, A2 : float
         (m^2) parameter in Slavin-Kalinikos equation,
-        A = Aex*2/(Ms**2*MU0).
+        `A = Aex*2/(Ms**2*MU0)`.
     Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,
-        Hani = 2*Ku/material.Ms/MU0.
+        `Hani = 2*Ku/material.Ms/MU0`.
     Ms, Ms2 : float
         (A/m) saturation magnetization.
 
     Methods
     -------
     # sort these and check completeness, make some maybe private
-    GetPartiallyPinnedKappa
     GetDisperison
-    GetDispersionSAFM
-    GetDispersionSAFMNumeric
-    GetDispersionSAFMNumericRezende
-    GetPhisSAFM
-    GetFreeEnergySAFM
-    GetFreeEnergySAFMOOP
+    GetPhis
+    GetFreeEnergyIP
+    GetFreeEnergyOOP
     GetGroupVelocity
     GetLifetime
-    GetLifetimeSAFM
-    GetPropLen
-    GetSecondPerturbation
+    GetDecLen
     GetDensityOfStates
     GetExchangeLen
-    GetEllipticity
-    GetCouplingParam
-    GetThresholdField
-
-    Private methods
-    ---------------
-    __GetPropagationVector
-    __GetPropagationQVector
-    __CnncTacchi
-    __pnncTacchi
-    __qnncTacchi
-    __OmegankTacchi
-    __ankTacchi
-    __bTacchi
-    __PnncTacchi
-    __QnncTacchi
-    __GetAk
-    __GetBk
 
     Code example
     ------------
@@ -304,8 +282,27 @@ class DoubleLayerNumeric:
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in the rad*Hz.
 
-        ### returns dispersion relations for 2 modes (acoustic and optic),
-            each in positive and negative values -> 4 modes
+        The model formulates a system matrix and then numerically solves
+        its eigenvalues and eigenvectors. The eigenvalues represent the
+        dispersion relation (as the matrix is 4x4 it has 4 eigenvalues).
+        The eigen values represent the acoustic and optic spin-wave
+        modes (each with negative and positive frequency).
+        The eigenvectors represent the amplitude of the individual
+        spin-wave modes and can be used to calculate spin-wave profile
+        (see example NumericCalculationofDispersionModeProfiles.py).
+
+        The returned modes are sorted from low (acoustic) to high
+        (optic) frequencies, omitting the negative-frequency modes.
+
+        Returns
+        -------
+        wV : ndarray
+            (rad*Hz) frequencies of the acoustic and optic spin-wave
+            modes.  Has a shape of `(2, N)`, where `N = kxi.shape[0]`.
+        vV : ndarray
+            Mode profiles of corresponding eigenfrequencies,
+            given as Fourier coefficients for IP and OOP profiles.
+            Has a shape of `(4, 2, N)`, where `N = kxi.shape[0]`.
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -321,10 +318,11 @@ class DoubleLayerNumeric:
         Hs1 = 0  # Surface anisotropy of the first layer
         Hs2 = 0  # Surface anisotropy of the second layer
 
-        phi1, phi2 = wrapAngle(self.GetPhisSAFM())
+        phi1, phi2 = wrapAngle(self.GetPhis())
 
         ks = self.kxi
-        wV = np.zeros((4, np.size(ks, 0)))
+        wV = np.zeros((2, np.size(ks, 0)))
+        vV = np.zeros((4, 2, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Zet1 = (
                 np.sinh(k * self.d1 / 2)
@@ -454,16 +452,27 @@ class DoubleLayerNumeric:
                 ],
                 dtype=complex,
             )
-            w, _ = linalg.eig(A)
-            wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)
-        return wV
+            w, v = linalg.eig(A)
+            indi = np.argsort(w)[2:]  # sort low-to-high and crop to positive
+            wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
+            # ### check the correctness of the following line (use imag?)
+            vV[:, :, idx] = v[:, indi] * self.gamma * MU0  # eigenvectors (mode profiles)
+            # ### the original way to get dispersion:
+            # wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)[2:]
+        return wV, vV
 
     def GetPhis(self):
         """Gives angles of magnetization in both SAF layers.
         The returned value is in rad.
         Function finds the energy minimum
         If there are problems with energy minimalization I recomend to
-        try different methods (but Nelder-Mead seems to work in most scenarios)
+        try different methods (but Nelder-Mead seems to work in most
+        scenarios).
+
+        Returns
+        -------
+        phis : [float, float]
+            (rad) equilibrium angles of magnetization.
         """
         # phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
         # phi2x0 = wrapAngle(self.phiAnis2 + 0.1)
@@ -480,13 +489,23 @@ class DoubleLayerNumeric:
         return phis
 
     def GetFreeEnergy(self, phis):
-        """Gives overall energy of SAF system.
+        """Gives overall energy (density) of SAF system.
         The returned value is in joules.
 
         This function is used during fidning of the angles of
         magnetization.  Only works, when the out-of-plane tilt is not
         expected.  Function does not minimize the OOP angles, just
-        assumes completelly in-plane magnetization.
+        assumes completely in-plane magnetization.
+
+        Parameters
+        ----------
+        phis : [float, float]
+            (rad) IP magnetization angles.
+
+        Returns
+        -------
+        E : float
+            (J) energy density of the system.
         """
         phiAnis1 = self.phiAnis1  # EA along x direction
         phiAnis2 = self.phiAnis2  # EA along x direction
@@ -552,12 +571,22 @@ class DoubleLayerNumeric:
         return E
 
     def GetFreeEnergyOOP(self, thetas):
-        """Gives overall energy of SAF system.
+        """Gives overall energy (density) of the SAF system.
         The returned value is in joules.
 
         This function is used during fidning of the angles of
         magnetization.  This function assumes fixed in-plane angle of
         the magnetization.
+
+        Parameters
+        ----------
+        thetas : [float, float]
+            (rad) OOP magnetization angles.
+
+        Returns
+        -------
+        E : float
+            (J) energy density of the system.
         """
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
@@ -617,120 +646,111 @@ class DoubleLayerNumeric:
         )
         return E
 
-    def GetGroupVelocity(self, n=0, nc=-1, nT=0):
+    def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1}, default 0
+            Quantization number.  If -1, data
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
         """
-        if nc == -1:
-            nc = n
-        f = self.GetDispersion(n=n, nc=nc, nT=nT)
-        vg = np.diff(f) / (self.kxi[2] - self.kxi[1])  # maybe -> /diff(kxi)
+        w, _ = self.GetDispersion()
+        if n == -1:
+            vg = np.zeros(w.shape)
+            for i in range(w.shape[0]):
+                vg[i] = np.gradient(w[i]) / np.gradient(self.kxi)
+        else:
+            vg = np.gradient(w[n]) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=0, nc=-1, nT=0):
+    def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
         lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-        The output is in s
+        The output is in s.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1}, default 0
+            Quantization number.  If -1, data
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
         """
-        if nc == -1:
-            nc = n
-        w0Ori = self.w0
-        self.w0 = w0Ori * 0.9999999
-        dw0p999 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori * 1.0000001
-        dw0p001 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori
+        Bext_ori = self.Bext
+        step = 1e-5
+        self.Bext = Bext_ori * (1 - step)
+        dw_lo, _ = self.GetDispersion()
+        self.Bext = Bext_ori * (1 + step)
+        dw_hi, _ = self.GetDispersion()
+        self.Bext = Bext_ori
         lifetime = (
             (
-                self.alpha * self.GetDispersion(n=n, nc=nc, nT=nT)
+                self.alpha * self.GetDispersion()[0]
                 + self.gamma * self.mu0dH0
             )
-            * (dw0p001 - dw0p999)
-            / (w0Ori * 1.0000001 - w0Ori * 0.9999999)
+            * (dw_hi - dw_lo)
+            / (self.Bext * self.gamma * 2 * step)
         ) ** -1
+        if n != -1:
+            return lifetime[n]
         return lifetime
 
-    def GetLifetimeSAFM(self, n):
-        """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-        Output is given in s
-        Parameters
-        ----------
-        n : int
-            quantization number
-        """
-        BextOri = self.Bext
-        self.Bext = BextOri - 0.001
-        dw0p999 = self.GetDispersionSAFMNumeric()
-        self.Bext = BextOri + 0.001
-        dw0p001 = self.GetDispersionSAFMNumeric()
-        self.Bext = BextOri
-        w = self.GetDispersionSAFMNumeric()
-        lifetime = (
-            (self.alpha * w[n] + self.gamma * self.mu0dH0)
-            * (dw0p001[n] - dw0p999[n])
-            / 0.2
-        ) ** -1
-        return lifetime
-
-    def GetPropLen(self, n=0, nc=-1, nT=0):
-        """Give propagation lengths for defined k.
-        Propagation length is computed as lambda = v_g*tau.
+    def GetDecLen(self, n=0):
+        """Give decay lengths for defined k.
+        Decay length is computed as lambda = v_g*tau.
         Output is given in m.
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        propLen = self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1] * self.GetGroupVelocity(
-            n=n, nc=nc, nT=nT
-        )
-        return propLen
+        n : {-1, 0, 1, 2}, default 0
+            Quantization number.  If -1, data
+            for all (positive) calculated modes are returned.
 
-    def GetDensityOfStates(self, n=0, nc=-1, nT=0):
+        Returns
+        -------
+        declen : ndarray
+            (m) decay length.
+        """
+        return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
+
+    def GetDensityOfStates(self, n=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
+
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
 
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1, 2}, default 0
+            Quantization number.  If -1, data
+            for all (positive) calculated modes are returned.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
-        if nc == -1:
-            nc = n
-        DoS = 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
-        return DoS
+        return 1 / self.GetGroupVelocity(n=n)
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""

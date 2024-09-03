@@ -12,6 +12,7 @@ class SingleLayer:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
+
     The model uses famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
@@ -24,6 +25,7 @@ class SingleLayer:
         (T) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction).
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
@@ -61,7 +63,7 @@ class SingleLayer:
         `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Ms`
+        `wM = MU0*gamma*Ms`
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
         `A = Aex*2/(Ms**2*MU0)`
@@ -599,7 +601,7 @@ class SingleLayer:
         Returns
         -------
         declen : ndarray
-            (m) decay lengths.
+            (m) decay length.
         """
         if nc == -1:
             nc = n
@@ -736,7 +738,7 @@ class SingleLayer:
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
 
         Parameters
@@ -747,6 +749,11 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
         if nc == -1:
             nc = n
