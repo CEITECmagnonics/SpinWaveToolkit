@@ -221,7 +221,7 @@ class DoubleLayerNumeric:
     @Ms.setter
     def Ms(self, val):
         self._Ms = val
-        self.A = self.Aex * 2 / (val ** 2 * MU0)
+        self.A = self.Aex * 2 / (val**2 * MU0)
         self.Hani = 2 * self.Ku / val / MU0
 
     @property
@@ -241,7 +241,7 @@ class DoubleLayerNumeric:
     @Aex.setter
     def Aex(self, val):
         self._Aex = val
-        self.A = val * 2 / (self.Ms ** 2 * MU0)
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
     @property
     def Ku(self):
@@ -261,7 +261,7 @@ class DoubleLayerNumeric:
     @Ms2.setter
     def Ms2(self, val):
         self._Ms2 = val
-        self.A2 = self.Aex2 * 2 / (val ** 2 * MU0)
+        self.A2 = self.Aex2 * 2 / (val**2 * MU0)
         self.Hani2 = 2 * self.Ku2 / val / MU0
 
     @property
@@ -272,7 +272,7 @@ class DoubleLayerNumeric:
     @Aex2.setter
     def Aex2(self, val):
         self._Aex2 = val
-        self.A2 = val * 2 / (self.Ms2 ** 2 * MU0)
+        self.A2 = val * 2 / (self.Ms2**2 * MU0)
 
     @property
     def Ku2(self):
@@ -462,7 +462,9 @@ class DoubleLayerNumeric:
             indi = np.argsort(w)[2:]  # sort low-to-high and crop to positive
             wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
             # ### check the correctness of the following line (use imag?)
-            vV[:, :, idx] = v[:, indi] * self.gamma * MU0  # eigenvectors (mode profiles)
+            vV[:, :, idx] = (
+                v[:, indi] * self.gamma * MU0
+            )  # eigenvectors (mode profiles)
             # ### the original way to get dispersion:
             # wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)[2:]
         return wV, vV
@@ -704,10 +706,7 @@ class DoubleLayerNumeric:
         dw_hi, _ = self.GetDispersion()
         self.Bext = Bext_ori
         lifetime = (
-            (
-                self.alpha * self.GetDispersion()[0]
-                + self.gamma * self.mu0dH0
-            )
+            (self.alpha * self.GetDispersion()[0] + self.gamma * self.mu0dH0)
             * (dw_hi - dw_lo)
             / (self.Bext * self.gamma * 2 * step)
         ) ** -1
