@@ -44,6 +44,10 @@ class Material:
     CoFeB
     FeNi (Metastable iron)
     YIG
+
+    See also
+    --------
+    SingleLayer, SingleLayerNumeric, DoubleLayerNumeric
     """
 
     def __init__(self, Ms, Aex, alpha, mu0dH0=0, gamma=28.1 * 2 * np.pi * 1e9, Ku=0):

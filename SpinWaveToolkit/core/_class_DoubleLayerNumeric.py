@@ -14,7 +14,7 @@ class DoubleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
-    
+
     The model uses ### ADD SOURCE
 
     Most parameters can be specified as vectors (1d numpy arrays)
@@ -127,6 +127,12 @@ class DoubleLayerNumeric:
     lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
     propLen = NiFeChar.GetPropLen()*1e6  # um
     ``
+
+    See also
+    --------
+    SingleLayer, SingleLayerNumeric, Material
+
+    # ### update when finished adding/removing code
     """
 
     def __init__(

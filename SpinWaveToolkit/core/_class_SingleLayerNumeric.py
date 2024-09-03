@@ -112,8 +112,14 @@ class SingleLayerNumeric:
     DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
     vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
     lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
+    decLen = NiFeChar.GetDecLen()*1e6  # um
     ``
+
+    See also
+    --------
+    SingleLayer, DoubleLayerNumeric, Material
+
+    # ### update when finished adding/removing code
     """
 
     def __init__(
