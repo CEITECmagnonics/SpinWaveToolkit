@@ -18,7 +18,7 @@ class DoubleLayerNumeric:
     The model uses ### ADD SOURCE
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------

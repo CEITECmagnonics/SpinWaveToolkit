@@ -13,11 +13,11 @@ class SingleLayer:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    The model uses famous Slavin-Kalinikos equation from
+    The model uses the famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
@@ -70,7 +70,6 @@ class SingleLayer:
 
     Methods
     -------
-    # ### sort these and check completeness
     GetPartiallyPinnedKappa
     GetDisperison
     GetGroupVelocity
@@ -85,28 +84,31 @@ class SingleLayer:
 
     Private methods
     ---------------
+    __GetPropagationVector
+    __GetPropagationQVector
     __GetAk
     __GetBk
 
     Code example
     ------------
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the lowest-order mode in a 30 nm
+    thick NiFe (Permalloy) layer.
     .. code-block:: python
-        # Here is an example of code
         kxi = np.linspace(1e-12, 150e6, 150)
 
-        NiFeChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
+        PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
                                phi=np.pi/2, d=30e-9, weff=2e-6,
                                boundary_cond=2, material=SWT.NiFe)
-        DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-        vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-        lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-        decLen = NiFeChar.GetDecLen()*1e6  # um
+        DispPy = PyChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
 
     See also
     --------
     SingleLayerNumeric, DoubleLayerNumeric, Material
 
-    # ### update when finished adding/removing code
     """
 
     def __init__(

@@ -12,13 +12,13 @@ __all__ = ["SingleLayerNumeric"]
 class SingleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
-    propagation length.
+    propagation length for up to three lowest-order modes.
 
     The dispersion model uses the approach of Tacchi, see:
     https://doi.org/10.1103/PhysRevB.100.104406
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
@@ -466,6 +466,7 @@ class SingleLayerNumeric:
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
+        ### Update correct example.
 
         The returned modes are sorted from low to high frequencies,
         omitting the negative-frequency modes.
@@ -482,7 +483,7 @@ class SingleLayerNumeric:
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
-        wV = np.zeros((6, np.size(ks, 0)))
+        wV = np.zeros((3, np.size(ks, 0)))
         vV = np.zeros((6, 3, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
