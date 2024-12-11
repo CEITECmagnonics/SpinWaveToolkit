@@ -459,7 +459,7 @@ class DoubleLayerNumeric:
                 dtype=complex,
             )
             w, v = linalg.eig(A)
-            indi = np.argsort(w)[2:]  # sort low-to-high and crop to positive
+            indi = np.argsort(np.imag(w))[2:]  # sort low-to-high and crop to positive
             wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
             # ### check the correctness of the following line (use imag?)
             vV[:, :, idx] = (
