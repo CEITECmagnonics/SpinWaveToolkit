@@ -78,11 +78,8 @@ from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
 from .core._class_DoubleLayerNumeric import *
 
-# if you add __all__ lists to all files, you can use wildcard imports and do not
-#   worry about importing also stuff like numpy as e.g. `SWT.np` :D
 
-# this is for testing (to avoid pylint and Pycharm warnings)
-# (might be removed in the future)
+__version__ = "1.0.0"
 __all__ = [
     "helpers",
     *core._class_Material.__all__,
@@ -90,3 +87,6 @@ __all__ = [
     "SingleLayerNumeric",
     "DoubleLayerNumeric",
 ]
+# if you add __all__ lists to all files, you can use wildcard imports and do not
+#   worry about importing also stuff like numpy as e.g. `SWT.np` :D
+

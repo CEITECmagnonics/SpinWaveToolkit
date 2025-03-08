@@ -14,7 +14,10 @@ For more general talks about new features, improvements, etc., use the GitHub [D
 The SpinWaveToolkit repository adapts the following structure:
 
 - SpinWaveToolkit
-  - **SpinWaveToolkit.py** - the module itself
+  - **SpinWaveToolkit** - the module base folder
+    - `__init__.py` - script for importing all submodules (file where all useful classes, functions and constants are imported so that they are accessible from the first level module)
+    - `helpers.py` - place for supplemental functions, not directly related a specific model, should not have any imports from other parts of this module
+    - `core` - folder with all classes as individual scripts (e.g. for Material class named _class_Material.py), usually each model type has its own class
   - **docs** - documentation that will be later displayed on [ReadTheDocs](https://readthedocs.org/) or GitHub Wiki of this repository (TBD), preferrably emulated by [Sphinx](https://www.sphinx-doc.org/en/master/) (theme and usage TBD)
   - **examples** - folder containing use cases and examples in Jupyter Notebook format
   - other files are project configuration files, readme, etc.
@@ -41,7 +44,8 @@ For others, the adhering to the same workflow is recommended. Not doing so might
 ## Where to get inspiration
 Here is a list of some Python physics modules with nice documentation and development workflow:
 - **magpylib**: [GitHub][magpylib_gh], [ReadTheDocs][magpylib_rtd]
-- **TetraX**: [ReadTheDocs][tetrax_rtd]
+- **TetraX**: [repository](https://codebase.helmholtz.cloud/micromagnetic-modeling/tetrax/-/tree/main), [ReadTheDocs][tetrax_rtd]
+- **PyPa sampleproject**: [GitHub](https://github.com/pypa/sampleproject)
 
 
 ## Other notes
@@ -65,7 +69,7 @@ py -m pytest  &:: let pytest execute all tests (located in the tests folder)
 After this you might want to check the changes done by [black] (easily done in GitHub Desktop) and correct any errors suggested by [pylint] and inspect failed tests from [pytest], and if you make some additional changes, do one more iteration of this process to check that everything is all right.
 
 ### Notes on [pytest]
-Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue](Issues) so someone else can try to implement it.
+Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue][Issues] so someone else can try to implement it.
 
 
 

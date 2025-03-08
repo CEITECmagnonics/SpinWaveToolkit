@@ -30,10 +30,7 @@ name = "SpinWaveToolkit" # REQUIRED, is the only field that cannot be marked as 
 
 # Versions should comply with PEP 440:
 # https://www.python.org/dev/peps/pep-0440/
-#
-# For a discussion on single-sourcing the version, see
-# https://packaging.python.org/guides/single-sourcing-package-version/
-version = "1.0.0" # REQUIRED, although can be dynamic
+dynamic = ["version"]
 
 # This is a one-line description or tagline of what your project does. This
 # corresponds to the "Summary" metadata field:
@@ -163,4 +160,5 @@ test = ["pytest"]
 # installed, specify them here.
 include-package-data = false
 
-# ### add dynamic versioning of the SW (inspire e.g. by TetraX)
+[tool.setuptools.dynamic]
+version = {attr = "SpinWaveToolkit.__version__"}
