@@ -5,7 +5,10 @@
 
 ## Installation
 
-Copy the [SpinWaveToolkit.py][SWTpy] file to your `site-packages` folder. Usually (on Windows machines) located at
+> [!NOTE]
+> Installation with `pip` from PyPI is currently a WIP. We hope it will be available soon.
+
+Copy the [SpinWaveToolkit][SWTpy] folder to your `site-packages` folder. Usually (on Windows machines) located at
 ```
 C:\Users\<user>\AppData\Roaming\Python\Python<python-version>\site-packages
 ```
@@ -18,11 +21,11 @@ for global modules.
 ## Dependencies
 
 > [!WARNING]
-> This section lacks proof, completeness, and was not much checked.
+> This section lacks proof and was not much checked.
 
-The SpinWaveToolkit module is compatible with Python >3.X, and uses the following modules:
-- [numpy] !add minimal version!
-- [scipy] !add minimal version!
+The SpinWaveToolkit module is compatible with Python >3.7, and uses the following modules:
+- [numpy] >1.20,<2.0
+- [scipy] >1.8
 
 <hr>
 
@@ -59,7 +62,7 @@ lifetimePy = NiFeChar.GetLifetime()*1e9 #ns <br/>
 propLen = NiFeChar.GetPropLen()*1e6 #um <br/>
 
 
-[SWTpy]:SpinWaveToolkit.py
+[SWTpy]:SpinWaveToolkit
 [numpy]:https://numpy.org/
 [scipy]:https://scipy.org/
 

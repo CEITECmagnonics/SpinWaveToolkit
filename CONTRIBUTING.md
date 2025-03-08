@@ -29,9 +29,7 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module file(s). Examples and other scripts rely mostly on your feeling for nice code.
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
 > [!NOTE]
-> JKL: I'm not sure if [black] also helps with this or not. I will update this when I find out.
-> 
-> JKL update: No, [black] does not do anything with docstrings. (this note will be removed soon)
+> [black] does not change the docstrings, apart from too long lines.
 - Use [pylint] for checking code errors and formatting issues (best if rated 10/10).
 - Use [pytest] to check the functionality of the module.
 
@@ -53,6 +51,7 @@ First of all, make sure you have these modules installed, e.g. by using `pip` an
 ```cmd
 py -m pip install black
 py -m pip install pylint
+py -m pip install pytest
 ```
 Then, if you want to apply them to some script or a folder with scripts such as a full module, e.g. the [SpinWaveToolkit][SWTpy], open a command line and write
 ```cmd
@@ -64,6 +63,9 @@ py -m pytest  &:: let pytest execute all tests (located in the tests folder)
 (The `&::` marks beginning of a comment, no need to type comments into the command line.) Make sure you have the [.pylintrc](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.pylintrc) file in the folder from which you call [pylint]. It is the configuration file, set up to our needs.
 
 After this you might want to check the changes done by [black] (easily done in GitHub Desktop) and correct any errors suggested by [pylint] and inspect failed tests from [pytest], and if you make some additional changes, do one more iteration of this process to check that everything is all right.
+
+### Notes on [pytest]
+Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue](Issues) so someone else can try to implement it.
 
 
 
