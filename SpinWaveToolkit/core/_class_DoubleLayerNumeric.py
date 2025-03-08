@@ -15,7 +15,8 @@ class DoubleLayerNumeric:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    The model uses ### ADD SOURCE
+    The dispersion model uses the approach of Gallardo et al., see:
+    https://doi.org/10.1103/PhysRevApplied.12.034012
 
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
@@ -32,20 +33,10 @@ class DoubleLayerNumeric:
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
+        (rad) out of plane angle of Bext, pi/2 is totally in-plane
         magnetization.
     phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry.
-    weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
-        order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
-        Boundary conditions (BCs), 1 is totally unpinned and 2 is
-        totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
-    dp : float, optional
-        Pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned.
+        (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
     Ku : float, optional
         (J/m^3) uniaxial anisotropy strength.
     Ku2 : float, optional
@@ -70,8 +61,8 @@ class DoubleLayerNumeric:
         (J/m^2) dynamic biquadratic RKKY coupling parameter,
         if None, same as `Jbq`.
     phiAnis1, phiAnis2 : float, default np.pi/2
-        (rad) uniaxial anisotropy axis in-plane angle for
-        both magnetic layers. (### angle from Beff?)
+        (rad) uniaxial anisotropy axis in-plane angle from kxi for
+        both magnetic layers.
     phiInit1, phiInit2 : float, default np.pi/2, -np.pi/2
         (rad) initial value of magnetization in-plane angle of the
         first and second layer, used for energy minimization.
@@ -101,7 +92,6 @@ class DoubleLayerNumeric:
 
     Methods
     -------
-    # sort these and check completeness, make some maybe private
     GetDisperison
     GetPhis
     GetFreeEnergyIP
@@ -114,19 +104,19 @@ class DoubleLayerNumeric:
 
     Code example
     ------------
-    ``
-    # Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the acoustic mode in a 30 nm
+    thick NiFe (Permalloy) bilayer.
+    .. code-block:: python
+        kxi = np.linspace(1e-6, 150e6, 150)
 
-    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                        n=0, d=30e-9, weff=2e-6, nT=0,
-                                        boundary_cond=2, Bext=20e-3,
-                                        material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
-    ``
+        PyChar = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
+                                    kxi=kxi, theta=np.pi/2, Ku=
+                                    )
+        DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
 
     See also
     --------
@@ -143,15 +133,12 @@ class DoubleLayerNumeric:
         kxi=np.linspace(1e-12, 25e6, 200),
         theta=np.pi / 2,
         phi=np.pi / 2,
-        weff=3e-6,
-        boundary_cond=1,
-        dp=0,
         Ku=0,
         Ku2=0,
         Jbl=0,
         Jbq=0,
         s=0,
-        d2=0,
+        d2=None,
         material2=None,
         JblDyn=None,
         JbqDyn=None,
@@ -176,9 +163,6 @@ class DoubleLayerNumeric:
         self.phi = phi
         self.d = d
         self.d1 = d
-        self.weff = weff
-        self.boundary_cond = boundary_cond
-        self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
         # Compute A, Hani
@@ -191,7 +175,7 @@ class DoubleLayerNumeric:
         self.phiAnis2 = phiAnis2
         self.phiInit1 = phiInit1
         self.phiInit2 = phiInit2
-        self.d2 = d2 if d2 != 0 else d
+        self.d2 = d if d2 is None else d2
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
@@ -461,18 +445,17 @@ class DoubleLayerNumeric:
             w, v = linalg.eig(A)
             indi = np.argsort(np.imag(w))[2:]  # sort low-to-high and crop to positive
             wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
-            # ### check the correctness of the following line (use imag?)
             vV[:, :, idx] = (
-                v[:, indi] * self.gamma * MU0
+                np.imag(v)[:, indi] * self.gamma * MU0
             )  # eigenvectors (mode profiles)
-            # ### the original way to get dispersion:
-            # wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)[2:]
         return wV, vV
 
     def GetPhis(self):
         """Gives angles of magnetization in both SAF layers.
         The returned value is in rad.
-        Function finds the energy minimum
+
+        Function finds the energy minimum, assuming completely
+        in-plane magnetization.
         If there are problems with energy minimalization I recomend to
         try different methods (but Nelder-Mead seems to work in most
         scenarios).
@@ -487,7 +470,7 @@ class DoubleLayerNumeric:
         phi1x0 = wrapAngle(self.phiInit1)
         phi2x0 = wrapAngle(self.phiInit2)
         result = minimize(
-            self.GetFreeEnergy,
+            self.GetFreeEnergyIP,
             x0=[phi1x0, phi2x0],
             tol=1e-20,
             method="Nelder-Mead",
@@ -496,7 +479,7 @@ class DoubleLayerNumeric:
         phis = wrapAngle(result.x)
         return phis
 
-    def GetFreeEnergy(self, phis):
+    def GetFreeEnergyIP(self, phis):
         """Gives overall energy (density) of SAF system.
         The returned value is in joules.
 
@@ -724,7 +707,7 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
+        n : {-1, 0, 1}, default 0
             Quantization number.  If -1, data
             for all (positive) calculated modes are returned.
 
@@ -746,7 +729,7 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
+        n : {-1, 0, 1}, default 0
             Quantization number.  If -1, data
             for all (positive) calculated modes are returned.
 

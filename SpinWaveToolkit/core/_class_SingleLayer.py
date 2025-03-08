@@ -31,10 +31,10 @@ class SingleLayer:
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
-        magnetization.
+        (rad) out of plane angle of static M, pi/2 is totally
+        in-plane magnetization.
     phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry.
+        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
@@ -95,11 +95,11 @@ class SingleLayer:
     other important quantities, for the lowest-order mode in a 30 nm
     thick NiFe (Permalloy) layer.
     .. code-block:: python
-        kxi = np.linspace(1e-12, 150e6, 150)
+        kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
-                               phi=np.pi/2, d=30e-9, weff=2e-6,
-                               boundary_cond=2, material=SWT.NiFe)
+                             phi=np.pi/2, d=30e-9, weff=2e-6,
+                             boundary_cond=2, material=SWT.NiFe)
         DispPy = PyChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
         vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
         lifetimePy = PyChar.GetLifetime()*1e9  # ns

@@ -14,7 +14,7 @@ class SingleLayerNumeric:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length for up to three lowest-order modes.
 
-    The dispersion model uses the approach of Tacchi, see:
+    The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
 
     Most parameters can be specified as vectors (1d numpy arrays)
@@ -32,10 +32,10 @@ class SingleLayerNumeric:
     kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
-        magnetization.
+        (rad) out of plane angle static M, pi/2 is totally
+        in-plane magnetization.
     phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry.
+        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
@@ -43,13 +43,15 @@ class SingleLayerNumeric:
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
         pinned BC.
+        ### The only working BCs are 1 right now, some functions
+            implement 2 and 4, but it is not complete!
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned.
     KuOOP : float, optional
         (J/m^3) OOP anisotropy strength used in the Tacchi model.
         ### Should this be calculated from the surface anisotropy
-            strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis'ies`?,
+            strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
 
@@ -80,7 +82,6 @@ class SingleLayerNumeric:
 
     Methods
     -------
-    # sort these and check completeness, make some maybe private
     GetDisperison
     GetGroupVelocity
     GetLifetime
@@ -101,25 +102,24 @@ class SingleLayerNumeric:
 
     Code example
     ------------
-    ``
-    # Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the lowest-order mode in a 30 nm
+    thick NiFe (Permalloy) layer.
+    .. code-block:: python
+        kxi = np.linspace(1e-6, 150e6, 150)
 
-    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                        n=0, d=30e-9, weff=2e-6, nT=0,
-                                        boundary_cond=2, Bext=20e-3,
-                                        material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    decLen = NiFeChar.GetDecLen()*1e6  # um
-    ``
+        PyChar = SingleLayerNumeric(Bext=20e-3, kxi=kxi, theta=np.pi/2,
+                                    phi=np.pi/2, d=30e-9, weff=2e-6,
+                                    boundary_cond=2, material=SWT.NiFe)
+        DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
 
     See also
     --------
     SingleLayer, DoubleLayerNumeric, Material
 
-    # ### update when finished adding/removing code
     """
 
     def __init__(
