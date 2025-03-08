@@ -9,6 +9,7 @@ __all__ = ["Material", "NiFe", "CoFeB", "FeNi", "YIG"]
 
 class Material:
     """Class for magnetic materials used in spin wave research.
+
     To define a custom material, type
     ``
     MyNewMaterial = Material(Ms=MyMS, Aex=MyAex, alpha=MyAlpha, gamma=MyGamma)
