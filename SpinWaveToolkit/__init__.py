@@ -79,7 +79,7 @@ from .core._class_SingleLayerNumeric import *
 from .core._class_DoubleLayerNumeric import *
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __all__ = [
     "helpers",
     *core._class_Material.__all__,
