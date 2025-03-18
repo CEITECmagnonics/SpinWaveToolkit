@@ -769,7 +769,7 @@ class SingleLayer:
         """Calculate semi-major axis of the precession ellipse for
         all `kxi`.
         ### check correctness of the docstring!
-        ### add source
+        ### Melkov Gurevich
         """
         gk = 1 - (1 - np.exp(-self.kxi * self.d))
         return (
