@@ -36,11 +36,11 @@ The SpinWaveToolkit module is compatible with Python >3.7, and uses the followin
 This module provides analytical tools in spin-wave physics.
 
 ### Classes
-`SingleLayer` - Compute spin-wave characteristics in dependance to k-vector for a single layer using an analytical model of Kalinikos and Slavin.
+`SingleLayer` - Compute spin-wave characteristics in dependance to k-vector for a single layer using an analytical model of Kalinikos and Slavin [^1].
 
-`SingleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a single layer using a numerical approach by Tacchi.
+`SingleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a single layer using a numerical approach by Tacchi [^2].
 
-`DoubleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a double layer using a numerical model of Gallardo.
+`DoubleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a double layer using a numerical model of Gallardo [^3].
 
 `Material` - Class for magnetic materials used in spin wave research.
     
@@ -84,6 +84,10 @@ vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
 lifetimePy = PyChar.GetLifetime()*1e9  # ns
 decLen = PyChar.GetDecLen()*1e6  # um
 ```
+
+[^1]: B. A. Kalinikos and A. N. Slavin, *J. Phys. C: Solid State Phys.*, **19**, 7013 (1986).
+[^2]: S. Tacchi et al., *Phys. Rev. B*, **100**, 104406 (2019).
+[^3]: R. A. Gallardo et al., *Phys. Rev. Applied*, **12**, 034012 (2019).
 
 
 [SWTpy]:SpinWaveToolkit
