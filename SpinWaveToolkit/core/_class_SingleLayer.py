@@ -81,6 +81,7 @@ class SingleLayer:
     GetEllipticity
     GetCouplingParam
     GetThresholdField
+    GetBlochFunction
 
     Private methods
     ---------------
@@ -760,6 +761,37 @@ class SingleLayer:
         if nc == -1:
             nc = n
         return 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
+    
+    def GetBlochFunction(self, n=0, nc=-1, nT=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+        
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        nc : int, optional
+            Second quantization number, used for hybridization.
+        nT : int, optional
+            Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w00 = self.GetDispersion(n=n, nc=nc, nT=nT)
+        lifeTime = self.GetLifetime(n=n, nc=nc, nT=nT)
+        
+        w = np.linspace((np.min(w00) - 2*np.pi*1/lifeTime)*0.9, (np.max(w00) + 2*np.pi*1/lifeTime)*1.1, Nf)
+        blochFunc = 1/(abs(w00-w)**2+(2/lifeTime)**2)
+
+        return w, blochFunc
+
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
