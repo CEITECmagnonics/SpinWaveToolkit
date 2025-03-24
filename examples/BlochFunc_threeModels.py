@@ -69,6 +69,15 @@ modelDouble = SWT.DoubleLayerNumeric(Bext=50e-3, kxi=kxi, theta=np.pi/2,
 
 Nf = 1000
 
+LF = modelDouble.GetLifetime()
+
+plt.figure()
+plt.plot(kxi, LF)
+plt.xlabel('kx (rad/m)')
+plt.ylabel('Lifetime (s)')
+plt.title('Lifetime')
+plt.show()
+
 # Interpolate all Bloch functions to the same frequency grid
 w0, bf0 = modelDouble.GetBlochFunction(n=0, Nf=Nf, lifeTime=3e-9)
 w1, bf1 = modelDouble.GetBlochFunction(n=1, Nf=Nf, lifeTime=3e-9)
