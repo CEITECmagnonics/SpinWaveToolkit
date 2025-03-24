@@ -12,7 +12,7 @@ Nf = 1000
 w, bf = model.GetBlochFunction(n=0, Nf=Nf)
 
 plt.figure()
-plt.contourf(kxi/1e6, w[:,0]/2/np.pi/1e9, bf, cmap='viridis')
+plt.contourf(kxi/1e6, w/2/np.pi/1e9, bf, cmap='viridis')
 plt.xlabel('kx (rad/µm)')
 plt.ylabel('f (GHz)')
 plt.colorbar()

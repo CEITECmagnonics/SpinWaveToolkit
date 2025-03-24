@@ -787,8 +787,9 @@ class SingleLayer:
         w00 = self.GetDispersion(n=n, nc=nc, nT=nT)
         lifeTime = self.GetLifetime(n=n, nc=nc, nT=nT)
         
-        w = np.linspace((np.min(w00) - 2*np.pi*1/lifeTime)*0.9, (np.max(w00) + 2*np.pi*1/lifeTime)*1.1, Nf)
-        blochFunc = 1/(abs(w00-w)**2+(2/lifeTime)**2)
+        w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / (abs(wMat - w00)**2 + (2 / lifeTime)**2)
 
         return w, blochFunc
 
