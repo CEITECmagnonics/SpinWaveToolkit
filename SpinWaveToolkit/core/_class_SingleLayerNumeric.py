@@ -648,6 +648,34 @@ class SingleLayerNumeric:
             (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
+    
+    def GetBlochFunction(self, n=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+        
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w, v00 = self.GetDispersion()
+        lifeTime = self.GetLifetime(n=n)
+        w00 = w[n]
+
+        w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / (abs(wMat - w00)**2 + (2 / lifeTime)**2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
