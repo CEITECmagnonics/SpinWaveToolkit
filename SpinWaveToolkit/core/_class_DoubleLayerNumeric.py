@@ -682,7 +682,7 @@ class DoubleLayerNumeric:
             (s) lifetime.
         """
         Bext_ori = self.Bext
-        step = 1e-5
+        step = 1e-4
         self.Bext = Bext_ori * (1 - step)
         dw_lo, _ = self.GetDispersion()
         self.Bext = Bext_ori * (1 + step)
@@ -739,6 +739,39 @@ class DoubleLayerNumeric:
             (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
+    def GetBlochFunction(self, n=0, Nf=200, lifeTime=None):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+        As there is problems with lifetime calculation for the
+        double layers, you can set fixed one as input parameter.
+        
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        Nf : int, default 200
+            Number of frequency points for the Bloch function.
+        lifetime : float, optional
+            Fixed lifetime to bypass its dispersion calculation
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w, v00 = self.GetDispersion()
+        if lifeTime==None: lifeTime = self.GetLifetime(n=n)
+        else: lifeTime = lifeTime*np.ones(len(self.kxi))
+        w00 = w[n]
+
+        w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / (abs(wMat - w00)**2 + (2 / lifeTime)**2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
