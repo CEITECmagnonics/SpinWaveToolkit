@@ -86,7 +86,6 @@ __all__ = [
     "SingleLayer",
     "SingleLayerNumeric",
     "DoubleLayerNumeric",
-    "BlochFunction",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not
 #   worry about importing also stuff like numpy as e.g. `SWT.np` :D
