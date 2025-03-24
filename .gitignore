@@ -17,5 +17,6 @@ venv.bak/
 .vscode/
 testcode.py
 ignored_folder/
+*.egg-info/
 
 *.ignore

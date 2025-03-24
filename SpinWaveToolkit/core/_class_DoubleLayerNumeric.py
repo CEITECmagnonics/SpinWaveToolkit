@@ -683,7 +683,7 @@ class DoubleLayerNumeric:
             (s) lifetime.
         """
         Bext_ori = self.Bext
-        step = 1e-4
+        step = 1e-5
         self.Bext = Bext_ori * (1 - step)
         dw_lo, _ = self.GetDispersion()
         self.Bext = Bext_ori * (1 + step)
