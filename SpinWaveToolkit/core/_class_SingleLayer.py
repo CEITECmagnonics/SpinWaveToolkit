@@ -77,11 +77,11 @@ class SingleLayer:
     GetDecLen
     GetSecondPerturbation
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
     GetEllipticity
     GetCouplingParam
     GetThresholdField
-    GetBlochFunction
 
     Private methods
     ---------------

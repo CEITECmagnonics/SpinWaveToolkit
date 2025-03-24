@@ -87,6 +87,7 @@ class SingleLayerNumeric:
     GetLifetime
     GetDecLen
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
 
     Private methods
@@ -657,8 +658,8 @@ class SingleLayerNumeric:
         
         Parameters
         ----------
-        n : int
-            Quantization number.
+        n : {0, 1, 2}, default 0
+            Quantization number.  The -1 value is not supported here.
 
         Returns
         -------

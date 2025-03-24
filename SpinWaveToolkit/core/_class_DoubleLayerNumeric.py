@@ -100,6 +100,7 @@ class DoubleLayerNumeric:
     GetLifetime
     GetDecLen
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
 
     Code example
@@ -739,6 +740,7 @@ class DoubleLayerNumeric:
             (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
+    
     def GetBlochFunction(self, n=0, Nf=200, lifeTime=None):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
@@ -749,12 +751,12 @@ class DoubleLayerNumeric:
         
         Parameters
         ----------
-        n : int
-            Quantization number.
+        n : {0, 1}, default 0
+            Quantization number.  The -1 value is not supported here.
         Nf : int, default 200
             Number of frequency points for the Bloch function.
         lifetime : float, optional
-            Fixed lifetime to bypass its dispersion calculation
+            (s) fixed lifetime to bypass its dispersion calculation.
         Returns
         -------
         w : ndarray
