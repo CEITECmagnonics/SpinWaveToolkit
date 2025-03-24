@@ -77,7 +77,6 @@ from .core._class_Material import *
 from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
 from .core._class_DoubleLayerNumeric import *
-from .core._class_BlochFunction import *
 
 
 __version__ = "1.0.1"
