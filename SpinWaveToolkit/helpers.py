@@ -5,9 +5,14 @@ Place for all helping functions and constants in this module.
 import numpy as np
 
 MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
+KB = 1.38064852e-23 # J/K Boltzmann constant
+HBAR = 1.0545718e-34 # J s Planck constant
 
 __all__ = [
     "MU0",
+    "KB",
+    "HBAR",
+    "distBE",
     "wavenumber2wavelength",
     "wavelength2wavenumber",
     "wrapAngle",
@@ -91,8 +96,6 @@ def distBE(w, temp=300, mu=-1e12*1.0545718e-34):
     float
         Bose-Einstein distribution in dependance to frequency
     """
-    kb = 1.38064852e-23 # J/K Boltzmann constant
-    hbar = 1.0545718e-34 # J s Planck constant
     return 1./(np.exp((hbar*(abs(w) - mu))/(kb*temp))-1)
 
 
