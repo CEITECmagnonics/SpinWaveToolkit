@@ -73,6 +73,28 @@ def wrapAngle(angle):
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
 
+def distBE(w, temp=300, mu=-1e12*1.0545718e-34):
+    """Returns Bose-Einstein distribution for
+    given chemical potential and temperature
+
+    Parameters
+    ----------
+    f : float
+        (rad Hz) angular frequency
+    temp : float
+        (K) temperature
+    mu : float
+        (J) chemical potential
+
+    Returns
+    -------
+    float
+        Bose-Einstein distribution in dependance to frequency
+    """
+    kb = 1.38064852e-23 # J/K Boltzmann constant
+    hbar = 1.0545718e-34 # J s Planck constant
+    return 1./(np.exp((hbar*(abs(w) - mu))/(kb*temp))-1)
+
 
 def rootsearch(f, a, b, dx, args=()):
     """Search for a root of a continuous function within an
