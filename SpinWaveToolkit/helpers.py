@@ -93,7 +93,7 @@ def distBE(w, temp=300, mu=-1e12*2*np.pi*HBAR):
 
     Returns
     -------
-    float
+    BEdist : float or ndarray
         Bose-Einstein distribution in dependance to frequency
     """
     return 1./(np.exp((HBAR*(abs(w)) - mu)/(KB*temp))-1)
