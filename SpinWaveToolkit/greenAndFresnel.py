@@ -50,9 +50,9 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         Array of thicknesses for the layers between the superstrate and substrate.
         (Length should be len(DF) - 2.)
     source_layer_index : int
-        (1-indexed) Index of the layer where the source (induced polarization) is located.
+        0-indexed index of the layer where the source (induced polarization) is located.
     output_layer_index : int
-        (1-indexed) Index of the layer where the output is desired.
+        0-indexed index of the layer where the output is desired.
 
     Returns
     -------
@@ -61,10 +61,10 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     hts : function
         A function that computes the s-polarized Fresnel transmission coefficients given q.
     """
-    # Convert inputs to numpy arrays (ensure complex type for DF and PM)
+    # Convert inputs to numpy arrays (ensure complex type for DF, PM, and d)
     DF = np.asarray(DF, dtype=complex)
     PM = np.asarray(PM, dtype=complex)
-    d = np.asarray(d, dtype=complex)
+    d = d
 
     N = len(DF)
     # Compute the wavenumber in each layer: kn = 2π/λ * sqrt(DF * PM)
@@ -84,7 +84,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         -------
         tp_out : np.ndarray
             Fresnel transmission coefficient(s) for p-polarization.
-            The shape (either a 1×2 array or a 2×2 array) depends on the chosen output layer.
+            Its shape depends on the chosen output layer.
         """
         # Compute the z-component in each layer (as a function of q)
         knz = [np.sqrt(kn[i]**2 - q**2) for i in range(N)]
@@ -103,10 +103,11 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
             rpji.append(-rpij[-1])
             tpji.append(2 * tmp2 / tmp3 * np.sqrt((PM[i] * DF[i+1]) / (PM[i+1] * DF[i])))
 
-        # Build propagation matrices for layers 2 to N-1 (indices 1 to N-2)
+        # Build propagation matrices for layers 1 to N-2 (i.e. indices 1 to N-2)
         Pj = []
         PjInv = []
         for i in range(1, N-1):
+            # d is provided for layers between superstrate and substrate; d[i-1] corresponds to layer i.
             if np.isinf(d[i-1]):
                 # For infinite thickness, force interface reflection to zero and use identity matrix.
                 rpij[i] = 0
@@ -116,47 +117,49 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
                 PjInv.append(P)
             else:
                 phase = np.exp(1j * knz[i] * d[i-1])
-                P = np.array([[phase, 0],
-                              [0, 1/phase]], dtype=complex)
+                P = np.array([[phase, np.zeros(np.shape(phase))],
+                              [np.zeros(np.shape(phase)), 1/phase]], dtype=complex)
                 Pj.append(P)
                 # Inverse propagation matrix: swap the diagonal entries.
-                P_inv = np.array([[1/phase, 0],
-                                  [0, phase]], dtype=complex)
+                P_inv = np.array([[1/phase, np.zeros(np.shape(phase))],
+                                  [np.zeros(np.shape(phase)), phase]], dtype=complex)
                 PjInv.append(P_inv)
 
         # Compute interface matrices Mij and Mji at each interface
         Mij = []
         Mji = []
+
         for i in range(N-1):
             tmp_val = tpij[i] * tpji[i] - rpij[i] * rpji[i]
-            Mji.append(np.array([[1, -rpij[i]],
+            Mji.append(np.array([[np.ones(np.shape(rpij[i])), -rpij[i]],
                                  [rpji[i], tmp_val]], dtype=complex))
             Mij.append(np.array([[tmp_val, rpij[i]],
-                                 [-rpji[i], 1]], dtype=complex))
+                                 [-rpji[i], np.ones(np.shape(rpij[i]))]], dtype=complex))
 
-        # Upward propagation: from top layer to source layer.
+        # Upward propagation: from top layer (index 0) to source layer.
         MUp = np.eye(2, dtype=complex)
         FactorUp = 1
-        for i in range(source_layer_index - 1):
-            MUp = MUp @ Mji[i] @ PjInv[i]
+        # Loop from the top layer to the source layer.
+        for i in range(source_layer_index):
+            MUp = PjInv[i] @ Mji[i] @ MUp
             FactorUp *= tpji[i]
-
         # Downward propagation: from bottom (last interface) upward to source layer.
         MDown = Mij[-1]
         FactorDown = tpij[-1]
-        # Loop indices: from (N-2) downto source_layer_index (adjusted for 0-indexing)
-        for i in range(N-2 - 1, source_layer_index - 1 - 1, -1):
-            MDown = MDown @ Pj[i] @ Mij[i]
+        # Loop from the last propagation matrix index down to source_layer_index
+        for i in range(len(Pj)-1, source_layer_index - 1, -1):
+            MDown = Mij[i] @ Pj[i] @ MDown
             FactorDown *= tpij[i]
 
         tmp_val = MDown[1, 1] * MUp[0, 0] - MDown[0, 1] * MUp[1, 0]
 
         # Branch according to the desired output layer.
-        if output_layer_index == 1:
+        if output_layer_index == 0:
             # Output at the superstrate (top layer)
             tp_out = np.array([FactorUp * MDown[1, 1] / tmp_val,
                                FactorUp * MDown[0, 1] / tmp_val], dtype=complex)
-        elif output_layer_index == N:
+
+        elif output_layer_index == N - 1:
             # Output at the bottom substrate
             tp_out = np.array([FactorDown * MUp[1, 0] / tmp_val,
                                FactorDown * MUp[0, 0] / tmp_val], dtype=complex)
@@ -166,19 +169,19 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         else:
             if output_layer_index < source_layer_index:
                 L = np.eye(2, dtype=complex)
-                for i in range(output_layer_index - 1):
-                    L = L @ Mji[i] @ PjInv[i]
+                for i in range(output_layer_index):
+                    L = PjInv[i] @ Mji[i] @ L
                 Factor = 1
-                for i in range(output_layer_index - 1, source_layer_index - 1):
+                for i in range(output_layer_index, source_layer_index):
                     Factor *= tpji[i]
                 tp_out = np.array([[Factor * L[0, 0] * MDown[1, 1] / tmp_val, Factor * L[0, 0] * MDown[0, 1] / tmp_val],
                                    [Factor * L[1, 0] * MDown[1, 1] / tmp_val, Factor * L[1, 0] * MDown[0, 1] / tmp_val]], dtype=complex)
             elif output_layer_index > source_layer_index:
                 L = Mij[-1]
-                for i in range(N-2 - 1, output_layer_index - 1 - 1, -1):
-                    L = L @ Pj[i] @ Mij[i]
+                for i in range(len(Pj)-1, output_layer_index - 1, -1):
+                    L = Mij[i] @ Pj[i] @ L
                 Factor = 1
-                for i in reversed(range(source_layer_index - 1, output_layer_index - 1)):
+                for i in reversed(range(source_layer_index, output_layer_index)):
                     Factor *= tpij[i]
                 tp_out = np.array([[Factor * L[0, 1] * MUp[1, 0] / tmp_val, Factor * L[0, 1] * MUp[0, 0] / tmp_val],
                                    [Factor * L[1, 1] * MUp[1, 0] / tmp_val, Factor * L[1, 1] * MUp[0, 0] / tmp_val]], dtype=complex)
@@ -200,7 +203,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         -------
         ts_out : np.ndarray
             Fresnel transmission coefficient(s) for s-polarization.
-            The shape (either a 1×2 array or a 2×2 array) depends on the chosen output layer.
+            Its shape depends on the chosen output layer.
         """
         knz = [np.sqrt(kn[i]**2 - q**2) for i in range(N)]
         
@@ -246,22 +249,22 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         
         MUp = np.eye(2, dtype=complex)
         FactorUp = 1
-        for i in range(source_layer_index - 1):
-            MUp = MUp @ Mji[i] @ PjInv[i]
+        for i in range(source_layer_index):
+            MUp = PjInv[i] @ Mji[i] @ MUp
             FactorUp *= tsji[i]
         
         MDown = Mij[-1]
         FactorDown = tsij[-1]
-        for i in range(N-2 - 1, source_layer_index - 1 - 1, -1):
-            MDown = MDown @ Pj[i] @ Mij[i]
+        for i in range(len(Pj)-1, source_layer_index - 1, -1):
+            MDown = Mij[i] @ Pj[i] @ MDown
             FactorDown *= tsij[i]
         
         tmp_val = MDown[1, 1] * MUp[0, 0] - MDown[0, 1] * MUp[1, 0]
         
-        if output_layer_index == 1:
+        if output_layer_index == 0:
             ts_out = np.array([FactorUp * MDown[1, 1] / tmp_val,
                                FactorUp * MDown[0, 1] / tmp_val], dtype=complex)
-        elif output_layer_index == N:
+        elif output_layer_index == N - 1:
             ts_out = np.array([FactorDown * MUp[1, 0] / tmp_val,
                                FactorDown * MUp[0, 0] / tmp_val], dtype=complex)
         elif output_layer_index == source_layer_index:
@@ -270,19 +273,19 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         else:
             if output_layer_index < source_layer_index:
                 L = np.eye(2, dtype=complex)
-                for i in range(output_layer_index - 1):
-                    L = L @ Mji[i] @ PjInv[i]
+                for i in range(output_layer_index):
+                    L = PjInv[i] @ Mji[i] @ L
                 Factor = 1
-                for i in range(output_layer_index - 1, source_layer_index - 1):
+                for i in range(output_layer_index, source_layer_index):
                     Factor *= tsji[i]
                 ts_out = np.array([[Factor * L[0, 0] * MDown[1, 1] / tmp_val, Factor * L[0, 0] * MDown[0, 1] / tmp_val],
                                    [Factor * L[1, 0] * MDown[1, 1] / tmp_val, Factor * L[1, 0] * MDown[0, 1] / tmp_val]], dtype=complex)
             elif output_layer_index > source_layer_index:
                 L = Mij[-1]
-                for i in range(N-2 - 1, output_layer_index - 1 - 1, -1):
-                    L = L @ Pj[i] @ Mij[i]
+                for i in range(len(Pj)-1, output_layer_index - 1, -1):
+                    L = Mij[i] @ Pj[i] @ L
                 Factor = 1
-                for i in reversed(range(source_layer_index - 1, output_layer_index - 1)):
+                for i in reversed(range(source_layer_index, output_layer_index)):
                     Factor *= tsij[i]
                 ts_out = np.array([[Factor * L[0, 1] * MUp[1, 0] / tmp_val, Factor * L[0, 1] * MUp[0, 0] / tmp_val],
                                    [Factor * L[1, 1] * MUp[1, 0] / tmp_val, Factor * L[1, 1] * MUp[0, 0] / tmp_val]], dtype=complex)
@@ -292,7 +295,8 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
 
     return htp, hts
 
-def sph_green_function(Kx, Ky, DFNiFe, lambda_, tp, ts):
+
+def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
     """
     Compute the spherical Green's functions for p- and s-polarized fields.
 
@@ -300,10 +304,10 @@ def sph_green_function(Kx, Ky, DFNiFe, lambda_, tp, ts):
     ----------
     Kx, Ky : np.ndarray
         Lateral wavevector components.
-    DFNiFe : float
-        Dielectric function (permitivity) of the NiFe (or similar) layer.
-    lambda_ : float
-        Wavelength of the light.
+    DFMagLayer : float
+        Dielectric function (permitivity) of the magnetic layer.
+    wavelength : float
+        wavelength of the light.
     tp, ts : list or array_like
         Fresnel coefficients for p- and s-polarization, respectively.
         Each is expected to have two elements (e.g. tp[0] and tp[1]).
@@ -319,9 +323,9 @@ def sph_green_function(Kx, Ky, DFNiFe, lambda_, tp, ts):
     c = 3e9
     mu0 = 4 * np.pi * 1e-7
 
-    k0 = 2 * np.pi / lambda_
+    k0 = 2 * np.pi / wavelength
     w = c * k0
-    ks = k0 * np.sqrt(DFNiFe)
+    ks = k0 * np.sqrt(DFMagLayer)
 
     # Initialize Green's function containers as 3x2 lists.
     pGF = [[None, None] for _ in range(3)]
@@ -330,11 +334,12 @@ def sph_green_function(Kx, Ky, DFNiFe, lambda_, tp, ts):
     # Calculate the radial wavevector and angles.
     Kr = np.sqrt(Kx**2 + Ky**2)
     # Avoid division by zero: define cosPhi=1 and sinPhi=0 where Kr==0.
-    cosPhi = np.where(Kr == 0, 1, Kx / Kr)
-    sinPhi = np.where(Kr == 0, 0, Ky / Kr)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        cosPhi = np.where(Kr == 0, 1, Kx / Kr)
+        sinPhi = np.where(Kr == 0, 0, Ky / Kr)
 
     # Calculate the z-component in the substrate.
-    Kzs = np.sqrt(DFNiFe * k0**2 - Kr**2) + np.finfo(float).eps
+    Kzs = np.sqrt(DFMagLayer * k0**2 - Kr**2) + np.finfo(float).eps
 
     # --- s-polarized Green's functions ---
     sGF[0][0] = -1j * w**2 * mu0 / 2 * sinPhi * ts[0] / Kzs

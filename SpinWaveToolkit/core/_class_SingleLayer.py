@@ -789,7 +789,7 @@ class SingleLayer:
         
         w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
         wMat = np.tile(w, (len(lifeTime), 1)).T
-        blochFunc = (2 / lifeTime)  / ((wMat - w00)**2 + (2 / lifeTime)**2)
+        blochFunc = 1 / ((wMat - w00)**2 + (2 / lifeTime)**2)
 
         return w, blochFunc
 

@@ -52,6 +52,16 @@ roots
     given interval `[a, b]`.
 distBE
     Bose-Einstein distribution function.
+fresnel_coefficients
+    Compute Fresnel reflection and transmission coefficients.
+htp
+    Compute p-polarized Fresnel coefficients for a given lateral wavevector q.
+hts
+    Compute s-polarized Fresnel coefficients for a given lateral wavevector q.
+sph_green_function
+    Compute the spherical Green's functions for p- and s-polarized fields.
+getBLSsignal
+    Compute the Brillouin light scattering signal using Green's functions formalism.
 
 Example
 -------
@@ -82,6 +92,7 @@ thick NiFe (Permalloy) layer.
 # import all needed classes, functions, and constants
 from .helpers import *
 from .greenAndFresnel import *
+from .BLSmodel import *
 from .core._class_Material import *
 from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
@@ -93,6 +104,7 @@ __version__ = "1.0.1"
 __all__ = [
     "helpers",
     "greenAndFresnel",
+    "BLSmodel",
     *core._class_Material.__all__,
     "SingleLayer",
     "SingleLayerNumeric",
