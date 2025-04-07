@@ -649,13 +649,13 @@ class SingleLayerNumeric:
             (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
-    
+
     def GetBlochFunction(self, n=0, Nf=200):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
-        
+
         Parameters
         ----------
         n : {0, 1, 2}, default 0
@@ -672,9 +672,13 @@ class SingleLayerNumeric:
         lifeTime = self.GetLifetime(n=n)
         w00 = w[n]
 
-        w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
         wMat = np.tile(w, (len(lifeTime), 1)).T
-        blochFunc = (2 / lifeTime)  / ((wMat - w00)**2 + (2 / lifeTime)**2)
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
 
         return w, blochFunc
 
