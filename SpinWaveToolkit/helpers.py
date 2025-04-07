@@ -4,9 +4,9 @@ Place for all helping functions and constants in this module.
 
 import numpy as np
 
-MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
-KB = 1.38064852e-23 # J/K Boltzmann constant
-HBAR = 1.0545718e-34 # J s Planck constant
+MU0 = 1.25663706127e-6  # (N/A^2) permeability of vacuum
+KB = 1.38064852e-23 # (J/K) Boltzmann constant
+HBAR = 1.054571817e-34 # (J s) reduced Planck constant
 
 __all__ = [
     "MU0",
@@ -79,22 +79,22 @@ def wrapAngle(angle):
     return np.mod(angle, 2 * np.pi)
 
 def distBE(w, temp=300, mu=-1e12*2*np.pi*HBAR):
-    """Returns Bose-Einstein distribution for
-    given chemical potential and temperature
+    """Returns Bose-Einstein distribution for given chemical potential 
+    and temperature.
 
     Parameters
     ----------
-    f : float
-        (rad Hz) angular frequency
+    w : float
+        (rad Hz) angular frequency.
     temp : float
-        (K) temperature
+        (K) temperature.
     mu : float
-        (J) chemical potential
+        (J) chemical potential.
 
     Returns
     -------
     BEdist : float or ndarray
-        Bose-Einstein distribution in dependance to frequency
+        Bose-Einstein distribution in dependance to frequency.
     """
     return 1./(np.exp((HBAR*(abs(w)) - mu)/(KB*temp))-1)
 

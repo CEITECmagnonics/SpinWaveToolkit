@@ -1,7 +1,11 @@
+"""
+Submodule for calculations regarding the BLS signal model.
+"""
+
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from scipy.signal import convolve2d
-from scipy.interpolate import interpn, RegularGridInterpolator
+from scipy.interpolate import interpn, RegularGridInterpolator   # ### interpn not used!
 from SpinWaveToolkit.greenAndFresnel import *
 
 
@@ -14,44 +18,54 @@ def getBLSsignal(SweepBloch, KxKyBloch, Bloch, Exy, E, DF, PM, d, NA, Nq=30,
     Parameters
     ----------
     SweepBloch : ndarray
-        Sweep grid of the Bloch functions. Usually frequency of spin waves.
-    KxKyBloch : tuple of ndarrays
-        Tuple containing the 1D grids (kx_grid, ky_grid) on which the Bloch functions are defined.
+        Sweep vector of the Bloch functions. Usually frequency of spin 
+        waves.
+    KxKyBloch : tuple[ndarray]
+        (### unit?) tuple containing the 1D grids (kx_grid, ky_grid) on 
+        which the Bloch functions are defined.
     Bloch : ndarray
-        Array with shape (3, Nf, Nkx, Nky) containing the Bloch function components 
-        (Mx, My, Mz) for each frequency and KxKy grid point.
+        Array with shape (3, Nf, Nkx, Nky) containing the Bloch function 
+        components (Mx, My, Mz) for each frequency and KxKy grid point.
     Exy : ndarray
-        XY grid for the electric field.
+        (### unit?) XY grid for the electric field.
+        ### shape?
     E : ndarray
-        3D array with shape (3, Ny, Nx) containing the X, Y, Z components of the electric field.
+        (V/m) 3D array with shape (3, Ny, Nx) containing the X, Y, Z 
+        components of the electric field.
     DF : ndarray
-        Vector of the complex dielectric functions for each material in the stack.
+        () vector of the complex dielectric functions for each material 
+        in the stack.
     PM : ndarray
-        Vector of the complex permeability functions for each material in the stack.
+        () vector of the complex permeability functions for each 
+        material in the stack.
     d : ndarray
-        Thickness of all layers in the stack excluding the superstrate and substrate. Usually just
-        the thickness of the magnetic layer.
+        (m) thickness of all layers in the stack excluding the 
+        superstrate and substrate.  Usually just the thickness of the 
+        magnetic layer.
     NA : float
         Numerical aperture of the optical system.
     Nq : int, optional
-        Number of points in the q-space grid (default is 30).
-    source_layer_index : int
-        Index of the source layer in the stack. Usually 1.
-    output_layer_index : int
-        Index of the output layer in the stack. Usually 0.
+        Number of points in the q-space grid.  Default is 30.
+    source_layer_index : int, optional
+        Index of the source layer in the stack.  Default is 1.
+    output_layer_index : int, optional
+        Index of the output layer in the stack.  Default is 0.
     wavelength : float, optional
-        Wavelength of the light (default is 532e-9 m).
+        (m) wavelength of the light.  Default is 532e-9.
     collectionSpot : float, optional
-        Collection spot size – used here as the beam waist (default is 1e-6 m).
+        (m) collection spot size - used here as the beam waist.  Default 
+        is 1e-6.
     focalLength : float, optional
-        Focal length of the lens (default is 1e-3 m).
+        (m) focal length of the lens.  Default is 1e-3.
 
     Returns
     -------
     ExS : ndarray
-        Scattered electric field in the X axis.
+        (V/m) scattered electric field in the X axis.
+        ### shape?
     EyS : ndarray
-        Scattered electric field in the Y axis.
+        (V/m) scattered electric field in the Y axis.
+        ### shape?
     """
     k0 = 2 * np.pi / wavelength
 

@@ -15,16 +15,16 @@ DoubleLayerNumeric
 Material
     Class for magnetic materials used in spin wave research.
 ObjectiveLens
-    Class for calculation of the focal electric fields of given lens
+    Class for calculation of the focal electric fields of given lens.
     
 Constants
 ---------
 MU0 : float
-    Magnetic permeability of free space.
+    (N/A^2) magnetic permeability of free space.
 KB : float
-    Boltzmann constant.
+    (J/K) Boltzmann constant.
 HBAR : float
-    Reduced Planck constant.
+    (J s) reduced Planck constant.
 NiFe : Material
     Predefined material NiFe (permalloy).
 CoFeB : Material
@@ -55,13 +55,17 @@ distBE
 fresnel_coefficients
     Compute Fresnel reflection and transmission coefficients.
 htp
-    Compute p-polarized Fresnel coefficients for a given lateral wavevector q.
+    Compute p-polarized Fresnel coefficients for a given lateral 
+    wavevector q.
 hts
-    Compute s-polarized Fresnel coefficients for a given lateral wavevector q.
+    Compute s-polarized Fresnel coefficients for a given lateral 
+    wavevector q.
 sph_green_function
-    Compute the spherical Green's functions for p- and s-polarized fields.
+    Compute the spherical Green's functions for p- and s-polarized 
+    fields.
 getBLSsignal
-    Compute the Brillouin light scattering signal using Green's functions formalism.
+    Compute the Brillouin light scattering signal using Green's 
+    functions formalism.
 
 Example
 -------

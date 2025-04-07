@@ -1,70 +1,88 @@
 """
-functions: fresnel_and_green.py
+Submodule for functions related to BLS model, specifically for the 
+calculations of Fresnel coefficients and Green functions.
+
 
 This module implements:
 
 1. fresnel_coefficients: Computes Fresnel transmission coefficients for 
-   p- and s-polarized waves as a function of lateral wavevector q.
+    p- and s-polarized waves as a function of lateral wavevector q.
    
-   The function accepts:
-     - lambda_     : wavelength (in meters)
-     - DF          : array of dielectric functions (complex) for each layer,
-                     ordered from the top (superstrate) to bottom.
-     - PM          : array of permeabilities for each layer (usually ones)
-     - d           : array of thicknesses for the layers between the superstrate
-                     and substrate (length should be len(DF)-2)
-     - source_layer_index: (1-indexed) index of the layer where the source is located.
-     - output_layer_index: (1-indexed) index of the layer where the output is desired.
+    The function accepts:
+    - lambda_ : wavelength (in meters)
+    - DF      : array of dielectric functions (complex) for each 
+                layer, ordered from the top (superstrate) to bottom.
+    - PM      : array of permeabilities for each layer (usually ones)
+    - d       : array of thicknesses for the layers between the 
+                superstrate and substrate (length should be `len(DF)-2`)
+    - source_layer_index: (1-indexed) index of the layer where the 
+                source is located.
+    - output_layer_index: (1-indexed) index of the layer where the 
+                output is desired.
      
-   It returns two functions, htp and hts, which when called with a lateral wavevector q
-   (scalar or numpy array) return the corresponding Fresnel transmission coefficient(s)
-   for p- and s-polarization, respectively.
+   It returns two functions, `htp` and `hts`, which when called with a 
+   lateral wavevector q (scalar or numpy array) return the corresponding 
+   Fresnel transmission coefficient(s) for p- and s-polarization, 
+   respectively.
    
-2. sph_green_function: Computes the spherical Green’s functions for p- and s-polarized fields,
-   given the lateral wavevector components (Kx, Ky), the dielectric function of a target layer,
-   wavelength, and the Fresnel coefficients (tp and ts). The outputs pGF and sGF are provided
-   as 3×2 lists (each entry a numpy array of the same shape as Kx and Ky).
+2. sph_green_function: Computes the spherical Green's functions for p- 
+    and s-polarized fields, given the lateral wavevector components 
+    (Kx, Ky), the dielectric function of a target layer, wavelength, 
+    and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF 
+    are provided as 3×2 lists (each entry a numpy array of the same 
+    shape as Kx and Ky).
    
 Note:
-    - The code uses numpy for numerical operations.
-    - The matrices (2×2) for propagation and interface relations are represented as NumPy arrays.
-    - Indices in the code assume that the user supplies layer indices in a 1-indexed manner,
-      similar to the MATLAB version.
+- The code uses numpy for numerical operations.
+- The matrices (2×2) for propagation and interface relations are 
+    represented as NumPy arrays.
+- Indices in the code assume that the user supplies layer indices in a 
+    1-indexed manner, similar to the MATLAB version.
+
+### check that the indexing really starts at 1 instead of 0 and unite 
+    it in the docstrings
+
 """
 
 import numpy as np
 
 def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_index):
     """
-    Compute Fresnel coefficients for p- and s-polarized waves as a function of lateral wavevector q.
+    Compute Fresnel coefficients for p- and s-polarized waves as a 
+    function of lateral wavevector q.
 
     Parameters
     ----------
     lambda_ : float
-        Wavelength of the calculated light (in meters).
+        (m) wavelength of the calculated light.
     DF : array_like
-        Array of dielectric functions (complex) for each layer, ordered from top (superstrate) downward.
+        () array of dielectric functions (complex) for each layer, 
+        ordered from top (superstrate) downward.
     PM : array_like
-        Array of permeabilities for each layer (typically ones).
+        () array of relative permeabilities for each layer (typically 
+        ones).
     d : array_like
-        Array of thicknesses for the layers between the superstrate and substrate.
-        (Length should be len(DF) - 2.)
+        (m) array of thicknesses for the layers between the superstrate 
+        and substrate.  Length should be `len(DF) - 2`.
     source_layer_index : int
-        0-indexed index of the layer where the source (induced polarization) is located.
+        0-indexed index of the layer where the source (induced 
+        polarization) is located.
     output_layer_index : int
         0-indexed index of the layer where the output is desired.
 
     Returns
     -------
     htp : function
-        A function that computes the p-polarized Fresnel transmission coefficients given q.
+        A function that computes the p-polarized Fresnel transmission 
+        coefficients for given q.
     hts : function
-        A function that computes the s-polarized Fresnel transmission coefficients given q.
+        A function that computes the s-polarized Fresnel transmission 
+        coefficients for given q.
     """
     # Convert inputs to numpy arrays (ensure complex type for DF, PM, and d)
     DF = np.asarray(DF, dtype=complex)
     PM = np.asarray(PM, dtype=complex)
-    d = d
+    d = np.asarray(d)
 
     N = len(DF)
     # Compute the wavenumber in each layer: kn = 2π/λ * sqrt(DF * PM)
@@ -73,16 +91,17 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     # ------------------------ p-polarization ------------------------
     def htp(q):
         """
-        Compute p-polarized Fresnel coefficients for a given lateral wavevector q.
+        Compute p-polarized Fresnel coefficients for a given lateral 
+        wavevector q.
 
         Parameters
         ----------
-        q : float or array_like
-            Lateral wavevector component(s).
+        q : float or ndarray
+            (### unit?) lateral wavevector component(s).
 
         Returns
         -------
-        tp_out : np.ndarray
+        tp_out : ndarray
             Fresnel transmission coefficient(s) for p-polarization.
             Its shape depends on the chosen output layer.
         """
@@ -192,16 +211,17 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     # ------------------------ s-polarization ------------------------
     def hts(q):
         """
-        Compute s-polarized Fresnel coefficients for a given lateral wavevector q.
+        Compute s-polarized Fresnel coefficients for a given lateral 
+        wavevector q.
 
         Parameters
         ----------
-        q : float or array_like
-            Lateral wavevector component(s).
+        q : float or ndarray
+            (### unit?) lateral wavevector component(s).
 
         Returns
         -------
-        ts_out : np.ndarray
+        ts_out : ndarray
             Fresnel transmission coefficient(s) for s-polarization.
             Its shape depends on the chosen output layer.
         """
@@ -298,26 +318,29 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
 
 def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
     """
-    Compute the spherical Green's functions for p- and s-polarized fields.
+    Compute the spherical Green's functions for p- and s-polarized 
+    fields.
 
     Parameters
     ----------
-    Kx, Ky : np.ndarray
-        Lateral wavevector components.
+    Kx, Ky : ndarray
+        (### unit?) lateral wavevector components.
     DFMagLayer : float
-        Dielectric function (permitivity) of the magnetic layer.
+        () dielectric function (permitivity) of the magnetic layer.
     wavelength : float
-        wavelength of the light.
+        (m) wavelength of the light.
     tp, ts : list or array_like
         Fresnel coefficients for p- and s-polarization, respectively.
         Each is expected to have two elements (e.g. tp[0] and tp[1]).
 
     Returns
     -------
-    pGF : list of lists
-        A 3×2 list containing the p-polarized Green's function components.
-    sGF : list of lists
-        A 3×2 list containing the s-polarized Green's function components.
+    pGF : list[list]
+        A 3×2 list containing the p-polarized Green's function 
+        components.
+    sGF : list[list]
+        A 3×2 list containing the s-polarized Green's function 
+        components.
     """
     # Constants
     c = 3e9

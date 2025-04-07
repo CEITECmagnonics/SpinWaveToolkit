@@ -1,19 +1,5 @@
 """
 Core (private) file for the `ObjectiveLens` class.
-Module for calculating the electric field focused by an objective lens.
-Calculations follows the method presented in book of Novotny and Hecht
-
-This module implements the ObjectiveLens class which represents an objective lens
-with specific optical parameters. Methods provided include:
-
-    - getFocalFieldRad: computes the focal field using a radial formulation.
-    - getFocalFieldAzm: computes the focal field using an azimuthal formulation (with E_z = 0).
-    - getFocalField: computes the focal field using a general formulation.
-
-Dependencies:
-    - numpy
-    - scipy.interpolate (for scattered data interpolation)
-    - scipy.special (for Bessel functions)
 """
 
 import numpy as np
@@ -27,23 +13,29 @@ class ObjectiveLens:
     """
     Represents an objective lens with specific optical parameters.
 
+    Module for calculating the electric field focused by an objective 
+    lens.  Calculations follows the method presented in book of Novotny 
+    and Hecht.
+
+
     Parameters
     ----------
     wavelength : float
-        Wavelength of the light (in meters).
+        (m) wavelength of the light.
     NA : float
         Numerical aperture of the objective lens.
     f0 : float
         Filling factor.
     f : float
-        Focal length of the objective lens (in meters).
+        (m) focal length of the objective lens.
 
     Methods
     -------
     getFocalFieldRad(z, rho_max, N)
         Compute the focal field using the radial formulation.
     getFocalFieldAzm(z, rho_max, N)
-        Compute the focal field using the azimuthal formulation (with E_z = 0).
+        Compute the focal field using the azimuthal formulation 
+        (with E_z = 0).
     getFocalField(z, rho_max, N)
         Compute the focal field using a general formulation.
     """
@@ -56,9 +48,11 @@ class ObjectiveLens:
 
     def _scattered_interpolant(self, x, y, z, XI, YI):
         """
-        Interpolates scattered data (x, y, z) onto a regular grid (XI, YI).
+        Interpolates scattered data (x, y, z) onto a regular grid 
+        (XI, YI).
 
-        Uses linear interpolation with a nearest-neighbor fallback for undefined points.
+        Uses linear interpolation with a nearest-neighbor fallback for 
+        undefined points.
         """
         points = np.column_stack((x, y))
         grid_z_linear = griddata(points, z, (XI, YI), method='linear')
@@ -67,6 +61,7 @@ class ObjectiveLens:
             grid_z_nearest = griddata(points, z, (XI, YI), method='nearest')
             grid_z_linear[nan_mask] = grid_z_nearest[nan_mask]
         return grid_z_linear
+    
     def getFocalField(self, z, rho_max, N):
         """
         Compute the focal field using a general formulation.
@@ -74,18 +69,20 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            Defocus of the beam (z = 0 corresponds to the focal plane).
+            (m) defocus of the beam (z = 0 corresponds to the focal 
+            plane).
         rho_max : float
-            Maximum radial coordinate for evaluation.
+            (### unit?) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
         Returns
         -------
-        xi, yi : 1D numpy arrays
-            Vectors defining the interpolation grid.
-        Exi, Eyi, Ezi : 2D numpy arrays
-            Complex electric field components on the grid.
+        xi, yi : ndarray
+            Vectors (1D numpy arrays) defining the interpolation grid.
+        Exi, Eyi, Ezi : ndarray
+            Complex electric field components on the grid.  Specified as
+            2D arrays.
         """
         E0 = 1 # Amplitude of the incident electric field
         n1, n2 = 1, 1 # Refractive indices of the medium and the lens - not properly implemented
@@ -139,9 +136,10 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            Defocus of the beam (z = 0 corresponds to the focal plane).
+            (m) defocus of the beam (z = 0 corresponds to the focal 
+            plane).
         rho_max : float
-            Maximum radial coordinate for evaluation.
+            (### unit?) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -149,8 +147,9 @@ class ObjectiveLens:
         -------
         xi, yi : 1D numpy arrays
             Vectors defining the interpolation grid.
-        Exi, Eyi, Ezi : 2D numpy arrays
-            Complex electric field components on the grid.
+        Exi, Eyi, Ezi : ndarray
+            Complex electric field components on the grid.  Specified as
+            2D arrays.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
@@ -199,14 +198,16 @@ class ObjectiveLens:
 
     def getFocalFieldAzm(self, z, rho_max, N):
         """
-        Compute the focal field using an azimuthal formulation (E_z = 0).
+        Compute the focal field using an azimuthal formulation 
+        (E_z = 0).
 
         Parameters
         ----------
         z : float
-            Defocus of the beam (z = 0 corresponds to the focal plane).
+            (m) defocus of the beam (z = 0 corresponds to the focal 
+            plane).
         rho_max : float
-            Maximum radial coordinate for evaluation.
+            (### unit?) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -214,8 +215,9 @@ class ObjectiveLens:
         -------
         xi, yi : 1D numpy arrays
             Vectors defining the interpolation grid.
-        Exi, Eyi, Ezi : 2D numpy arrays
-            Complex electric field components on the grid (with E_z identically zero).
+        Exi, Eyi, Ezi : ndarray
+            Complex electric field components on the grid (with E_z 
+            identically zero).  Specified as 2D arrays.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
