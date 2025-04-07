@@ -78,6 +78,26 @@ def wrapAngle(angle):
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
 
+def distBE(w, temp=300, mu=-1e12*2*np.pi*HBAR):
+    """Returns Bose-Einstein distribution for
+    given chemical potential and temperature
+
+    Parameters
+    ----------
+    f : float
+        (rad Hz) angular frequency
+    temp : float
+        (K) temperature
+    mu : float
+        (J) chemical potential
+
+    Returns
+    -------
+    BEdist : float or ndarray
+        Bose-Einstein distribution in dependance to frequency
+    """
+    return 1./(np.exp((HBAR*(abs(w)) - mu)/(KB*temp))-1)
+
 
 def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
     """Returns Bose-Einstein distribution for given chemical potential
