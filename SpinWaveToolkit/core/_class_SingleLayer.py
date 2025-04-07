@@ -761,13 +761,13 @@ class SingleLayer:
         if nc == -1:
             nc = n
         return 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
-    
+
     def GetBlochFunction(self, n=0, nc=-1, nT=0, Nf=200):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
-        
+
         Parameters
         ----------
         n : int
@@ -786,13 +786,16 @@ class SingleLayer:
         """
         w00 = self.GetDispersion(n=n, nc=nc, nT=nT)
         lifeTime = self.GetLifetime(n=n, nc=nc, nT=nT)
-        
-        w = np.linspace((np.min(w00) - 2*np.pi*1/np.max(lifeTime))*0.9, (np.max(w00) + 2*np.pi*1/np.max(lifeTime))*1.1, Nf)
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
         wMat = np.tile(w, (len(lifeTime), 1)).T
-        blochFunc = 1 / ((wMat - w00)**2 + (2 / lifeTime)**2)
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
 
         return w, blochFunc
-
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""

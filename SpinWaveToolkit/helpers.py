@@ -5,8 +5,8 @@ Place for all helping functions and constants in this module.
 import numpy as np
 
 MU0 = 1.25663706127e-6  # (N/A^2) permeability of vacuum
-KB = 1.38064852e-23 # (J/K) Boltzmann constant
-HBAR = 1.054571817e-34 # (J s) reduced Planck constant
+KB = 1.38064852e-23  # (J/K) Boltzmann constant
+HBAR = 1.054571817e-34  # (J s) reduced Planck constant
 
 __all__ = [
     "MU0",
@@ -78,8 +78,9 @@ def wrapAngle(angle):
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
 
-def distBE(w, temp=300, mu=-1e12*2*np.pi*HBAR):
-    """Returns Bose-Einstein distribution for given chemical potential 
+
+def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
+    """Returns Bose-Einstein distribution for given chemical potential
     and temperature.
 
     Parameters
@@ -96,7 +97,7 @@ def distBE(w, temp=300, mu=-1e12*2*np.pi*HBAR):
     BEdist : float or ndarray
         Bose-Einstein distribution in dependance to frequency.
     """
-    return 1./(np.exp((HBAR*(abs(w)) - mu)/(KB*temp))-1)
+    return 1.0 / (np.exp((HBAR * (abs(w)) - mu) / (KB * temp)) - 1)
 
 
 def rootsearch(f, a, b, dx, args=()):
