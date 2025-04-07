@@ -44,7 +44,8 @@ class SingleLayer:
         pinned BC.
     dp : float, optional
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned. dp=Ks/Aex, see https://doi.org/10.1103/PhysRev.131.594
+        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`, 
+        see https://doi.org/10.1103/PhysRev.131.594.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
