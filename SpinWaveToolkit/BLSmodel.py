@@ -5,7 +5,7 @@ Submodule for calculations regarding the BLS signal model.
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from scipy.signal import convolve2d
-from scipy.interpolate import interpn, RegularGridInterpolator  # ### interpn not used!
+from scipy.interpolate import RegularGridInterpolator
 from SpinWaveToolkit.greenAndFresnel import *
 
 
@@ -35,14 +35,15 @@ def getBLSsignal(
         Sweep vector of the Bloch functions. Usually frequency of spin
         waves.
     KxKyBloch : tuple[ndarray]
-        (### unit?) tuple containing the 1D grids (kx_grid, ky_grid) on
+        (rad/m) tuple containing the 1D grids (kx_grid, ky_grid) on
         which the Bloch functions are defined.
     Bloch : ndarray
         Array with shape (3, Nf, Nkx, Nky) containing the Bloch function
         components (Mx, My, Mz) for each frequency and KxKy grid point.
     Exy : ndarray
-        (### unit?) XY grid for the electric field.
-        ### shape?
+        (m) XY grid for the electric field.
+        2D array with shape (Ny, Nx) containing the X and Y
+        coordinates of the electric field.
     E : ndarray
         (V/m) 3D array with shape (3, Ny, Nx) containing the X, Y, Z
         components of the electric field.
@@ -76,10 +77,12 @@ def getBLSsignal(
     -------
     ExS : ndarray
         (V/m) scattered electric field in the X axis.
-        ### shape?
+        1D array with shape (Nf,) containing the scattered electric
+        field in the X direction for each frequency in SweepBloch.
     EyS : ndarray
         (V/m) scattered electric field in the Y axis.
-        ### shape?
+        1D array with shape (Nf,) containing the scattered electric
+        field in the Y direction for each frequency in SweepBloch.
     """
     k0 = 2 * np.pi / wavelength
 

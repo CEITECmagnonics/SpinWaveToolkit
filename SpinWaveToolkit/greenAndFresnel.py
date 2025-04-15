@@ -31,17 +31,6 @@ This module implements:
     and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF 
     are provided as 3×2 lists (each entry a numpy array of the same 
     shape as Kx and Ky).
-   
-Note:
-- The code uses numpy for numerical operations.
-- The matrices (2×2) for propagation and interface relations are 
-    represented as NumPy arrays.
-- Indices in the code assume that the user supplies layer indices in a 
-    1-indexed manner, similar to the MATLAB version.
-
-### check that the indexing really starts at 1 instead of 0 and unite 
-    it in the docstrings
-
 """
 
 import numpy as np
@@ -98,7 +87,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         Parameters
         ----------
         q : float or ndarray
-            (### unit?) lateral wavevector component(s).
+            (rad/m) lateral wavevector component(s).
 
         Returns
         -------
@@ -276,7 +265,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         Parameters
         ----------
         q : float or ndarray
-            (### unit?) lateral wavevector component(s).
+            (rad/m) lateral wavevector component(s).
 
         Returns
         -------
@@ -415,7 +404,7 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
     Parameters
     ----------
     Kx, Ky : ndarray
-        (### unit?) lateral wavevector components.
+        (rad/m) lateral wavevector components.
     DFMagLayer : float
         () dielectric function (permitivity) of the magnetic layer.
     wavelength : float

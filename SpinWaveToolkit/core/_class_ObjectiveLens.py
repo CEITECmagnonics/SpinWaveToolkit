@@ -73,7 +73,7 @@ class ObjectiveLens:
             (m) defocus of the beam (z = 0 corresponds to the focal
             plane).
         rho_max : float
-            (### unit?) maximum radial coordinate for evaluation.
+            (m) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -173,7 +173,7 @@ class ObjectiveLens:
             (m) defocus of the beam (z = 0 corresponds to the focal
             plane).
         rho_max : float
-            (### unit?) maximum radial coordinate for evaluation.
+            (m) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
