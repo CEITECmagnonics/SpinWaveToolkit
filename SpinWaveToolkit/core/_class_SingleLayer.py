@@ -873,7 +873,7 @@ class SingleLayer:
     def GetThresholdField(self):
         """### Add docstring!
         
-        mu_0 * h_th = w_r / V_k
+        mu_0 * h_th = w_r / V_k (relaxation frequency / coupling parameter)
 
         Returns
         -------
@@ -890,6 +890,9 @@ class SingleLayer:
         """### Add docstring!
         Threshold field for parallel pumping including 
         radiative losses in the non-adiabatic case.
+
+        This is an approximation which only work for
+        v_g / L >> w_r (relaxation frequency).
 
         Parameters
         ----------
