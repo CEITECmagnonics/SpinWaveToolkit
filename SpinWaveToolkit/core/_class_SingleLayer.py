@@ -881,7 +881,31 @@ class SingleLayer:
             (T) threshold field for parallel pumping.
         
         """
-        
+
         return (
             (2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam()))
+        )
+    
+    def GetThresholdFieldNonAdiabatic(self, L=1e-6):
+        """### Add docstring!
+        Threshold field for parallel pumping including 
+        radiative losses in the non-adiabatic case.
+
+        Parameters
+        ----------
+        L : float
+            (m) pumping field localization length.
+            (i.e. width of the excitation antenna)
+
+        Returns
+        -------
+        mu_0 * h_th : float
+            (T) threshold field for parallel pumping including radiative losses.
+        
+        """
+
+        alfa = np.abs(np.sinc(self.kxi * L / np.pi))
+        return (
+            self.GetGroupVelocity(n=0, nc=0, nT=0) / (L * self.GetCouplingParam())
+            * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )
