@@ -485,6 +485,38 @@ class SingleLayer:
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
+    
+    def _GetFnn(self, n, nc, nT):
+        """Gives Fnn from the Kalinikos-Slavin dispersion relation.
+
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        nc : int
+            Second quantization number, used for hybridization.
+        nT : int
+            Waveguide (transversal) quantization number.
+        """
+        
+        if nc == -1:
+            nc = n
+        if self.boundary_cond == 4:
+            kappa = self.GetPartiallyPinnedKappa(n)
+        else:
+            kappa = n * np.pi / self.d
+        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
+        k = np.sqrt(np.power(kxi, 2) + kappa**2)
+        phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
+        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
+        Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
+            1
+            - Pnn * (1 + np.power(np.cos(phi), 2))
+            + self.wM
+            * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
+            / (self.w0 + self.A * self.wM * np.power(k, 2))
+        )
+        return Fnn
 
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
@@ -507,15 +539,7 @@ class SingleLayer:
             kappa = n * np.pi / self.d
         kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
-        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
-        Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
-            1
-            - Pnn * (1 + np.power(np.cos(phi), 2))
-            + self.wM
-            * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
-            / (self.w0 + self.A * self.wM * np.power(k, 2))
-        )
+        Fnn = self._GetFnn(n=n, nc=nc, nT=nT)
         f = np.sqrt(
             (self.w0 + self.A * self.wM * np.power(k, 2))
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
@@ -808,11 +832,18 @@ class SingleLayer:
         ### check correctness of the docstring!
         ### Melkov Gurevich
         """
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
+        Fnn = self._GetFnn(n=0, nc=0, nT=0)
+
+        # gk = 1 - (1 - np.exp(-self.kxi * self.d))
+        # return (
+        #     self.w0
+        #     + self.wM * self.A * self.kxi**2
+        #     + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
+        # )
         return (
             self.w0
             + self.wM * self.A * self.kxi**2
-            + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
+            + self.wM / 2 * Fnn
         )
 
     def __GetBk(self):
@@ -821,8 +852,11 @@ class SingleLayer:
         ### check correctness of the docstring!
         ### add source
         """
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
+        Fnn = self._GetFnn(n=0, nc=0, nT=0)
+
+        # gk = 1 - (1 - np.exp(-self.kxi * self.d))
+        # return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
+        return self.wM / 2 * Fnn
 
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
@@ -837,9 +871,17 @@ class SingleLayer:
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
     def GetThresholdField(self):
-        """### Add docstring!"""
+        """### Add docstring!
+        
+        mu_0 * h_th = w_r / V_k
+
+        Returns
+        -------
+        mu_0 * h_th : float
+            (T) threshold field for parallel pumping.
+        
+        """
+        
         return (
-            2
-            * np.pi
-            / (self.GetLifetime(n=0, nc=0, nT=0) * abs(self.GetCouplingParam()))
+            (2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam()))
         )
