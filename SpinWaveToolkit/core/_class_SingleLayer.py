@@ -88,6 +88,7 @@ class SingleLayer:
     ---------------
     __GetPropagationVector
     __GetPropagationQVector
+    __GetFnn
     __GetAk
     __GetBk
 
@@ -486,7 +487,7 @@ class SingleLayer:
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
     
-    def _GetFnn(self, n, nc, nT):
+    def __GetFnn(self, n, nc, nT):
         """Gives Fnn from the Kalinikos-Slavin dispersion relation.
 
         Parameters
@@ -539,7 +540,7 @@ class SingleLayer:
             kappa = n * np.pi / self.d
         kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        Fnn = self._GetFnn(n=n, nc=nc, nT=nT)
+        Fnn = self.__GetFnn(n=n, nc=nc, nT=nT)
         f = np.sqrt(
             (self.w0 + self.A * self.wM * np.power(k, 2))
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
@@ -576,7 +577,7 @@ class SingleLayer:
 
     def GetLifetime(self, n=0, nc=-1, nT=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The result is given in s.
 
         Parameters
@@ -801,6 +802,9 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.  Default
+            is 200.
 
         Returns
         -------
@@ -832,7 +836,7 @@ class SingleLayer:
         ### check correctness of the docstring!
         ### Melkov Gurevich
         """
-        Fnn = self._GetFnn(n=0, nc=0, nT=0)
+        Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
         # gk = 1 - (1 - np.exp(-self.kxi * self.d))
         # return (
@@ -852,7 +856,7 @@ class SingleLayer:
         ### check correctness of the docstring!
         ### add source
         """
-        Fnn = self._GetFnn(n=0, nc=0, nT=0)
+        Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
         # gk = 1 - (1 - np.exp(-self.kxi * self.d))
         # return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))

@@ -668,7 +668,7 @@ class DoubleLayerNumeric:
 
     def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
@@ -757,6 +757,7 @@ class DoubleLayerNumeric:
             Number of frequency points for the Bloch function.
         lifetime : float, optional
             (s) fixed lifetime to bypass its dispersion calculation.
+        
         Returns
         -------
         w : ndarray

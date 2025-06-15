@@ -405,7 +405,7 @@ class SingleLayerSCcoupled:
         kappa_y = self.__get_kappa_y(a_ky, d_sc, d_is)
         return self.gamma*np.sqrt((H_ky-kappa_x*MU0*self.Ms)*(H_ky-kappa_y*MU0*self.Ms))
 
-    def GetDispersion(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0,):
+    def GetDispersion(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
         """Calculates dispersion relation for the FM-SC bilayer.
 
         This corresponds to the actual model of Zhou et al.
@@ -425,7 +425,7 @@ class SingleLayerSCcoupled:
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
-            is not derived rigorously.
+            is not derived rigorously.  Default is "original".
         tol : float, optional
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
@@ -457,7 +457,232 @@ class SingleLayerSCcoupled:
         else:
             raise ValueError(f'Unknown model "{model}". Use "original", "approx0" or "approx1".')
 
+    def GetGroupVelocity(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+        """Gives (tangential) group velocities for defined k.
+        The group velocity is computed as vg = dw/dk.
+        The result is given in m/s.
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
 
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.  Default is "original".
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
 
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
+        """
+        f = self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+        vg = np.gradient(f) / np.gradient(self.kxi)
+        return vg
+    
+    def GetLifetime(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+        """Gives lifetimes for defined k.
+        It is computed as tau = (alpha*w*dw/dw0)^-1.
+        The result is given in s.
+
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.  Default is "original".
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
+        """
+        Bext_ori = self.Bext
+        step = 1e-5
+        self.Bext = Bext_ori * (1 - step)
+        dw_lo = self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+        self.Bext = Bext_ori * (1 + step)
+        dw_hi = self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+        self.Bext = Bext_ori
+        lifetime = (
+            (
+                self.alpha * self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+                + self.gamma * self.mu0dH0
+            )
+            * (dw_hi - dw_lo)
+            / (self.gamma * Bext_ori * 2 * step)
+        ) ** -1
+        return lifetime
+
+    def GetDecLen(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+        """Give decay lengths for defined k.
+        Decay length is computed as lambda = v_g*tau.
+        The result is given in m.
+
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.  Default is "original".
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
+
+        Returns
+        -------
+        declen : ndarray
+            (m) decay length.
+        """
+        return self.GetLifetime(model=model, tol=tol, d_sc=d_sc, d_is=d_is) * self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is
+        )
+
+    def GetDensityOfStates(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+        """Give density of states for given mode.
+        Density of states is computed as DoS = 1/v_g.
+        Output is density of states in 1D for given dispersion
+        characteristics.
+
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.  Default is "original".
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
+        """
+        return 1 / self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+
+    def GetBlochFunction(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.  Default is "original".
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.  Default
+            is 200.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w00 = self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+        lifeTime = self.GetLifetime(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        return w, blochFunc
 

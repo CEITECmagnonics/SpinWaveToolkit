@@ -576,7 +576,7 @@ class SingleLayerNumeric:
 
     def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
@@ -660,6 +660,9 @@ class SingleLayerNumeric:
         ----------
         n : {0, 1, 2}, default 0
             Quantization number.  The -1 value is not supported here.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.  Default
+            is 200.
 
         Returns
         -------
