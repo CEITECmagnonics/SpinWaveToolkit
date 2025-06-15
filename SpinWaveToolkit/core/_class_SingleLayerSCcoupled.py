@@ -211,10 +211,12 @@ class SingleLayerSCcoupled:
             For a precise model, use the `GetDispersion()` method, 
             although it does not account for `d_sc` or `d_is`.
         """
+        lam0 = self.lam
         self.lam = np.infty  # without adjacent layer
         f0 = self.GetDispersion(tol)
         self.lam = 0  # with PEC at one side
         f_pec = self.GetDispersion(tol)
+        self.lam = lam0  # restore original lam
         k = np.abs(self.kxi)
         refl = -self.__get_refl_factor(d_sc, d_is)
         return f0 + (f_pec-f0)*refl

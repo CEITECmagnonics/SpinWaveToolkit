@@ -100,6 +100,7 @@ from .BLSmodel import *
 from .core._class_Material import *
 from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
+from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
 from .core._class_ObjectiveLens import *
 
@@ -112,6 +113,7 @@ __all__ = [
     *core._class_Material.__all__,
     "SingleLayer",
     "SingleLayerNumeric",
+    "SingleLayerSCcoupled"
     "DoubleLayerNumeric",
     "ObjectiveLens",
 ]
