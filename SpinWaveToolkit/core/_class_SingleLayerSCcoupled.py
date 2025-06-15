@@ -291,7 +291,7 @@ class SingleLayerSCcoupled:
         return a_ky1.squeeze() if a_ky1.ndim == 0 else a_ky1
 
 
-    def __get_a_ky(self, a_ky0=1.0):
+    def __get_a_ky(self, a_ky0=1):
         """Iterative function evaluating the spin-wave ellipticity 
         coefficient `a_ky`.
 
@@ -309,9 +309,9 @@ class SingleLayerSCcoupled:
         """
         H_ky = self.__get_H_ky()
         kappa_x = self.__get_kappa_x(a_ky0)
-        kappa_y = get_kappa_y(a_ky0)
+        kappa_y = self.__get_kappa_y(a_ky0)
         # print("kapx", kappa_x, "\nkapy", kappa_y)
-        return np.sqrt((H_ky-kappa_y*MU0*Ms)/(H_ky-kappa_x*MU0*Ms))
+        return np.sqrt((H_ky-kappa_y*MU0*self.Ms)/(H_ky-kappa_x*MU0*self.Ms))
 
 
     def __get_H_ky(self):
