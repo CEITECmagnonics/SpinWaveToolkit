@@ -376,75 +376,11 @@ class SingleLayerSCcoupled:
             + f"max {np.max(iters)} iterations.")
         return a_ky1.squeeze() if a_ky1.ndim == 0 else a_ky1
 
-    def GetDispersion(self, tol=1e-5):
-        """Calculates dispersion relation for the FM-SC bilayer.
+    def __GetDispersionHandle(self, d_sc=np.infty, d_is=0, tol=1e-5):
+        """Handle method for the dispersion calculation.  Should not
+        be used directly, use `GetDispersion()` instead.
 
-        This corresponds to the actual model of Zhou et al.
-
-        Parameters
-        ----------
-        tol : float, optional
-            () tolerance of the spin-wave ellipticity `a_ky`.
-            Default is 1e-5.
-
-        Returns
-        -------
-        freq : float or ndarray
-            (rad/s) angular frequency of spin waves.
-        """
-        a_ky = self.GetEllipticityIter(1, tol)
-        H_ky = self.__get_H_ky()
-        kappa_x = self.__get_kappa_x(a_ky)
-        kappa_y = self.__get_kappa_y(a_ky)
-        return self.gamma*np.sqrt((H_ky-kappa_x*MU0*self.Ms)*(H_ky-kappa_y*MU0*self.Ms))
-
-    def GetDispersionApprox(self, d_sc=np.infty, d_is=0, tol=1e-5):
-        """Calculates APPROXIMATE dispersion relation of the FM-SC 
-        bilayer, adjusted for finite thickness of the SC and an 
-        insulating spacer (IS) in between.
-
-        Inspired by the Mruczkiewicz & Krawczyk 2014 paper, 
-        https://doi.org/10.1063/1.4868905
-        the approximate dispersion is given by:
-        f = f_DE + (f_PEC - f_DE)*(-R_k)*exp(-2*k*d_is)*tanh(ks*d_sc)
-
-        Parameters
-        ----------
-        d_sc : float, optional
-            (m) thickness of the SC layer.  Default is np.infty.
-        d_is : float, optional
-            (m) thickness of the IS layer.  Default is 0.
-        tol : float, optional
-            () tolerance of the spin-wave ellipticity `a_ky`.
-            Default is 1e-5.
-
-        Returns
-        -------
-        freq : float or ndarray
-            (rad/s) angular frequency of spin waves, approximate result.
-            For a precise model, use the `GetDispersion()` method, 
-            although it does not account for `d_sc` or `d_is`.
-        """
-        lam0 = self.lam
-        self.lam = np.infty  # without adjacent layer
-        f0 = self.GetDispersion(tol)
-        self.lam = 0  # with PEC at one side
-        f_pec = self.GetDispersion(tol)
-        self.lam = lam0  # restore original lam
-        k = np.abs(self.kxi)
-        refl = -self.__get_refl_factor(d_sc, d_is)
-        return f0 + (f_pec-f0)*refl
-
-    def GetDispersionApprox2(self, d_sc=np.infty, d_is=0, tol=1e-5):
-        """Calculates APPROXIMATE dispersion relation of the FM-SC 
-        bilayer, adjusted for finite thickness of the SC and an 
-        insulating spacer (IS) in between.  
-        
-        A testing function based on the modified reflection factor, 
-        which is used in the dispersion calculations directly.
-
-        Note that the modified reflection factor is based on hand-wave
-        arguments and is not derived rigorously.
+        Further details are given in the `GetDispersion()` method.
 
         Parameters
         ----------
@@ -468,6 +404,58 @@ class SingleLayerSCcoupled:
         kappa_x = self.__get_kappa_x(a_ky, d_sc, d_is)
         kappa_y = self.__get_kappa_y(a_ky, d_sc, d_is)
         return self.gamma*np.sqrt((H_ky-kappa_x*MU0*self.Ms)*(H_ky-kappa_y*MU0*self.Ms))
+
+    def GetDispersion(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0,):
+        """Calculates dispersion relation for the FM-SC bilayer.
+
+        This corresponds to the actual model of Zhou et al.
+
+        Parameters
+        ----------
+        model : {"original", "approx0", "approx1"}, optional
+            Model to use for the dispersion calculation.
+            `"original"` uses the original Zhou et al. model.
+            `"approx0"` uses the APPROXIMATE formulas inspired by the
+            Mruczkiewicz & Krawczyk 2014 paper,
+            https://doi.org/10.1063/1.4868905
+            and this dispersion relation is given by
+            `f = f_DE + (f_PEC - f_DE)*(-R_k_mod)`,
+            where R_k_mod is a modified reflection factor as
+            `R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)`.
+            `"approx1"` uses the modified reflection factor, directly
+            in the dispersion calculation, but also gives only an
+            APPROXIMATE result, as the modified reflection factor
+            is not derived rigorously.
+        tol : float, optional
+            () tolerance of the spin-wave ellipticity `a_ky`.
+            Default is 1e-5.
+        d_sc : float, optional
+            (m) thickness of the superconducting layer.  Used only in 
+            the approximate models.  Default is np.inf.
+        d_is : float, optional
+            (m) thickness of the insulating spacer layer.  Used only in 
+            the approximate models.  Default is 0.
+
+        Returns
+        -------
+        freq : float or ndarray
+            (rad/s) angular frequency of spin waves.
+        """
+        if model == "original":
+            return self.__GetDispersionHandle(tol=tol)
+        elif model == "approx0":
+            lam0 = self.lam
+            self.lam = np.infty  # without adjacent layer
+            f0 = self.__GetDispersionHandle(tol=tol)
+            self.lam = 0  # with PEC at one side
+            f_pec = self.__GetDispersionHandle(tol=tol)
+            self.lam = lam0  # restore original lam
+            refl = -self.__get_refl_factor(d_sc, d_is)
+            return f0 + (f_pec-f0)*refl
+        elif model == "approx1":
+            return self.__GetDispersionHandle(d_sc, d_is, tol)
+        else:
+            raise ValueError(f'Unknown model "{model}". Use "original", "approx0" or "approx1".')
 
 
 
