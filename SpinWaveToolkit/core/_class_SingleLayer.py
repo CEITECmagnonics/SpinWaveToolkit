@@ -44,7 +44,7 @@ class SingleLayer:
         pinned BC.  Default is 1.
     dp : float, optional
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`, 
+        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`,
         see https://doi.org/10.1103/PhysRev.131.594.
 
     Attributes (same as Parameters, plus these)
@@ -486,7 +486,7 @@ class SingleLayer:
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
-    
+
     def __GetFnn(self, n, nc, nT):
         """Gives Fnn from the Kalinikos-Slavin dispersion relation.
 
@@ -499,7 +499,7 @@ class SingleLayer:
         nT : int
             Waveguide (transversal) quantization number.
         """
-        
+
         if nc == -1:
             nc = n
         if self.boundary_cond == 4:
@@ -841,11 +841,7 @@ class SingleLayer:
         #     + self.wM * self.A * self.kxi**2
         #     + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
         # )
-        return (
-            self.w0
-            + self.wM * self.A * self.kxi**2
-            + self.wM / 2 * Fnn
-        )
+        return self.w0 + self.wM * self.A * self.kxi**2 + self.wM / 2 * Fnn
 
     def __GetBk(self):
         """Calculate semi-minor axis of the precession ellipse for
@@ -860,10 +856,10 @@ class SingleLayer:
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
         all `kxi`.  It is defined such that is falls within [0, 1].
-        
-        Based on: A.G. Gurevich and G.A. Melkov. Magnetization 
+
+        Based on: A.G. Gurevich and G.A. Melkov. Magnetization
         Oscillations and Waves. CRC Press, 1996.
-        ### Maybe put the source to the class docstring and state that 
+        ### Maybe put the source to the class docstring and state that
         ### it relates the functions (...) instead of the functions.
 
         Returns
@@ -879,23 +875,23 @@ class SingleLayer:
 
     def GetThresholdField(self):
         """### Add docstring!
-        
+
         mu_0 * h_th = w_r / V_k (relaxation frequency / coupling parameter)
 
         Returns
         -------
         mu_0 * h_th : float
             (T) threshold field for parallel pumping.
-        
+
         """
 
         return (
-            (2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam()))
+            2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam())
         )
-    
+
     def GetThresholdFieldNonAdiabatic(self, L=1e-6):
         """### Add docstring!
-        Threshold field for parallel pumping including 
+        Threshold field for parallel pumping including
         radiative losses in the non-adiabatic case.
 
         This is an approximation which only work when
@@ -912,11 +908,12 @@ class SingleLayer:
         -------
         mu_0 * h_th : float
             (T) threshold field for parallel pumping including radiative losses.
-        
+
         """
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))
         return (
-            self.GetGroupVelocity(n=0, nc=0, nT=0) / (L * self.GetCouplingParam())
+            self.GetGroupVelocity(n=0, nc=0, nT=0)
+            / (L * self.GetCouplingParam())
             * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )

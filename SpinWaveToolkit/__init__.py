@@ -113,7 +113,7 @@ __all__ = [
     *core._class_Material.__all__,
     "SingleLayer",
     "SingleLayerNumeric",
-    "SingleLayerSCcoupled"
+    "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
     "ObjectiveLens",
 ]

@@ -557,7 +557,7 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -582,7 +582,7 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -618,7 +618,7 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -640,7 +640,7 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns

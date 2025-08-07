@@ -649,7 +649,7 @@ class DoubleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -674,7 +674,7 @@ class DoubleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -709,7 +709,7 @@ class DoubleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -731,7 +731,7 @@ class DoubleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1}, optional
-            Quantization number.  If -1, data for all (positive) 
+            Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
         Returns
@@ -758,7 +758,7 @@ class DoubleLayerNumeric:
             Number of frequency points for the Bloch function.
         lifetime : float, optional
             (s) fixed lifetime to bypass its dispersion calculation.
-        
+
         Returns
         -------
         w : ndarray
