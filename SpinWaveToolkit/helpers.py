@@ -4,10 +4,6 @@ Place for all helping functions and constants in this module.
 
 import numpy as np
 
-MU0 = 1.25663706127e-6  # (N/A^2) permeability of vacuum
-KB = 1.38064852e-23  # (J/K) Boltzmann constant
-HBAR = 1.054571817e-34  # (J s) reduced Planck constant
-
 __all__ = [
     "MU0",
     "KB",
@@ -18,6 +14,10 @@ __all__ = [
     "wrapAngle",
     "roots",
 ]
+
+MU0 = 1.25663706127e-6  # (N/A^2) permeability of vacuum
+KB = 1.38064852e-23  # (J/K) Boltzmann constant
+HBAR = 1.054571817e-34  # (J s) reduced Planck constant
 
 
 def wavenumber2wavelength(wavenumber):

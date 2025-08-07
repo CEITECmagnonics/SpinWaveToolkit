@@ -766,8 +766,8 @@ class DoubleLayerNumeric:
         blochFunc : ndarray
             () 2D Bloch function for given kxi and w.
         """
-        w, v00 = self.GetDispersion()
-        if lifeTime == None:
+        w, _ = self.GetDispersion()
+        if lifeTime is None:
             lifeTime = self.GetLifetime(n=n)
         else:
             lifeTime = lifeTime * np.ones(len(self.kxi))

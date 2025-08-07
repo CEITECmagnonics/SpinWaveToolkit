@@ -671,7 +671,7 @@ class SingleLayerNumeric:
         blochFunc : ndarray
             () 2D Bloch function for given kxi and w.
         """
-        w, v00 = self.GetDispersion()
+        w, _ = self.GetDispersion()
         lifeTime = self.GetLifetime(n=n)
         w00 = w[n]
 
