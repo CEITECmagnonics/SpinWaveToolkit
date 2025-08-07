@@ -29,20 +29,20 @@ class SingleLayerNumeric:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction)
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
+    theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally
         in-plane magnetization.
-    phi : float or ndarray, default np.pi/2
+    phi : float or ndarray, optional
         (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
+    boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
+        pinned BC.  Default is 1.
         ### The only working BCs are 1 right now, some functions
             implement 2 and 4, but it is not complete!
     dp : float, optional
@@ -556,9 +556,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive) 
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -581,9 +581,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive) 
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -617,9 +617,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive) 
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -639,9 +639,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive) 
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -658,11 +658,11 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {0, 1, 2}, default 0
+        n : {0, 1, 2}, optional
             Quantization number.  The -1 value is not supported here.
+            Default is 0.
         Nf : int, optional
-            Number of frequency levels for the Bloch function.  Default
-            is 200.
+            Number of frequency levels for the Bloch function.
 
         Returns
         -------

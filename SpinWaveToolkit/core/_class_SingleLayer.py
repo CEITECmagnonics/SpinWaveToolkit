@@ -28,20 +28,20 @@ class SingleLayer:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction).
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
+    theta : float, optional
         (rad) out of plane angle of static M, pi/2 is totally
         in-plane magnetization.
-    phi : float or ndarray, default np.pi/2
+    phi : float or ndarray, optional
         (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
+    boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
+        pinned BC.  Default is 1.
     dp : float, optional
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned. Can be calculated as `dp=Ks/Aex`, 
@@ -803,8 +803,7 @@ class SingleLayer:
         nT : int, optional
             Waveguide (transversal) quantization number.
         Nf : int, optional
-            Number of frequency levels for the Bloch function.  Default
-            is 200.
+            Number of frequency levels for the Bloch function.
 
         Returns
         -------
@@ -833,8 +832,6 @@ class SingleLayer:
     def __GetAk(self):
         """Calculate semi-major axis of the precession ellipse for
         all `kxi`.
-        ### check correctness of the docstring!
-        ### Melkov Gurevich
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -853,8 +850,6 @@ class SingleLayer:
     def __GetBk(self):
         """Calculate semi-minor axis of the precession ellipse for
         all `kxi`.
-        ### check correctness of the docstring!
-        ### add source
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -864,9 +859,17 @@ class SingleLayer:
 
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
-        all `kxi`.
-        ### check correctness of the docstring!
-        ### add source
+        all `kxi`.  It is defined such that is falls within [0, 1].
+        
+        Based on: A.G. Gurevich and G.A. Melkov. Magnetization 
+        Oscillations and Waves. CRC Press, 1996.
+        ### Maybe put the source to the class docstring and state that 
+        ### it relates the functions (...) instead of the functions.
+
+        Returns
+        -------
+        ellipticity : ndarray
+            () ellipticity for all `kxi`.
         """
         return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 

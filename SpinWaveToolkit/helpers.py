@@ -157,7 +157,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
         Function to evaluate, f(x, *args).
     x1, x2 : float
         (x units) left and right boundaries of the interval to search.
-    epsilon : float, default 1.0e-9
+    epsilon : float, optional
         (x units) tolerance of the to-be-found root.
     args : list, optional
         List of arguments to be passed to `f`.
@@ -216,7 +216,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
         (x units) left and right boundaries of the interval to search.
     dx : float
         (x units) stepsize of evaluation points (coarse search).
-    eps : float, default 1.0e-9
+    eps : float, optional
         (x units) tolerance of the to-be-found roots (fine search).
     args : list, optional
         List of arguments to be passed to `f`.

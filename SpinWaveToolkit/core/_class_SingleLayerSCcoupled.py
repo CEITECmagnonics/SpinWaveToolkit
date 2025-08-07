@@ -33,12 +33,6 @@ class SingleLayerSCcoupled:
     # ### update the docstring after implementing the model 
     #   (also check other models)
 
-    # ### try to compare numeric calculation of the lifetime to the one
-    #   derived by Zhou et al.
-
-    # ### todo: add also possibility to calculate approximate dispersion 
-    #   with finite SC and IS
-
     Parameters
     ----------
     Bext : float
@@ -48,24 +42,10 @@ class SingleLayerSCcoupled:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m) magnetic layer thickness (in z direction).
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
-        (rad) out of plane angle of static M, pi/2 is totally
-        in-plane magnetization.
-    phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
-    weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
-        order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
-        boundary conditions (BCs), 1 is totally unpinned and 2 is
-        totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
-    dp : float, optional
-        (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`, 
-        see https://doi.org/10.1103/PhysRev.131.594.
+    lam : float, optional
+        (m) penetration depth of the superconducting layer.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
@@ -79,49 +59,38 @@ class SingleLayerSCcoupled:
         () Gilbert damping.
     mu0dH0 : float
         (T) inhomogeneous broadening.
-    w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Hext`
-    wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `wM = MU0*gamma*Ms`
-    A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
-        `A = Aex*2/(Ms**2*MU0)`
 
     Methods
     -------
-    GetPartiallyPinnedKappa
     GetDisperison
     GetGroupVelocity
     GetLifetime
     GetDecLen
-    GetSecondPerturbation
     GetDensityOfStates
     GetBlochFunction
-    GetExchangeLen
-    GetEllipticity
-    GetCouplingParam
-    GetThresholdField
+    GetEllipticityIter
 
     Private methods
     ---------------
-    __GetPropagationVector
-    __GetPropagationQVector
-    __GetAk
-    __GetBk
+    __get_refl_factor
+    __get_kappa_x
+    __get_kappa_y
+    __get_H_ky
+    __get_a_ky
+    __GetDispersionHandle
+
 
     Code example
     ------------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the lowest-order mode in a 30 nm
-    thick NiFe (Permalloy) layer.
+    thick NiFe (Permalloy) layer covered by a sufficiently thick 
+    superconductor (Nb, lam ~ 100 nm).
     .. code-block:: python
         kxi = np.linspace(1e-6, 150e6, 150)
 
-        PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
-                             phi=np.pi/2, d=30e-9, weff=2e-6,
-                             boundary_cond=2, material=SWT.NiFe)
+        PyChar = SingleLayer(Bext=20e-3, material=Swt.NiFe, d=30e-9, 
+                             kxi=kxi, lam=100e-9)
         DispPy = PyChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
         vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
         lifetimePy = PyChar.GetLifetime()*1e9  # ns
@@ -171,7 +140,7 @@ class SingleLayerSCcoupled:
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
-        k_mask : None or ndarray[bool], optional.
+        k_mask : None or ndarray[bool], optional
             Mask for wavevectors.  Used e.g. for efficient numeric 
             solution of `a_ky`.  Default is None.
         
@@ -219,7 +188,7 @@ class SingleLayerSCcoupled:
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
-        k_mask : None or ndarray[bool], optional.
+        k_mask : None or ndarray[bool], optional
             Mask for wavevectors.  Used e.g. for efficient numeric 
             solution of `a_ky`.  Default is None.
 
@@ -256,7 +225,7 @@ class SingleLayerSCcoupled:
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
-        k_mask : None or ndarray[bool], optional.
+        k_mask : None or ndarray[bool], optional
             Mask for wavevectors.  Used e.g. for efficient numeric 
             solution of `a_ky`.  Default is None.
 
@@ -286,7 +255,7 @@ class SingleLayerSCcoupled:
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
-        k_mask : None or ndarray[bool], optional.
+        k_mask : None or ndarray[bool], optional
             Mask for wavevectors.  Used e.g. for efficient numeric 
             solution of `a_ky`.  Default is None.
 
@@ -318,7 +287,7 @@ class SingleLayerSCcoupled:
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
-        k_mask : None or ndarray[bool], optional.
+        k_mask : None or ndarray[bool], optional
             Mask for wavevectors.  Used e.g. for efficient numeric 
             solution of `a_ky`.  Default is None.
 
@@ -395,9 +364,8 @@ class SingleLayerSCcoupled:
         Returns
         -------
         freq : float or ndarray
-            (rad/s) angular frequency of spin waves, approximate result.
-            For a precise model, use the `GetDispersion()` method, 
-            although it does not account for `d_sc` or `d_is`.
+            (rad/s) angular frequency of spin waves.  Approximate result 
+            if d_sc != np.infty and d_is != 0.
         """
         a_ky = self.GetEllipticityIter(1, tol, d_sc, d_is)
         H_ky = self.__get_H_ky()
@@ -663,8 +631,7 @@ class SingleLayerSCcoupled:
             (m) thickness of the insulating spacer layer.  Used only in 
             the approximate models.  Default is 0.
         Nf : int, optional
-            Number of frequency levels for the Bloch function.  Default
-            is 200.
+            Number of frequency levels for the Bloch function.
 
         Returns
         -------
