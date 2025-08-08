@@ -22,7 +22,7 @@ class TestClass:
         sln = SWT.SingleLayerNumeric(bext, mat, d, kxi, theta, phi,
                                      boundary_cond=bc)
         f_sln = sln.GetDispersion()[0]*1e-9/np.pi/2
-        slsc = SWT.SingleLayerSCcoupled(bext, mat, d, kxi, np.infty)
+        slsc = SWT.SingleLayerSCcoupled(bext, mat, d, kxi, np.inf)
         f_slsc = slsc.GetDispersion()*1e-9/np.pi/2
         zeroth = 0  # select the lowest mode
         if show:
