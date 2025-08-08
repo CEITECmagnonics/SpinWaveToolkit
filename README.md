@@ -5,15 +5,16 @@
 
 ## Installation
 
-> [!NOTE]
-> Installation with `pip` from PyPI is currently a WIP. We hope it will be available soon.
-
 Currently you can either 
-1. install from GitHub via `pip` by typing in the command line
+1. (recommended) install latest release from PyPI via `pip` by typing in the command line
 ```
-py -m pip install https://github.com/CEITECmagnonics/SpinWaveToolkit/tarball/master --user
+py -m pip install SpinWaveToolkit --user
 ```
-2. or copy the [SpinWaveToolkit][SWTpy] folder to your `site-packages` folder manually. Usually (on Windows machines) located at
+2. or install from GitHub any branch via `pip` by typing in the command line
+```
+py -m pip install https://github.com/CEITECmagnonics/SpinWaveToolkit/tarball/<branch-name> --user
+```
+3. or copy the [SpinWaveToolkit][SWTpy] folder to your `site-packages` folder manually. Usually (on Windows machines) located at
 ```
 C:\Users\<user>\AppData\Roaming\Python\Python<python-version>\site-packages
 ```
@@ -38,14 +39,22 @@ This module provides analytical tools in spin-wave physics.
 ### Classes
 `SingleLayer` - Compute spin-wave characteristics in dependance to k-vector for a single layer using an analytical model of Kalinikos and Slavin [^1].
 
-`SingleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a single layer using a numerical approach by Tacchi [^2].
+`SingleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a single layer using a numerical approach by Tacchi et al. [^2].
 
-`DoubleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a double layer using a numerical model of Gallardo [^3].
+`DoubleLayerNumeric` - Compute spin-wave characteristics in dependance to k-vector for a double layer using a numerical model of Gallardo et al. [^3].
+
+`SingleLayerSCcoupled` - Compute spin-wave characteristics in dependance to k-vector for a single ferromagnetic layer dipolarly coupled to a superconductor using a semi-analytical model of Zhou et al. [^4].
 
 `Material` - Class for magnetic materials used in spin wave research.
+
+`ObjectiveLens` - Class for calculation of the focal electric fields of given lens.
     
 ### Constants
 `MU0` - Magnetic permeability of free space.
+
+`KB` - Bolzmann constant.
+
+`HBAR` - reduced Planck constant.
 
 `NiFe` - Predefined material NiFe (permalloy).
 
@@ -68,6 +77,19 @@ This module provides analytical tools in spin-wave physics.
 
 `roots` - Find all roots of a continuous function `f(x, *args)` within a given interval `[a, b]`.
 
+`distBE` - Bose-Einstein distribution function.
+
+`fresnel_coefficients` - Compute Fresnel reflection and transmission coefficients.
+
+`htp` - Compute p-polarized Fresnel coefficients for a given lateral 
+    wavevector q.  Returned by fresnel_coefficients().
+
+`hts` - Compute s-polarized Fresnel coefficients for a given lateral wavevector q.  Returned by fresnel_coefficients().
+
+`sph_green_function` - Compute the spherical Green's functions for p- and s-polarized fields.
+
+`getBLSsignal` - Compute the Brillouin light scattering signal using Green's functions formalism.
+
 ### Example
 Example of calculation of the dispersion relation `f(k_xi)`, and other important quantities, for the lowest-order mode in a 30 nm thick NiFe (Permalloy) layer.
 ```Python
@@ -88,6 +110,7 @@ decLen = PyChar.GetDecLen()*1e6  # um
 [^1]: B. A. Kalinikos and A. N. Slavin, *J. Phys. C: Solid State Phys.*, **19**, 7013 (1986).
 [^2]: S. Tacchi et al., *Phys. Rev. B*, **100**, 104406 (2019).
 [^3]: R. A. Gallardo et al., *Phys. Rev. Applied*, **12**, 034012 (2019).
+[^4]: X.-H. Zhou et al., *Phys. Rev. B*, **110**, L020404 (2024).
 
 
 [SWTpy]:SpinWaveToolkit
