@@ -30,9 +30,6 @@ class SingleLayerSCcoupled:
     (this also assumes no hybridizations).  See original paper for
     possible limitations.
 
-    # ### update the docstring after implementing the model
-    #   (also check other models)
-
     Parameters
     ----------
     Bext : float

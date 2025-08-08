@@ -83,6 +83,7 @@ class SingleLayer:
     GetEllipticity
     GetCouplingParam
     GetThresholdField
+    GetThresholdFieldNonAdiabatic
 
     Private methods
     ---------------
@@ -110,7 +111,7 @@ class SingleLayer:
 
     See also
     --------
-    SingleLayerNumeric, DoubleLayerNumeric, Material
+    SingleLayerNumeric, DoubleLayerNumeric, Material, SingleLayerSCcoupled
 
     """
 
@@ -331,7 +332,6 @@ class SingleLayer:
                 Pnn = Pnnc
         else:
             raise ValueError("Sorry, there is no boundary condition with this number.")
-
         return Pnn
 
     def __GetPropagationQVector(self, n=0, nc=-1, nT=0):

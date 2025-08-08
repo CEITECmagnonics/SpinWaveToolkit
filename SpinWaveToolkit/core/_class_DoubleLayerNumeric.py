@@ -122,8 +122,7 @@ class DoubleLayerNumeric:
     See also
     --------
     SingleLayer, SingleLayerNumeric, Material
-
-    # ### update when finished adding/removing code
+    
     """
 
     def __init__(
