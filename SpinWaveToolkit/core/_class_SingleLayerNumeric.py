@@ -4,7 +4,7 @@ Core (private) file for the `SingleLayerNumeric` class.
 
 import numpy as np
 from numpy import linalg
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, roots
 
 __all__ = ["SingleLayerNumeric"]
 

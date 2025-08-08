@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, roots
 
 __all__ = ["SingleLayer"]
 

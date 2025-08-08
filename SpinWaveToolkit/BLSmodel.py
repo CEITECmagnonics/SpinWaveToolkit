@@ -89,13 +89,13 @@ def getBLSsignal(
     # --- Set up q-space grid (qx and qy) ---
     qxHalf = np.linspace(0, 1.1, Nq) * k0
     qx = np.concatenate((-qxHalf[1:][::-1], qxHalf))
-    dqx_raw = np.diff(qx)
-    dqx_padded = np.concatenate(([0], dqx_raw, [0]))
-    dqx = (dqx_padded[:-1] + dqx_padded[1:]) / 2
+    # dqx_raw = np.diff(qx)  # ### unused?
+    # dqx_padded = np.concatenate(([0], dqx_raw, [0]))  # ### unused?
+    # dqx = (dqx_padded[:-1] + dqx_padded[1:]) / 2  # ### unused?
 
     # qy is taken identical to qx
     qy = qx.copy()
-    dqy = dqx.copy()
+    # dqy = dqx.copy()  # ### unused?
 
     # Create the 2D grid using ndgrid convention (like Matlab)
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")

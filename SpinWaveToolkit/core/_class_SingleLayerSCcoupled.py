@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayerSCcoupled` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0
 
 __all__ = ["SingleLayerSCcoupled"]
 
