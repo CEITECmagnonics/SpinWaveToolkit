@@ -15,8 +15,14 @@ ENV/
 env.bak/
 venv.bak/
 .vscode/
+
+# General / Testing
 testcode.py
 ignored_folder/
+*.ignore
+
+# Distribution / packaging
+dist/
+build/
 *.egg-info/
 
-*.ignore

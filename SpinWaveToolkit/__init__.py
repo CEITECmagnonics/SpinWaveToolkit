@@ -8,10 +8,14 @@ SingleLayer
     a single layer using an analytical model of Kalinikos and Slavin.
 SingleLayerNumeric
     Compute spin-wave characteristics in dependance to k-vector for
-    a single layer using a numerical approach by Tacchi.
+    a single layer using a numerical approach by Tacchi et al.
 DoubleLayerNumeric
     Compute spin-wave characteristics in dependance to k-vector for
-    a double layer using a numerical model of Gallardo.
+    a double layer using a numerical model of Gallardo et al.
+SingleLayerSCcoupled
+    Compute spin-wave characteristics in dependance to k-vector for
+    a single ferromagnetic layer dipolarly coupled to a superconductor
+    using a semi-analytical model of Zhou et al.
 Material
     Class for magnetic materials used in spin wave research.
 ObjectiveLens
@@ -56,10 +60,10 @@ fresnel_coefficients
     Compute Fresnel reflection and transmission coefficients.
 htp
     Compute p-polarized Fresnel coefficients for a given lateral 
-    wavevector q.
+    wavevector q.  Returned by fresnel_coefficients().
 hts
     Compute s-polarized Fresnel coefficients for a given lateral 
-    wavevector q.
+    wavevector q.  Returned by fresnel_coefficients().
 sph_green_function
     Compute the spherical Green's functions for p- and s-polarized 
     fields.
@@ -100,6 +104,7 @@ from .BLSmodel import *
 from .core._class_Material import *
 from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
+from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
 from .core._class_ObjectiveLens import *
 
@@ -112,8 +117,9 @@ __all__ = [
     *core._class_Material.__all__,
     "SingleLayer",
     "SingleLayerNumeric",
+    "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
     "ObjectiveLens",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not
-#   worry about importing also stuff like numpy as e.g. `SWT.np` :D
+#   worry about re-importing also stuff like numpy as e.g. `SWT.np` as `np` :D

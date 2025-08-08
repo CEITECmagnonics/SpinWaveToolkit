@@ -5,7 +5,7 @@ Core (private) file for the `DoubleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, wrapAngle
 
 __all__ = ["DoubleLayerNumeric"]
 
@@ -30,12 +30,12 @@ class DoubleLayerNumeric:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction).
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
+    theta : float, optional
         (rad) out of plane angle of Bext, pi/2 is totally in-plane
         magnetization.
-    phi : float or ndarray, default np.pi/2
+    phi : float or ndarray, optional
         (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
     Ku : float, optional
         (J/m^3) uniaxial anisotropy strength.
@@ -60,10 +60,10 @@ class DoubleLayerNumeric:
     JbqDyn : float or None
         (J/m^2) dynamic biquadratic RKKY coupling parameter,
         if None, same as `Jbq`.
-    phiAnis1, phiAnis2 : float, default np.pi/2
+    phiAnis1, phiAnis2 : float, optional
         (rad) uniaxial anisotropy axis in-plane angle from kxi for
         both magnetic layers.
-    phiInit1, phiInit2 : float, default np.pi/2, -np.pi/2
+    phiInit1, phiInit2 : float, optional
         (rad) initial value of magnetization in-plane angle of the
         first and second layer, used for energy minimization.
 
@@ -123,7 +123,6 @@ class DoubleLayerNumeric:
     --------
     SingleLayer, SingleLayerNumeric, Material
 
-    # ### update when finished adding/removing code
     """
 
     def __init__(
@@ -648,9 +647,9 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -668,14 +667,14 @@ class DoubleLayerNumeric:
 
     def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
         ----------
-        n : {-1, 0, 1}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -708,9 +707,9 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -730,9 +729,9 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -751,12 +750,14 @@ class DoubleLayerNumeric:
 
         Parameters
         ----------
-        n : {0, 1}, default 0
+        n : {0, 1}, optional
             Quantization number.  The -1 value is not supported here.
-        Nf : int, default 200
+            Default is 0.
+        Nf : int, optional
             Number of frequency points for the Bloch function.
         lifetime : float, optional
             (s) fixed lifetime to bypass its dispersion calculation.
+
         Returns
         -------
         w : ndarray
@@ -764,8 +765,8 @@ class DoubleLayerNumeric:
         blochFunc : ndarray
             () 2D Bloch function for given kxi and w.
         """
-        w, v00 = self.GetDispersion()
-        if lifeTime == None:
+        w, _ = self.GetDispersion()
+        if lifeTime is None:
             lifeTime = self.GetLifetime(n=n)
         else:
             lifeTime = lifeTime * np.ones(len(self.kxi))

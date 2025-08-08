@@ -6,6 +6,7 @@ import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from scipy.signal import convolve2d
 from scipy.interpolate import RegularGridInterpolator
+from scipy.integrate import trapezoid
 from SpinWaveToolkit.greenAndFresnel import *
 
 
@@ -89,13 +90,13 @@ def getBLSsignal(
     # --- Set up q-space grid (qx and qy) ---
     qxHalf = np.linspace(0, 1.1, Nq) * k0
     qx = np.concatenate((-qxHalf[1:][::-1], qxHalf))
-    dqx_raw = np.diff(qx)
-    dqx_padded = np.concatenate(([0], dqx_raw, [0]))
-    dqx = (dqx_padded[:-1] + dqx_padded[1:]) / 2
+    # dqx_raw = np.diff(qx)  # ### unused?
+    # dqx_padded = np.concatenate(([0], dqx_raw, [0]))  # ### unused?
+    # dqx = (dqx_padded[:-1] + dqx_padded[1:]) / 2  # ### unused?
 
     # qy is taken identical to qx
     qy = qx.copy()
-    dqy = dqx.copy()
+    # dqy = dqx.copy()  # ### unused?
 
     # Create the 2D grid using ndgrid convention (like Matlab)
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
@@ -151,7 +152,7 @@ def getBLSsignal(
         (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
     )
     Volume = np.exp(-ExtinCoefMagLayer * k0 * zs)
-    VolumeFac = np.trapz(Volume, zs)
+    VolumeFac = trapezoid(Volume, zs)
 
     # Multiply the electric field by the volume factor
     interp_fftEI *= VolumeFac
