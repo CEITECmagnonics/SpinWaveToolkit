@@ -6,6 +6,7 @@ import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from scipy.signal import convolve2d
 from scipy.interpolate import RegularGridInterpolator
+from scipy.integrate import trapezoid
 from SpinWaveToolkit.greenAndFresnel import *
 
 
@@ -151,7 +152,7 @@ def getBLSsignal(
         (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
     )
     Volume = np.exp(-ExtinCoefMagLayer * k0 * zs)
-    VolumeFac = np.trapz(Volume, zs)
+    VolumeFac = trapezoid(Volume, zs)
 
     # Multiply the electric field by the volume factor
     interp_fftEI *= VolumeFac

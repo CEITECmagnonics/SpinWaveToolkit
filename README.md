@@ -30,7 +30,7 @@ for global modules.
 > This section lacks proof and was not much checked.
 
 The SpinWaveToolkit module is compatible with Python >3.7, and uses the following modules:
-- [numpy] >1.20,<2.0
+- [numpy] >1.20 (>2.0 is also ok, bugs be reported in [Issues])
 - [scipy] >1.8
 
 ## About
@@ -116,4 +116,5 @@ decLen = PyChar.GetDecLen()*1e6  # um
 [SWTpy]:SpinWaveToolkit
 [numpy]:https://numpy.org/
 [scipy]:https://scipy.org/
+[Issues]:https://github.com/CEITECmagnonics/SpinWaveToolkit/issues
 
