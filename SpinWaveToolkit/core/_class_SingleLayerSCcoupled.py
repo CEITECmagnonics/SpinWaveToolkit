@@ -350,7 +350,7 @@ class SingleLayerSCcoupled:
         )
         return a_ky1.squeeze() if a_ky1.ndim == 0 else a_ky1
 
-    def __GetDispersionHandle(self, d_sc=np.infty, d_is=0, tol=1e-5):
+    def __GetDispersionHandle(self, d_sc=np.inf, d_is=0, tol=1e-5):
         """Handle method for the dispersion calculation.  Should not
         be used directly, use `GetDispersion()` instead.
 
@@ -359,7 +359,7 @@ class SingleLayerSCcoupled:
         Parameters
         ----------
         d_sc : float, optional
-            (m) thickness of the SC layer.  Default is np.infty.
+            (m) thickness of the SC layer.  Default is np.inf.
         d_is : float, optional
             (m) thickness of the IS layer.  Default is 0.
         tol : float, optional
@@ -370,7 +370,7 @@ class SingleLayerSCcoupled:
         -------
         freq : float or ndarray
             (rad/s) angular frequency of spin waves.  Approximate result
-            if d_sc != np.infty and d_is != 0.
+            if d_sc != np.inf and d_is != 0.
         """
         a_ky = self.GetEllipticityIter(1, tol, d_sc, d_is)
         H_ky = self.__get_H_ky()
@@ -380,7 +380,7 @@ class SingleLayerSCcoupled:
             (H_ky - kappa_x * MU0 * self.Ms) * (H_ky - kappa_y * MU0 * self.Ms)
         )
 
-    def GetDispersion(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+    def GetDispersion(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0):
         """Calculates dispersion relation for the FM-SC bilayer.
 
         This corresponds to the actual model of Zhou et al.
@@ -420,7 +420,7 @@ class SingleLayerSCcoupled:
             return self.__GetDispersionHandle(tol=tol)
         if model == "approx0":
             lam0 = self.lam
-            self.lam = np.infty  # without adjacent layer
+            self.lam = np.inf  # without adjacent layer
             f0 = self.__GetDispersionHandle(tol=tol)
             self.lam = 0  # with PEC at one side
             f_pec = self.__GetDispersionHandle(tol=tol)
@@ -433,7 +433,7 @@ class SingleLayerSCcoupled:
             f'Unknown model "{model}". Use "original", "approx0" or "approx1".'
         )
 
-    def GetGroupVelocity(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+    def GetGroupVelocity(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
@@ -476,7 +476,7 @@ class SingleLayerSCcoupled:
         vg = np.gradient(f) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+    def GetLifetime(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0):
         """Gives lifetimes for defined k.
         It is computed as tau = (alpha*w*dw/dw0)^-1.
         The result is given in s.
@@ -530,7 +530,7 @@ class SingleLayerSCcoupled:
         ) ** -1
         return lifetime
 
-    def GetDecLen(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+    def GetDecLen(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0):
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         The result is given in m.
@@ -570,7 +570,7 @@ class SingleLayerSCcoupled:
             model=model, tol=tol, d_sc=d_sc, d_is=d_is
         ) * self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
 
-    def GetDensityOfStates(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
+    def GetDensityOfStates(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
         Output is density of states in 1D for given dispersion
@@ -610,7 +610,7 @@ class SingleLayerSCcoupled:
         return 1 / self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
 
     def GetBlochFunction(
-        self, model="original", tol=1e-5, d_sc=np.infty, d_is=0, Nf=200
+        self, model="original", tol=1e-5, d_sc=np.inf, d_is=0, Nf=200
     ):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
