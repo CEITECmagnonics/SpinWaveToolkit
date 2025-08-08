@@ -429,7 +429,9 @@ class SingleLayerSCcoupled:
             return f0 + (f_pec - f0) * refl
         if model == "approx1":
             return self.__GetDispersionHandle(d_sc, d_is, tol)
-        raise ValueError(f'Unknown model "{model}". Use "original", "approx0" or "approx1".')
+        raise ValueError(
+            f'Unknown model "{model}". Use "original", "approx0" or "approx1".'
+        )
 
     def GetGroupVelocity(self, model="original", tol=1e-5, d_sc=np.infty, d_is=0):
         """Gives (tangential) group velocities for defined k.
