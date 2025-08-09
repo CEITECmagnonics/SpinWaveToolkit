@@ -17,7 +17,9 @@ class BulkPolariton:
     Models the magnon-polariton in a bulk ferromagnet.  Therefore
     only one angle (`phi`) is sufficient to describe the propagation 
     characteristics within this system.  However, the FMR frequency
-    is calculated for a thin film. ???? ### clarify the model
+    is calculated for a thin film. # ???? ### clarify the model
+
+    # ### Model source?
 
     Parameters
     ----------
