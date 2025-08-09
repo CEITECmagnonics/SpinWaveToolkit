@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: SpinWaveToolkit
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Ondřej
+    family-names: Wojewoda
+  - given-names: Jan
+    family-names: Klíma
+repository-code: 'https://github.com/CEITECmagnonics/SpinWaveToolkit'
+date-released: '2024-06-12'

@@ -9,6 +9,7 @@ __all__ = ["Material", "NiFe", "CoFeB", "FeNi", "YIG"]
 
 class Material:
     """Class for magnetic materials used in spin wave research.
+
     To define a custom material, type
     ``
     MyNewMaterial = Material(Ms=MyMS, Aex=MyAex, alpha=MyAlpha, gamma=MyGamma)
@@ -44,6 +45,10 @@ class Material:
     CoFeB
     FeNi (Metastable iron)
     YIG
+
+    See also
+    --------
+    SingleLayer, SingleLayerNumeric, DoubleLayerNumeric
     """
 
     def __init__(self, Ms, Aex, alpha, mu0dH0=0, gamma=28.1 * 2 * np.pi * 1e9, Ku=0):
@@ -59,9 +64,11 @@ class Material:
         with a given surface anisotropy. The result is in rad/m.
         `p=-2*pi*Ku/Aex`
 
+        ### Is this correct?
+
         https://doi.org/10.1103/PhysRevB.83.174417
         """
-        return -2*np.pi*self.Ku/self.Aex
+        return -2 * np.pi * self.Ku / self.Aex
 
 
 # Predefined materials

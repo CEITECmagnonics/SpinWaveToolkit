@@ -4,7 +4,7 @@ Core (private) file for the `SingleLayerNumeric` class.
 
 import numpy as np
 from numpy import linalg
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, roots
 
 __all__ = ["SingleLayerNumeric"]
 
@@ -12,12 +12,13 @@ __all__ = ["SingleLayerNumeric"]
 class SingleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
-    propagation length.
-    The model uses famous Slavin-Kalinikos equation from
-    https://doi.org/10.1088/0022-3719/19/35/014
+    propagation length for up to three lowest-order modes.
+
+    The dispersion model uses the approach of Tacchi et al., see:
+    https://doi.org/10.1103/PhysRevB.100.104406
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
@@ -25,29 +26,32 @@ class SingleLayerNumeric:
         (T) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction)
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
-        magnetization.
-    phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry.
+    theta : float, optional
+        (rad) out of plane angle static M, pi/2 is totally
+        in-plane magnetization.
+    phi : float or ndarray, optional
+        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
+    boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
+        pinned BC.  Default is 1.
+        ### The only working BCs are 1 right now, some functions
+            implement 2 and 4, but it is not complete!
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned.
     KuOOP : float, optional
         (J/m^3) OOP anisotropy strength used in the Tacchi model.
         ### Should this be calculated from the surface anisotropy
-            strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis'ies`?,
+            strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
 
@@ -68,7 +72,7 @@ class SingleLayerNumeric:
         `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Ms`
+        `wM = MU0*gamma*Ms`
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
         `A = Aex*2/(Ms**2*MU0)`
@@ -78,12 +82,12 @@ class SingleLayerNumeric:
 
     Methods
     -------
-    # sort these and check completeness, make some maybe private
     GetDisperison
     GetGroupVelocity
     GetLifetime
     GetDecLen
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
 
     Private methods
@@ -99,19 +103,24 @@ class SingleLayerNumeric:
 
     Code example
     ------------
-    ``
-    # Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the lowest-order mode in a 30 nm
+    thick NiFe (Permalloy) layer.
+    .. code-block:: python
+        kxi = np.linspace(1e-6, 150e6, 150)
 
-    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                        n=0, d=30e-9, weff=2e-6, nT=0,
-                                        boundary_cond=2, Bext=20e-3,
-                                        material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
-    ``
+        PyChar = SingleLayerNumeric(Bext=20e-3, kxi=kxi, theta=np.pi/2,
+                                    phi=np.pi/2, d=30e-9, weff=2e-6,
+                                    boundary_cond=2, material=SWT.NiFe)
+        DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
+
+    See also
+    --------
+    SingleLayer, DoubleLayerNumeric, Material
+
     """
 
     def __init__(
@@ -426,19 +435,21 @@ class SingleLayerNumeric:
         """
 
         def trans_eq(kappa, d, dp):
-            e = (kappa ** 2 - dp ** 2) * np.tan(kappa * d) - kappa * dp * 2
+            e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
             return e
 
-        kappa0 = roots(trans_eq,
-                       n * np.pi / self.d,
-                       (n + 1) * np.pi / self.d,
-                       np.pi / self.d * 4e-4,
-                       # try decreasing dx if an error occurs
-                       np.pi / self.d * 1e-9,
-                       args=(self.d, self.dp))
+        kappa0 = roots(
+            trans_eq,
+            n * np.pi / self.d,
+            (n + 1) * np.pi / self.d,
+            np.pi / self.d * 4e-4,
+            # try decreasing dx if an error occurs
+            np.pi / self.d * 1e-9,
+            args=(self.d, self.dp),
+        )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
-            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
+            kappa0[np.isclose(kappa0, np.pi / self.d * (i + 0.5))] = np.nan
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
@@ -456,24 +467,25 @@ class SingleLayerNumeric:
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
+        ### Update correct example.
 
         The returned modes are sorted from low to high frequencies,
-        therefore the lowest order mode with positive frequency has
-        index 3.
+        omitting the negative-frequency modes.
 
         Returns
         -------
         wV : ndarray
             (rad*Hz) frequencies of the 3 lowest spin-wave modes.
-            Has a shape of `(6, N)`, where `N = kxi.shape[0]`.
+            Has a shape of `(3, N)`, where `N = kxi.shape[0]`.
         vV : ndarray
-            (?) mode profiles of corresponding eigenfrequencies.
-            Has a shape of `(6, 6, N)`, where `N = kxi.shape[0]`.
+            Mode profiles of corresponding eigenfrequencies,
+            given as Fourier coefficients for IP and OOP profiles.
+            Has a shape of `(6, 3, N)`, where `N = kxi.shape[0]`.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
-        wV = np.zeros((6, np.size(ks, 0)))
-        vV = np.zeros((6, 6, np.size(ks, 0)))
+        wV = np.zeros((3, np.size(ks, 0)))
+        vV = np.zeros((6, 3, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
                 [
@@ -529,12 +541,12 @@ class SingleLayerNumeric:
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
-            indi = np.argsort(w)
-            wV[:, idx] = w[indi]  # These are eigenvalues (dispersion)
-            vV[:, :, idx] = v[:, indi]  # These are eigenvectors (mode profiles)
+            indi = np.argsort(w)[3:]  # sort low-to-high and crop to positive
+            wV[:, idx] = w[indi]  # eigenvalues (dispersion)
+            vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
         return wV, vV
 
-    def GetGroupVelocity(self, n=3):
+    def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
@@ -545,8 +557,13 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data
-            for all calculated modes are returned.
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
         """
         w, _ = self.GetDispersion()
         if n == -1:
@@ -554,20 +571,24 @@ class SingleLayerNumeric:
             for i in range(w.shape[0]):
                 vg[i] = np.gradient(w[i]) / np.gradient(self.kxi)
         else:
-            # ### check if the usage of n is correct (how are the modes sorted?)
             vg = np.gradient(w[n]) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=3):
+    def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data
-            for all calculated modes are returned.
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -578,19 +599,15 @@ class SingleLayerNumeric:
         self.w0 = w0_ori
         w_mid, _ = self.GetDispersion()
         lifetime = (
-            (
-                self.alpha * w_mid
-                + self.gamma * self.mu0dH0
-            )
+            (self.alpha * w_mid + self.gamma * self.mu0dH0)
             * (dw_hi - dw_lo)
             / (w0_ori * 2 * step)
         ) ** -1
         if n != -1:
-            # ### check if the usage of n is correct (how are the modes sorted?)
             return lifetime[n]
         return lifetime
 
-    def GetDecLen(self, n=3):
+    def GetDecLen(self, n=0):
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         Output is given in m.
@@ -601,16 +618,20 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data
-            for all calculated modes are returned.
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        declen : ndarray
+            (m) decay length.
         """
-        # ### check if the usage of n is correct (how are the modes sorted?)
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
-    def GetDensityOfStates(self, n=3):
+    def GetDensityOfStates(self, n=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
 
         .. warning::
@@ -619,10 +640,50 @@ class SingleLayerNumeric:
         Parameters
         ----------
         n : {-1, 0, 1, 2}, optional
-            Quantization number.  If -1, data
-            for all calculated modes are returned.
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
+
+    def GetBlochFunction(self, n=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+
+        Parameters
+        ----------
+        n : {0, 1, 2}, optional
+            Quantization number.  The -1 value is not supported here.
+            Default is 0.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w, _ = self.GetDispersion()
+        lifeTime = self.GetLifetime(n=n)
+        w00 = w[n]
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""

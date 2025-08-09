@@ -4,12 +4,22 @@ Place for all helping functions and constants in this module.
 
 import numpy as np
 
-MU0 = 4 * np.pi * 1e-7  # Magnetic permeability
-C = 299792458 # m/s Speed of light
+__all__ = [
+    "MU0",
+    "C",
+    "KB",
+    "HBAR",
+    "distBE",
+    "wavenumber2wavelength",
+    "wavelength2wavenumber",
+    "wrapAngle",
+    "roots",
+]
 
-
-__all__ = ["MU0", "C", "wavenumber2wavelength", "wavelength2wavenumber", "wrapAngle",
-           "roots"]
+MU0 = 1.25663706127e-6  # (N/A^2) permeability of vacuum
+C = 299792458.  # (m/s) Speed of light
+KB = 1.38064852e-23  # (J/K) Boltzmann constant
+HBAR = 1.054571817e-34  # (J s) reduced Planck constant
 
 
 def wavenumber2wavelength(wavenumber):
@@ -25,6 +35,10 @@ def wavenumber2wavelength(wavenumber):
     -------
     wavelength : float or ndarray
         (m) corresponding wavelength.
+
+    See also
+    --------
+    wavelength2wavenumber
     """
     return 2 * np.pi / np.array(wavenumber)
 
@@ -42,6 +56,10 @@ def wavelength2wavenumber(wavelength):
     -------
     wavenumber : float or ndarray
         (rad/m) wavenumber of the corresponding wavelength.
+
+    See also
+    --------
+    wavenumber2wavelength
     """
     return 2 * np.pi / np.array(wavelength)
 
@@ -61,6 +79,27 @@ def wrapAngle(angle):
     """
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
+
+
+def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
+    """Returns Bose-Einstein distribution for given chemical potential
+    and temperature.
+
+    Parameters
+    ----------
+    w : float
+        (rad Hz) angular frequency.
+    temp : float
+        (K) temperature.
+    mu : float
+        (J) chemical potential.
+
+    Returns
+    -------
+    BEdist : float or ndarray
+        Bose-Einstein distribution in dependance to frequency.
+    """
+    return 1.0 / (np.exp((HBAR * (abs(w)) - mu) / (KB * temp)) - 1)
 
 
 def rootsearch(f, a, b, dx, args=()):
@@ -120,7 +159,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
         Function to evaluate, f(x, *args).
     x1, x2 : float
         (x units) left and right boundaries of the interval to search.
-    epsilon : float, default 1.0e-9
+    epsilon : float, optional
         (x units) tolerance of the to-be-found root.
     args : list, optional
         List of arguments to be passed to `f`.
@@ -141,11 +180,11 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     if f2 == 0.0:
         return x2
     if f1 * f2 > 0.0:
-        print('Root is not bracketed! (The interval is probably not correct.)')
+        print("Root is not bracketed! (The interval is probably not correct.)")
         return None
 
     x3 = x1
-    while np.abs(x1-x2) > epsilon:
+    while np.abs(x1 - x2) > epsilon:
         x3 = 0.5 * (x1 + x2)
         f3 = f(x3, *args)
         if f3 == 0.0:
@@ -179,7 +218,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
         (x units) left and right boundaries of the interval to search.
     dx : float
         (x units) stepsize of evaluation points (coarse search).
-    eps : float, default 1.0e-9
+    eps : float, optional
         (x units) tolerance of the to-be-found roots (fine search).
     args : list, optional
         List of arguments to be passed to `f`.
@@ -198,7 +237,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
         x1, x2 = rootsearch(f, a, b, dx, args)
         if x1 is None and x2 is None:  # no more roots
             break
-        elif x1 is None and x2 is not None:  # probably a divergence point
+        if x1 is None and x2 is not None:  # probably a divergence point
             a = x2
             continue  # skip this region and continue from next one
         a = x2

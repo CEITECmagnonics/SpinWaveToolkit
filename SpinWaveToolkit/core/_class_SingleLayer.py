@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, roots
 
 __all__ = ["SingleLayer"]
 
@@ -12,37 +12,40 @@ class SingleLayer:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
-    The model uses famous Slavin-Kalinikos equation from
+
+    The model uses the famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
     Bext : float
         (T) external magnetic field.
     material : Material
-        instance of `Material` describing the magnetic layer material.
+        Instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction).
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
-        magnetization.
-    phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry.
+    theta : float, optional
+        (rad) out of plane angle of static M, pi/2 is totally
+        in-plane magnetization.
+    phi : float or ndarray, optional
+        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
+    boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
+        pinned BC.  Default is 1.
     dp : float, optional
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned.
+        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`,
+        see https://doi.org/10.1103/PhysRev.131.594.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
@@ -61,14 +64,13 @@ class SingleLayer:
         `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Ms`
+        `wM = MU0*gamma*Ms`
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
         `A = Aex*2/(Ms**2*MU0)`
 
     Methods
     -------
-    # ### sort these and check completeness
     GetPartiallyPinnedKappa
     GetDisperison
     GetGroupVelocity
@@ -76,32 +78,41 @@ class SingleLayer:
     GetDecLen
     GetSecondPerturbation
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
     GetEllipticity
     GetCouplingParam
     GetThresholdField
+    GetThresholdFieldNonAdiabatic
 
     Private methods
     ---------------
+    __GetPropagationVector
+    __GetPropagationQVector
+    __GetFnn
     __GetAk
     __GetBk
 
     Code example
     ------------
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the lowest-order mode in a 30 nm
+    thick NiFe (Permalloy) layer.
     .. code-block:: python
-        # Here is an example of code
-        kxi = np.linspace(1e-12, 150e6, 150)
+        kxi = np.linspace(1e-6, 150e6, 150)
 
-        NiFeChar = SingleLayer(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                               n=0, d=30e-9, weff=2e-6, nT=0,
-                               boundary_cond=2, Bext=20e-3, material=SWT.NiFe)
-        DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-        vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-        lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-        decLen = NiFeChar.GetDecLen()*1e6  # um
+        PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
+                             phi=np.pi/2, d=30e-9, weff=2e-6,
+                             boundary_cond=2, material=SWT.NiFe)
+        DispPy = PyChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
 
-    # ### update when finished adding/removing code
-    # ### add 'See also' section
+    See also
+    --------
+    SingleLayerNumeric, DoubleLayerNumeric, Material, SingleLayerSCcoupled
+
     """
 
     def __init__(
@@ -120,6 +131,7 @@ class SingleLayer:
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
+
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -136,7 +148,7 @@ class SingleLayer:
 
     @property
     def Bext(self):
-        """external field value (T)"""
+        """External field value (T)."""
         return self._Bext
 
     @Bext.setter
@@ -146,7 +158,7 @@ class SingleLayer:
 
     @property
     def Ms(self):
-        """saturation magnetization (A/m)"""
+        """Saturation magnetization (A/m)."""
         return self._Ms
 
     @Ms.setter
@@ -157,7 +169,7 @@ class SingleLayer:
 
     @property
     def gamma(self):
-        """gyromagnetic ratio (rad*Hz/T)"""
+        """Gyromagnetic ratio (rad*Hz/T)."""
         return self._gamma
 
     @gamma.setter
@@ -320,7 +332,6 @@ class SingleLayer:
                 Pnn = Pnnc
         else:
             raise ValueError("Sorry, there is no boundary condition with this number.")
-
         return Pnn
 
     def __GetPropagationQVector(self, n=0, nc=-1, nT=0):
@@ -461,18 +472,52 @@ class SingleLayer:
             e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
             return e
 
-        kappa0 = roots(trans_eq,
-                       n * np.pi / self.d,
-                       (n + 1) * np.pi / self.d,
-                       np.pi / self.d * 4e-4,  # try decreasing dx if an error occurs
-                       np.pi / self.d * 1e-9,
-                       args=(self.d, self.dp))
+        kappa0 = roots(
+            trans_eq,
+            n * np.pi / self.d,
+            (n + 1) * np.pi / self.d,
+            np.pi / self.d * 4e-4,  # try decreasing dx if an error occurs
+            np.pi / self.d * 1e-9,
+            args=(self.d, self.dp),
+        )
         for i in range(n + 1):
             # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
-            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
+            kappa0[np.isclose(kappa0, np.pi / self.d * (i + 0.5))] = np.nan
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
+
+    def __GetFnn(self, n, nc, nT):
+        """Gives Fnn from the Kalinikos-Slavin dispersion relation.
+
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        nc : int
+            Second quantization number, used for hybridization.
+        nT : int
+            Waveguide (transversal) quantization number.
+        """
+
+        if nc == -1:
+            nc = n
+        if self.boundary_cond == 4:
+            kappa = self.GetPartiallyPinnedKappa(n)
+        else:
+            kappa = n * np.pi / self.d
+        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
+        k = np.sqrt(np.power(kxi, 2) + kappa**2)
+        phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
+        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
+        Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
+            1
+            - Pnn * (1 + np.power(np.cos(phi), 2))
+            + self.wM
+            * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
+            / (self.w0 + self.A * self.wM * np.power(k, 2))
+        )
+        return Fnn
 
     def GetDispersion(self, n=0, nc=-1, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
@@ -495,15 +540,7 @@ class SingleLayer:
             kappa = n * np.pi / self.d
         kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
-        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
-        Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
-            1
-            - Pnn * (1 + np.power(np.cos(phi), 2))
-            + self.wM
-            * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
-            / (self.w0 + self.A * self.wM * np.power(k, 2))
-        )
+        Fnn = self.__GetFnn(n=n, nc=nc, nT=nT)
         f = np.sqrt(
             (self.w0 + self.A * self.wM * np.power(k, 2))
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
@@ -540,7 +577,7 @@ class SingleLayer:
 
     def GetLifetime(self, n=0, nc=-1, nT=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The result is given in s.
 
         Parameters
@@ -593,7 +630,7 @@ class SingleLayer:
         Returns
         -------
         declen : ndarray
-            (m) decay lengths.
+            (m) decay length.
         """
         if nc == -1:
             nc = n
@@ -730,7 +767,7 @@ class SingleLayer:
     def GetDensityOfStates(self, n=0, nc=-1, nT=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
 
         Parameters
@@ -741,10 +778,52 @@ class SingleLayer:
             Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
         if nc == -1:
             nc = n
         return 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
+
+    def GetBlochFunction(self, n=0, nc=-1, nT=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+
+        Parameters
+        ----------
+        n : int
+            Quantization number.
+        nc : int, optional
+            Second quantization number, used for hybridization.
+        nT : int, optional
+            Waveguide (transversal) quantization number.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w00 = self.GetDispersion(n=n, nc=nc, nT=nT)
+        lifeTime = self.GetLifetime(n=n, nc=nc, nT=nT)
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
@@ -753,30 +832,40 @@ class SingleLayer:
     def __GetAk(self):
         """Calculate semi-major axis of the precession ellipse for
         all `kxi`.
-        ### check correctness of the docstring!
-        ### add source
         """
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return (
-            self.w0
-            + self.wM * self.A * self.kxi**2
-            + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
-        )
+        Fnn = self.__GetFnn(n=0, nc=0, nT=0)
+
+        # gk = 1 - (1 - np.exp(-self.kxi * self.d))
+        # return (
+        #     self.w0
+        #     + self.wM * self.A * self.kxi**2
+        #     + self.wM / 2 * (gk * np.sin(self.phi) ** 2 + (1 - gk))
+        # )
+        return self.w0 + self.wM * self.A * self.kxi**2 + self.wM / 2 * Fnn
 
     def __GetBk(self):
         """Calculate semi-minor axis of the precession ellipse for
         all `kxi`.
-        ### check correctness of the docstring!
-        ### add source
         """
-        gk = 1 - (1 - np.exp(-self.kxi * self.d))
-        return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
+        Fnn = self.__GetFnn(n=0, nc=0, nT=0)
+
+        # gk = 1 - (1 - np.exp(-self.kxi * self.d))
+        # return self.wM / 2 * (gk * np.sin(self.phi) ** 2 - (1 - gk))
+        return self.wM / 2 * Fnn
 
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
-        all `kxi`.
-        ### check correctness of the docstring!
-        ### add source
+        all `kxi`.  It is defined such that is falls within [0, 1].
+
+        Based on: A.G. Gurevich and G.A. Melkov. Magnetization
+        Oscillations and Waves. CRC Press, 1996.
+        ### Maybe put the source to the class docstring and state that
+        ### it relates the functions (...) instead of the functions.
+
+        Returns
+        -------
+        ellipticity : ndarray
+            () ellipticity for all `kxi`.
         """
         return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 
@@ -785,9 +874,46 @@ class SingleLayer:
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
     def GetThresholdField(self):
-        """### Add docstring!"""
+        """### Add docstring!
+
+        mu_0 * h_th = w_r / V_k (relaxation frequency / coupling parameter)
+
+        Returns
+        -------
+        mu_0 * h_th : float
+            (T) threshold field for parallel pumping.
+
+        """
+
         return (
-            2
-            * np.pi
-            / (self.GetLifetime(n=0, nc=0, nT=0) * abs(self.GetCouplingParam()))
+            2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam())
+        )
+
+    def GetThresholdFieldNonAdiabatic(self, L=1e-6):
+        """### Add docstring!
+        Threshold field for parallel pumping including
+        radiative losses in the non-adiabatic case.
+
+        This is an approximation which only work when
+        radiative losses are greater than intrinsic,
+        i.e. when: v_g / L >> w_r (relaxation frequency).
+
+        Parameters
+        ----------
+        L : float
+            (m) pumping field localization length.
+            (i.e. width of the excitation antenna)
+
+        Returns
+        -------
+        mu_0 * h_th : float
+            (T) threshold field for parallel pumping including radiative losses.
+
+        """
+
+        alfa = np.abs(np.sinc(self.kxi * L / np.pi))
+        return (
+            self.GetGroupVelocity(n=0, nc=0, nT=0)
+            / (L * self.GetCouplingParam())
+            * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )

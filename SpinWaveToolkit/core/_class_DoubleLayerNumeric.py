@@ -5,7 +5,7 @@ Core (private) file for the `DoubleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, wrapAngle
 
 __all__ = ["DoubleLayerNumeric"]
 
@@ -14,149 +14,115 @@ class DoubleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
-    The model uses famous Slavin-Kalinikos equation from
-    https://doi.org/10.1088/0022-3719/19/35/014
+
+    The dispersion model uses the approach of Gallardo et al., see:
+    https://doi.org/10.1103/PhysRevApplied.12.034012
 
     Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not quaranteed.
+    of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field
+        (T) external magnetic field.
     material : Material
-        instance of `Material` describing the magnetic layer material
+        Instance of `Material` describing the magnetic layer material.
+        Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction)
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
-        (rad/m) k-vector (wavenumber), usually a vector
-    theta : float, default np.pi/2
-        (rad) out of plane angle, pi/2 is totally inplane
-        magnetization
-    phi : float or ndarray, default np.pi/2
-        (rad) in-plane angle, pi/2 is DE geometry
-    weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
-        order width modes)
-    boundary_cond : {1, 2, 3, 4}, default 1
-        boundary conditions (BCs), 1 is totally unpinned and 2 is
-        totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC
-    dp : float, optional
-        pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned
+        (m) layer thickness (in z direction).
+    kxi : float or ndarray, optional
+        (rad/m) k-vector (wavenumber), usually a vector.
+    theta : float, optional
+        (rad) out of plane angle of Bext, pi/2 is totally in-plane
+        magnetization.
+    phi : float or ndarray, optional
+        (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
     Ku : float, optional
-        (J/m^3) uniaxial anisotropy strength
+        (J/m^3) uniaxial anisotropy strength.
     Ku2 : float, optional
-        (J/m^3) uniaxial anisotropy strength of the second layer
-    KuOOP : float, optional
-        (J/m^3) OOP anisotropy strength used in the Tacchi model
+        (J/m^3) uniaxial anisotropy strength of the second layer.
     Jbl : float, optional
-        (J/m^2) bilinear RKKY coupling parameter
+        (J/m^2) bilinear RKKY coupling parameter.
     Jbq : float, optional
-        (J/m^2) biquadratic RKKY coupling parameter
+        (J/m^2) biquadratic RKKY coupling parameter.
     s : float, optional
-        (m) spacing layer thickness
-    d2 : float, optional
-        (m) thickness of the second magnetic layer
+        (m) spacing layer thickness.
+    d2 : float or None
+        (m) thickness of the second magnetic layer, if None,
+        same as `d`.
     material2 : Material or None
         instance of `Material` describing the second magnetic
-        layer, if None, `material` parameter is used instead
+        layer, if None, `material` parameter is used instead.
+        Its properties are saved as attributes, but this object is not.
     JblDyn : float or None
         (J/m^2) dynamic bilinear RKKY coupling parameter,
-        if None, same as `Jbl`
+        if None, same as `Jbl`.
     JbqDyn : float or None
         (J/m^2) dynamic biquadratic RKKY coupling parameter,
-        if None, same as `Jbq`
-    phiAnis1, phiAnis2 : float, default np.pi/2
-        (rad) uniaxial anisotropy axis in-plane angle for
-        both magnetic layers (angle from Beff?)
-    phiInit1, phiInit2 : float, default np.pi/2
+        if None, same as `Jbq`.
+    phiAnis1, phiAnis2 : float, optional
+        (rad) uniaxial anisotropy axis in-plane angle from kxi for
+        both magnetic layers.
+    phiInit1, phiInit2 : float, optional
         (rad) initial value of magnetization in-plane angle of the
-        first layer, used for energy minimization
-    phiInit2 : float, default -np.pi/2
-        (rad) initial value of magnetization in-plane angle of the
-        second layer, used for energy minimization
+        first and second layer, used for energy minimization.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
     alpha : float
-        () Gilbert damping
+        () Gilbert damping.
     gamma : float
-        (rad*Hz/T) gyromagnetic ratio (positive convention)
+        (rad*Hz/T) gyromagnetic ratio (positive convention).
     mu0dH0 : float
-        (T) inhomogeneous broadening
+        (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Hext
+        `w0 = MU0*gamma*Hext`.
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        w0 = MU0*gamma*Ms
+        `wM = MU0*gamma*Ms`.
     A, A2 : float
         (m^2) parameter in Slavin-Kalinikos equation,
-        A = Aex*2/(Ms**2*MU0)
-    wU : float
-        (rad*Hz) circular frequency of surface anisotropy field,
-        used in the Tacchi model
+        `A = Aex*2/(Ms**2*MU0)`.
     Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,
-        Hani = 2*Ku/material.Ms/MU0
+        `Hani = 2*Ku/material.Ms/MU0`.
     Ms, Ms2 : float
-        (A/m) saturation magnetization
+        (A/m) saturation magnetization.
 
     Methods
     -------
-    # sort these and check completeness, make some maybe private
-    GetPartiallyPinnedKappa
     GetDisperison
-    GetDisperisonTacchi
-    GetDispersionSAFM
-    GetDispersionSAFMNumeric
-    GetDispersionSAFMNumericRezende
-    GetPhisSAFM
-    GetFreeEnergySAFM
-    GetFreeEnergySAFMOOP
+    GetPhis
+    GetFreeEnergyIP
+    GetFreeEnergyOOP
     GetGroupVelocity
     GetLifetime
-    GetLifetimeSAFM
-    GetPropLen
-    GetSecondPerturbation
+    GetDecLen
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
-    GetEllipticity
-    GetCouplingParam
-    GetThresholdField
-
-    Private methods
-    ---------------
-    __GetPropagationVector
-    __GetPropagationQVector
-    __CnncTacchi
-    __pnncTacchi
-    __qnncTacchi
-    __OmegankTacchi
-    __ankTacchi
-    __bTacchi
-    __PnncTacchi
-    __QnncTacchi
-    __GetAk
-    __GetBk
 
     Code example
     ------------
-    ``
-    # Here is an example of code
-    kxi = np.linspace(1e-12, 150e6, 150)
+    Example of calculation of the dispersion relation `f(k_xi)`, and
+    other important quantities, for the acoustic mode in a 30 nm
+    thick NiFe (Permalloy) bilayer.
+    .. code-block:: python
+        kxi = np.linspace(1e-6, 150e6, 150)
 
-    NiFeChar = DispersionCharacteristic(kxi=kxi, theta=np.pi/2, phi=np.pi/2,
-                                        n=0, d=30e-9, weff=2e-6, nT=0,
-                                        boundary_cond=2, Bext=20e-3,
-                                        material=SWT.NiFe)
-    DispPy = NiFeChar.GetDispersion()*1e-9/(2*np.pi)  # GHz
-    vgPy = NiFeChar.GetGroupVelocity()*1e-3  # km/s
-    lifetimePy = NiFeChar.GetLifetime()*1e9  # ns
-    propLen = NiFeChar.GetPropLen()*1e6  # um
-    ``
+        PyChar = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
+                                    kxi=kxi, theta=np.pi/2, Ku=
+                                    )
+        DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
+        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = PyChar.GetLifetime()*1e9  # ns
+        decLen = PyChar.GetDecLen()*1e6  # um
+
+    See also
+    --------
+    SingleLayer, SingleLayerNumeric, Material
+
     """
 
     def __init__(
@@ -167,460 +133,166 @@ class DoubleLayerNumeric:
         kxi=np.linspace(1e-12, 25e6, 200),
         theta=np.pi / 2,
         phi=np.pi / 2,
-        weff=3e-6,
-        boundary_cond=1,
-        dp=0,
         Ku=0,
         Ku2=0,
-        KuOOP=0,
         Jbl=0,
         Jbq=0,
         s=0,
-        d2=0,
+        d2=None,
         material2=None,
-        JblDyn=1,
-        JbqDyn=1,
+        JblDyn=None,
+        JbqDyn=None,
         phiAnis1=np.pi / 2,
         phiAnis2=np.pi / 2,
         phiInit1=np.pi / 2,
         phiInit2=-np.pi / 2,
     ):
+        self._Bext = Bext
+        self._Ms = material.Ms
+        self._gamma = material.gamma  # same gamma for both layers (->eff gamma)
+        self._Aex = material.Aex
+        self._Ku = Ku
+        if material2 is None:
+            material2 = material
+        self._Ms2 = material2.Ms
+        self._Aex2 = material2.Aex
+        self._Ku2 = Ku2
+
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
         self.d = d
         self.d1 = d
-        self.weff = weff
-        self.boundary_cond = boundary_cond
         self.alpha = material.alpha
-        # Compute Slavin-Kalinikos parameters wM, w0, A
-        self.wM = material.Ms * material.gamma * MU0
-        self.w0 = material.gamma * Bext
-        self.wU = material.gamma * 2 * KuOOP / material.Ms  # only for Tacchi
-        self.A = material.Aex * 2 / (material.Ms**2 * MU0)
-        self._Bext = Bext
-        self.dp = dp
-        self.gamma = material.gamma
         self.mu0dH0 = material.mu0dH0
+        # Compute A, Hani
+        self.A = self.Aex * 2 / (self.Ms**2 * MU0)
+        self.Hani = 2 * self.Ku / self.Ms / MU0
+        self.Hani2 = 2 * self.Ku2 / self.Ms2 / MU0
+        self.A2 = self.Aex2 * 2 / (self.Ms2**2 * MU0)
 
-        self.Ms = material.Ms
-        self.Hani = 2 * Ku / material.Ms / MU0
         self.phiAnis1 = phiAnis1
         self.phiAnis2 = phiAnis2
         self.phiInit1 = phiInit1
         self.phiInit2 = phiInit2
-        if d2 == 0:
-            self.d2 = d
-        else:
-            self.d2 = d2
-        if material2 is None:
-            self.Ms2 = material.Ms
-            self.Hani2 = 2 * Ku / material.Ms / MU0
-            self.A2 = material.Aex * 2 / (material.Ms**2 * MU0)
-        else:
-            self.Ms2 = material2.Ms
-            self.Hani2 = 2 * Ku2 / material2.Ms / MU0
-            self.A2 = material2.Aex * 2 / (material2.Ms**2 * MU0)
+        self.d2 = d if d2 is None else d2
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
         self.Ku = Ku
         self.Ku2 = Ku2
-        if JblDyn == 1:
+        if JblDyn is None:
             JblDyn = Jbl
-        if JbqDyn == 1:
+        if JbqDyn is None:
             JbqDyn = Jbq
         self.JblDyn = JblDyn
         self.JbqDyn = JbqDyn
 
     @property
     def Bext(self):
-        """external field value (T)"""
+        """External field value (T)."""
         return self._Bext
 
     @Bext.setter
     def Bext(self, val):
         self._Bext = val
-        self.w0 = self.gamma * val
 
-    def __GetPropagationVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector.
-        The boundary condition is chosen based on the object property.
+    @property
+    def Ms(self):
+        """Saturation magnetization (A/m)."""
+        return self._Ms
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
-        kappa = n * np.pi / self.d
-        kappac = nc * np.pi / self.d
-        k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-        # Totally unpinned boundary condition
-        if self.boundary_cond == 1:
-            Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            if n == 0 and nc == 0:
-                Pnn = (kxi**2) / (kc**2) - (kxi**4) / (
-                    k**2 * kc**2
-                ) * 1 / 2 * ((1 + (-1) ** (n + nc)) / 2) * Fn
-            elif n == 0 and nc != 0 or nc == 0 and n != 0:
-                Pnn = (
-                    -(kxi**4)
-                    / (k**2 * kc**2)
-                    * 1
-                    / np.sqrt(2)
-                    * ((1 + (-1) ** (n + nc)) / 2)
-                    * Fn
-                )
-            elif n == nc:
-                Pnn = (kxi**2) / (kc**2) - (kxi**4) / (k**2 * kc**2) * (
-                    (1 + (-1) ** (n + nc)) / 2
-                ) * Fn
-            else:
-                Pnn = -(kxi**4) / (k**2 * kc**2) * ((1 + (-1) ** (n + nc)) / 2) * Fn
-        # Totally pinned boundary condition
-        elif self.boundary_cond == 2:
-            if n == nc:
-                Pnn = (kxi**2) / (kc**2) + (kxi**2) / (k**2) * (
-                    kappa * kappac
-                ) / (kc**2) * (1 + (-1) ** (n + nc) / 2) * 2 / (kxi * self.d) * (
-                    1 - (-1) ** n * np.exp(-kxi * self.d)
-                )
-            else:
-                Pnn = (
-                    (kxi**2)
-                    / (k**2)
-                    * (kappa * kappac)
-                    / (kc**2)
-                    * (1 + (-1) ** (n + nc) / 2)
-                    * 2
-                    / (kxi * self.d)
-                    * (1 - (-1) ** n * np.exp(-kxi * self.d))
-                )
-        # Totally unpinned condition - long wave limit
-        elif self.boundary_cond == 3:
-            if n == 0:
-                Pnn = kxi * self.d / 2
-            else:
-                Pnn = (kxi * self.d) ** 2 / (n**2 * np.pi**2)
-        # Partially pinned boundary condition
-        elif self.boundary_cond == 4:
-            dp = self.dp
-            kappa = self.GetPartiallyPinnedKappa(
-                n
-            )  # We have to get correct kappa from transversal eq.
-            kappac = self.GetPartiallyPinnedKappa(nc)
-            if kappa == 0:
-                kappa = 1e1
-            if kappac == 0:
-                kappac = 1e1
-            k = np.sqrt(np.power(kxi, 2) + kappa**2)
-            kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-            An = np.sqrt(
-                2
-                * (
-                    (kappa**2 + dp**2) / kappa**2
-                    + np.sin(kappa * self.d)
-                    / (kappa * self.d)
-                    * (
-                        (kappa**2 - dp**2) / kappa**2 * np.cos(kappa * self.d)
-                        + 2 * dp / kappa * np.sin(kappa * self.d)
-                    )
-                )
-                ** -1
-            )
-            Anc = np.sqrt(
-                2
-                * (
-                    (kappac**2 + dp**2) / kappac**2
-                    + np.sin(kappac * self.d)
-                    / (kappac * self.d)
-                    * (
-                        (kappac**2 - dp**2) / kappac**2 * np.cos(kappac * self.d)
-                        + 2 * dp / kappac * np.sin(kappac * self.d)
-                    )
-                )
-                ** -1
-            )
-            Pnnc = (
-                kxi
-                * An
-                * Anc
-                / (2 * self.d * k**2 * kc**2)
-                * (
-                    (kxi**2 - dp**2)
-                    * np.exp(-kxi * self.d)
-                    * (np.cos(kappa * self.d) + np.cos(kappac * self.d))
-                    + (kxi - dp)
-                    * np.exp(-kxi * self.d)
-                    * (
-                        (dp * kxi - kappa**2) * np.sin(kappa * self.d) / kappa
-                        + (dp * kxi - kappac**2) * np.sin(kappac * self.d) / kappac
-                    )
-                    - (kxi**2 - dp**2)
-                    * (1 + np.cos(kappa * self.d) * np.cos(kappac * self.d))
-                    + (kappa**2 * kappac**2 - dp**2 * kxi**2)
-                    * np.sin(kappa * self.d)
-                    / kappa
-                    * np.sin(kappac * self.d)
-                    / kappac
-                    - dp
-                    * (
-                        k**2 * np.cos(kappac * self.d) * np.sin(kappa * self.d) / kappa
-                        + kc**2
-                        * np.cos(kappa * self.d)
-                        * np.sin(kappac * self.d)
-                        / kappac
-                    )
-                )
-            )
-            if n == nc:
-                Pnn = kxi**2 / kc**2 + Pnnc
-            else:
-                Pnn = Pnnc
-        else:
-            raise ValueError("Sorry, there is no boundary condition with this number.")
+    @Ms.setter
+    def Ms(self, val):
+        self._Ms = val
+        self.A = self.Aex * 2 / (val**2 * MU0)
+        self.Hani = 2 * self.Ku / val / MU0
 
-        return Pnn
+    @property
+    def gamma(self):
+        """Gyromagnetic ratio (rad*Hz/T)."""
+        return self._gamma
 
-    def __GetPropagationQVector(self, n=0, nc=-1, nT=0):
-        """Gives dimensionless propagation vector Q.  This vector
-        accounts for interaction between odd and even spin wave modes.
-        The boundary condition is chosen based on the object property.
+    @gamma.setter
+    def gamma(self, val):
+        self._gamma = val
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
-        kappa = n * np.pi / self.d
-        kappac = nc * np.pi / self.d
-        if kappa == 0:
-            kappa = 1
-        if kappac == 0:
-            kappac = 1
-        k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        kc = np.sqrt(np.power(kxi, 2) + kappac**2)
-        # Totally unpinned boundary conditions
-        if self.boundary_cond == 1:
-            Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            Qnn = (
-                kxi**2
-                / kc**2
-                * (
-                    kappac**2 / (kappac**2 - kappa**2) * 2 / (kxi * self.d)
-                    - kxi**2 / (2 * k**2) * Fn
-                )
-                * ((1 - (-1) ** (n + nc)) / 2)
-            )
-        # Partially pinned boundary conditions
-        elif self.boundary_cond == 4:
-            dp = self.dp
-            kappa = self.GetPartiallyPinnedKappa(n)
-            kappac = self.GetPartiallyPinnedKappa(nc)
-            if kappa == 0:
-                kappa = 1
-            if kappac == 0:
-                kappac = 1
-            An = np.sqrt(
-                2
-                * (
-                    (kappa**2 + dp**2) / kappa**2
-                    + np.sin(kappa * self.d)
-                    / (kappa * self.d)
-                    * (
-                        (kappa**2 - dp**2) / kappa**2 * np.cos(kappa * self.d)
-                        + 2 * dp / kappa * np.sin(kappa * self.d)
-                    )
-                )
-                ** -1
-            )
-            Anc = np.sqrt(
-                2
-                * (
-                    (kappac**2 + dp**2) / kappac**2
-                    + np.sin(kappac * self.d)
-                    / (kappac * self.d)
-                    * (
-                        (kappac**2 - dp**2) / kappac**2 * np.cos(kappac * self.d)
-                        + 2 * dp / kappac * np.sin(kappac * self.d)
-                    )
-                )
-                ** -1
-            )
-            Qnn = (
-                kxi
-                * An
-                * Anc
-                / (2 * self.d * k**2 * kc**2)
-                * (
-                    (kxi**2 - dp**2)
-                    * np.exp(-kxi * self.d)
-                    * (np.cos(kappa * self.d) - np.cos(kappac * self.d))
-                    + (kxi - dp)
-                    * np.exp(-kxi * self.d)
-                    * (
-                        (dp * kxi - kappa**2) * np.sin(kappa * self.d) / kappa
-                        - (dp * kxi - kappac**2) * np.sin(kappac * self.d) / kappac
-                    )
-                    + (kxi - dp)
-                    * (
-                        (dp * kxi - kappac**2)
-                        * np.cos(kappa * self.d)
-                        * np.sin(kappac * self.d)
-                        / kappac
-                        - (dp * kxi - kappa**2)
-                        * np.cos(kappac * self.d)
-                        * np.sin(kappa * self.d)
-                        / kappa
-                    )
-                    + (
-                        1
-                        - np.cos(kappac * self.d)
-                        * np.cos(kappa * self.d)
-                        * 2
-                        * (
-                            kxi**2 * dp**2
-                            + kappa**2 * kappac**2
-                            + (kappac**2 + kappa**2) * (kxi**2 + dp**2)
-                        )
-                        / (kappac**2 - kappa**2)
-                        - np.sin(kappa * self.d)
-                        * np.sin(kappac**2 * self.d)
-                        / (kappa * kappac * (kappac**2 - kappa**2))
-                        * (
-                            dp * kxi * (kappa**4 + kappac**4)
-                            + (dp**2 * kxi**2 - kappa**2 * kappac**2)
-                            * (kappa**2 + kappac**2)
-                            - 2 * kappa**2 * kappac**2 * (dp**2 + kxi**2 - dp * kxi)
-                        )
-                    )
-                )
-            )
-        else:
-            raise ValueError("Sorry, there is no boundary condition with this number.")
-        return Qnn
+    @property
+    def Aex(self):
+        """Exchange stiffness constant (J/m)."""
+        return self._Aex
 
-    def GetPartiallyPinnedKappa(self, n):
-        """Gives kappa from the transverse equation (in rad/m).
+    @Aex.setter
+    def Aex(self, val):
+        self._Aex = val
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
-        Parameters
-        ----------
-        n : int
-            Quantization number.
-        """
+    @property
+    def Ku(self):
+        """Uniaxial anisotropy strength (J/m^3)."""
+        return self._Ku
 
-        def trans_eq(kappa, d, dp):
-            e = (kappa ** 2 - dp ** 2) * np.tan(kappa * d) - kappa * dp * 2
-            return e
+    @Ku.setter
+    def Ku(self, val):
+        self._Ku = val
+        self.Hani = 2 * val / self.Ms / MU0
 
-        kappa0 = roots(trans_eq,
-                       n * np.pi / self.d,
-                       (n + 1) * np.pi / self.d,
-                       np.pi / self.d * 4e-4,
-                       # try decreasing dx if an error occurs
-                       np.pi / self.d * 1e-9,
-                       args=(self.d, self.dp))
-        for i in range(n + 1):
-            # omit singularities at tan(kappa*d) when kappa*d = (n+0.5)pi
-            kappa0[np.isclose(kappa0, np.pi / d * (i + 0.5))] = np.nan
-            kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
-        kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
-        return kappa0[0]
+    @property
+    def Ms2(self):
+        """Saturation magnetization (A/m) of the second layer."""
+        return self._Ms2
 
-    def GetDispersion(self, n=0, nc=-1, nT=0):
+    @Ms2.setter
+    def Ms2(self, val):
+        self._Ms2 = val
+        self.A2 = self.Aex2 * 2 / (val**2 * MU0)
+        self.Hani2 = 2 * self.Ku2 / val / MU0
+
+    @property
+    def Aex2(self):
+        """Exchange stiffness constant (J/m) of the second layer."""
+        return self._Aex2
+
+    @Aex2.setter
+    def Aex2(self, val):
+        self._Aex2 = val
+        self.A2 = val * 2 / (self.Ms2**2 * MU0)
+
+    @property
+    def Ku2(self):
+        """Uniaxial anisotropy strength (J/m^3)."""
+        return self._Ku2
+
+    @Ku2.setter
+    def Ku2(self, val):
+        self._Ku2 = val
+        self.Hani2 = 2 * val / self.Ms2 / MU0
+
+    def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).
         The returned value is in the rad*Hz.
 
-        Parameters
-        ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        if self.boundary_cond == 4:
-            kappa = self.GetPartiallyPinnedKappa(n)
-        else:
-            kappa = n * np.pi / self.d
-        kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
-        k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        phi = np.arctan((nT * np.pi / self.weff) / self.kxi) - self.phi
-        Pnn = self.__GetPropagationVector(n=n, nc=nc, nT=nT)
-        Fnn = Pnn + np.power(np.sin(self.theta), 2) * (
-            1
-            - Pnn * (1 + np.power(np.cos(phi), 2))
-            + self.wM
-            * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
-            / (self.w0 + self.A * self.wM * np.power(k, 2))
-        )
-        f = np.sqrt(
-            (self.w0 + self.A * self.wM * np.power(k, 2))
-            * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
-        )
-        return f
+        The model formulates a system matrix and then numerically solves
+        its eigenvalues and eigenvectors. The eigenvalues represent the
+        dispersion relation (as the matrix is 4x4 it has 4 eigenvalues).
+        The eigen values represent the acoustic and optic spin-wave
+        modes (each with negative and positive frequency).
+        The eigenvectors represent the amplitude of the individual
+        spin-wave modes and can be used to calculate spin-wave profile
+        (see example NumericCalculationofDispersionModeProfiles.py).
 
-    def GetDispersionSAFM(self, n=0):
-        """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz.
-        Seems that this model has huge approximation and I recomend
-        to not use it.
+        The returned modes are sorted from low (acoustic) to high
+        (optic) frequencies, omitting the negative-frequency modes.
 
-        Parameters
-        ----------
-        n : {0, 1}
-            mode number, 0 - acoustic, 1 - optic"""
-        Zet = (
-            np.sinh(self.kxi * self.d / 2)
-            / (self.kxi * self.d / 2)
-            * np.exp(-abs(self.kxi) * self.d / 2)
-        )
-        g = (
-            MU0
-            * self.Ms
-            * Zet**2
-            * np.exp(-abs(self.kxi) * self.s)
-            * self.kxi
-            * self.d
-            / 2
-        )
-        p = (
-            MU0 * self.Hani
-            + MU0 * self.Ms * self.kxi**2 * self.A
-            + MU0 * self.Ms * (1 - Zet)
-        )
-        q = MU0 * self.Hani + MU0 * self.Ms * self.kxi**2 * self.A + MU0 * self.Ms * Zet
-        Cj = (self.Jbl - 2 * self.Jbq) / (self.Ms * self.d)
-
-        if n == 0:
-            f = self.gamma * (g + np.sqrt((p - g) * (q - g - 2 * Cj)))
-        elif n == 1:
-            f = self.gamma * (-g + np.sqrt((q + g) * (p + g - 2 * Cj)))
-        else:
-            raise ValueError(f"Invalid mode with n = {n}.")
-        return f
-
-    def GetDispersionSAFMNumeric(self):
-        """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz.
+        Returns
+        -------
+        wV : ndarray
+            (rad*Hz) frequencies of the acoustic and optic spin-wave
+            modes.  Has a shape of `(2, N)`, where `N = kxi.shape[0]`.
+        vV : ndarray
+            Mode profiles of corresponding eigenfrequencies,
+            given as Fourier coefficients for IP and OOP profiles.
+            Has a shape of `(4, 2, N)`, where `N = kxi.shape[0]`.
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -636,10 +308,11 @@ class DoubleLayerNumeric:
         Hs1 = 0  # Surface anisotropy of the first layer
         Hs2 = 0  # Surface anisotropy of the second layer
 
-        phi1, phi2 = wrapAngle(self.GetPhisSAFM())
+        phi1, phi2 = wrapAngle(self.GetPhis())
 
         ks = self.kxi
-        wV = np.zeros((4, np.size(ks, 0)))
+        wV = np.zeros((2, np.size(ks, 0)))
+        vV = np.zeros((4, 2, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Zet1 = (
                 np.sinh(k * self.d1 / 2)
@@ -769,23 +442,35 @@ class DoubleLayerNumeric:
                 ],
                 dtype=complex,
             )
-            w, _ = linalg.eig(A)
-            wV[:, idx] = np.sort(np.imag(w) * self.gamma * MU0)
-        return wV
+            w, v = linalg.eig(A)
+            indi = np.argsort(np.imag(w))[2:]  # sort low-to-high and crop to positive
+            wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
+            vV[:, :, idx] = (
+                np.imag(v)[:, indi] * self.gamma * MU0
+            )  # eigenvectors (mode profiles)
+        return wV, vV
 
-    def GetPhisSAFM(self):
+    def GetPhis(self):
         """Gives angles of magnetization in both SAF layers.
         The returned value is in rad.
-        Function finds the energy minimum
+
+        Function finds the energy minimum, assuming completely
+        in-plane magnetization.
         If there are problems with energy minimalization I recomend to
-        try different methods (but Nelder-Mead seems to work in most scenarios)
+        try different methods (but Nelder-Mead seems to work in most
+        scenarios).
+
+        Returns
+        -------
+        phis : [float, float]
+            (rad) equilibrium angles of magnetization.
         """
         # phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
         # phi2x0 = wrapAngle(self.phiAnis2 + 0.1)
         phi1x0 = wrapAngle(self.phiInit1)
         phi2x0 = wrapAngle(self.phiInit2)
         result = minimize(
-            self.GetFreeEnergySAFM,
+            self.GetFreeEnergyIP,
             x0=[phi1x0, phi2x0],
             tol=1e-20,
             method="Nelder-Mead",
@@ -794,13 +479,24 @@ class DoubleLayerNumeric:
         phis = wrapAngle(result.x)
         return phis
 
-    def GetFreeEnergySAFM(self, phis):
-        """Gives overall energy of SAF system
-        The returned value is in Joule.
-        This function is used during fidning of the angles of magnetization
-        Only works, when the out-of-plane tilt is not expected
-        Function does not minimize the OOP angles, just assumes completelly
-        in-plane magnetization
+    def GetFreeEnergyIP(self, phis):
+        """Gives overall energy (density) of SAF system.
+        The returned value is in joules.
+
+        This function is used during fidning of the angles of
+        magnetization.  Only works, when the out-of-plane tilt is not
+        expected.  Function does not minimize the OOP angles, just
+        assumes completely in-plane magnetization.
+
+        Parameters
+        ----------
+        phis : [float, float]
+            (rad) IP magnetization angles.
+
+        Returns
+        -------
+        E : float
+            (J) energy density of the system.
         """
         phiAnis1 = self.phiAnis1  # EA along x direction
         phiAnis2 = self.phiAnis2  # EA along x direction
@@ -865,11 +561,23 @@ class DoubleLayerNumeric:
         )
         return E
 
-    def GetFreeEnergySAFMOOP(self, thetas):
-        """Gives overall energy of SAF system
-        The returned value is in Joule.
-        This function is used during fidning of the angles of magnetization
-        This function assumes fixed in-plane angle of the magnetization
+    def GetFreeEnergyOOP(self, thetas):
+        """Gives overall energy (density) of the SAF system.
+        The returned value is in joules.
+
+        This function is used during fidning of the angles of
+        magnetization.  This function assumes fixed in-plane angle of
+        the magnetization.
+
+        Parameters
+        ----------
+        thetas : [float, float]
+            (rad) OOP magnetization angles.
+
+        Returns
+        -------
+        E : float
+            (J) energy density of the system.
         """
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
@@ -929,120 +637,151 @@ class DoubleLayerNumeric:
         )
         return E
 
-    def GetGroupVelocity(self, n=0, nc=-1, nT=0):
+    def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        vg : ndarray
+            (m/s) tangential group velocity.
         """
-        if nc == -1:
-            nc = n
-        f = self.GetDispersion(n=n, nc=nc, nT=nT)
-        vg = np.diff(f) / (self.kxi[2] - self.kxi[1])  # maybe -> /diff(kxi)
+        w, _ = self.GetDispersion()
+        if n == -1:
+            vg = np.zeros(w.shape)
+            for i in range(w.shape[0]):
+                vg[i] = np.gradient(w[i]) / np.gradient(self.kxi)
+        else:
+            vg = np.gradient(w[n]) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=0, nc=-1, nT=0):
+    def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-        The output is in s
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        The output is in s.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        lifetime : ndarray
+            (s) lifetime.
         """
-        if nc == -1:
-            nc = n
-        w0Ori = self.w0
-        self.w0 = w0Ori * 0.9999999
-        dw0p999 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori * 1.0000001
-        dw0p001 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        self.w0 = w0Ori
+        Bext_ori = self.Bext
+        step = 1e-5
+        self.Bext = Bext_ori * (1 - step)
+        dw_lo, _ = self.GetDispersion()
+        self.Bext = Bext_ori * (1 + step)
+        dw_hi, _ = self.GetDispersion()
+        self.Bext = Bext_ori
         lifetime = (
-            (
-                self.alpha * self.GetDispersion(n=n, nc=nc, nT=nT)
-                + self.gamma * self.mu0dH0
-            )
-            * (dw0p001 - dw0p999)
-            / (w0Ori * 1.0000001 - w0Ori * 0.9999999)
+            (self.alpha * self.GetDispersion()[0] + self.gamma * self.mu0dH0)
+            * (dw_hi - dw_lo)
+            / (self.Bext * self.gamma * 2 * step)
         ) ** -1
+        if n != -1:
+            return lifetime[n]
         return lifetime
 
-    def GetLifetimeSAFM(self, n):
-        """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
-        Output is given in s
-        Parameters
-        ----------
-        n : int
-            quantization number
-        """
-        BextOri = self.Bext
-        self.Bext = BextOri - 0.001
-        dw0p999 = self.GetDispersionSAFMNumeric()
-        self.Bext = BextOri + 0.001
-        dw0p001 = self.GetDispersionSAFMNumeric()
-        self.Bext = BextOri
-        w = self.GetDispersionSAFMNumeric()
-        lifetime = (
-            (self.alpha * w[n] + self.gamma * self.mu0dH0)
-            * (dw0p001[n] - dw0p999[n])
-            / 0.2
-        ) ** -1
-        return lifetime
-
-    def GetPropLen(self, n=0, nc=-1, nT=0):
-        """Give propagation lengths for defined k.
-        Propagation length is computed as lambda = v_g*tau.
+    def GetDecLen(self, n=0):
+        """Give decay lengths for defined k.
+        Decay length is computed as lambda = v_g*tau.
         Output is given in m.
 
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
+
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
-        """
-        if nc == -1:
-            nc = n
-        propLen = self.GetLifetime(n=n, nc=nc, nT=nT)[0:-1] * self.GetGroupVelocity(
-            n=n, nc=nc, nT=nT
-        )
-        return propLen
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
-    def GetDensityOfStates(self, n=0, nc=-1, nT=0):
+        Returns
+        -------
+        declen : ndarray
+            (m) decay length.
+        """
+        return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
+
+    def GetDensityOfStates(self, n=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
-        Out is density of states in 1D for given dispersion
+        Output is density of states in 1D for given dispersion
         characteristics.
+
+        .. warning::
+            Works only when `kxi.shape[0] >= 2`.
 
         Parameters
         ----------
-        n : int
-            quantization number
-        nc : int, optional
-            second quantization number, used for hybridization
-        nT : int, optional
-            waveguide (transversal) quantization number
+        n : {-1, 0, 1}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
+
+        Returns
+        -------
+        dos : ndarray
+            (s/m) value proportional to density of states.
         """
-        if nc == -1:
-            nc = n
-        DoS = 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
-        return DoS
+        return 1 / self.GetGroupVelocity(n=n)
+
+    def GetBlochFunction(self, n=0, Nf=200, lifeTime=None):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+        As there is problems with lifetime calculation for the
+        double layers, you can set fixed one as input parameter.
+
+        Parameters
+        ----------
+        n : {0, 1}, optional
+            Quantization number.  The -1 value is not supported here.
+            Default is 0.
+        Nf : int, optional
+            Number of frequency points for the Bloch function.
+        lifetime : float, optional
+            (s) fixed lifetime to bypass its dispersion calculation.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w, _ = self.GetDispersion()
+        if lifeTime is None:
+            lifeTime = self.GetLifetime(n=n)
+        else:
+            lifeTime = lifeTime * np.ones(len(self.kxi))
+        w00 = w[n]
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
-        return np.sqrt(self.A)
+        """Calculate exchange length in meters from the parameter `A`."""
+        return np.sqrt(self.A), np.sqrt(self.A2)
