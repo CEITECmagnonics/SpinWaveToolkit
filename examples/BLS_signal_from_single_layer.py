@@ -74,10 +74,10 @@ Ex, Ey = SWT.getBLSsignal(SweepBloch=w_common, KxKyBloch=[kx_grid, ky_grid], Blo
                           wavelength=532e-9, collectionSpot=0.5e-6, focalLength=1e-3)
 
 
-
 # Plot the BLS signal
 plt.figure()
 plt.plot(w_common/2/np.pi/1e9, np.abs(Ey*np.conj(Ey)), label='Slavin-Kalinikos model')
 plt.xlabel('f (GHz)')
 plt.ylabel('Intensity (a.u.)')
 plt.title('BLS signal')
+plt.show()
