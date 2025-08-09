@@ -106,6 +106,7 @@ from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
 from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
+from .core._class_BulkPolariton import *
 from .core._class_ObjectiveLens import *
 
 
