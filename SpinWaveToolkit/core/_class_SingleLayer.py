@@ -832,6 +832,9 @@ class SingleLayer:
     def __GetAk(self):
         """Calculate semi-major axis of the precession ellipse for
         all `kxi`.
+
+        Taking that wk^2 = Ak^2 - |Bk|^2,
+        where wk is the frequency f from GetDispersion() function.
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -846,6 +849,9 @@ class SingleLayer:
     def __GetBk(self):
         """Calculate semi-minor axis of the precession ellipse for
         all `kxi`.
+
+        Taking that wk^2 = Ak^2 - |Bk|^2,
+        where wk is the frequency f from GetDispersion() function.
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -855,7 +861,7 @@ class SingleLayer:
 
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
-        all `kxi`.  It is defined such that is falls within [0, 1].
+        all `kxi`.  It is defined such that it falls within [0, 1].
 
         Based on: A.G. Gurevich and G.A. Melkov. Magnetization
         Oscillations and Waves. CRC Press, 1996.
@@ -870,19 +876,27 @@ class SingleLayer:
         return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
 
     def GetCouplingParam(self):
-        """### Add docstring!"""
+        """Calculate coupling parameter of the parallel pumped
+        spin wave modes.
+
+        Vk = gamma * Bk / (2 * wk),
+        
+        Returns
+        -------
+        Vk : float
+            (Hz/T) coupling parameter for parallel pumping. 
+        """
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
     def GetThresholdField(self):
-        """### Add docstring!
+        """Calculate threshold field for parallel pumping.
 
-        mu_0 * h_th = w_r / V_k (relaxation frequency / coupling parameter)
+        mu_0 * h_th = w_r / Vk (relaxation frequency / coupling parameter)
 
         Returns
         -------
         mu_0 * h_th : float
             (T) threshold field for parallel pumping.
-
         """
 
         return (
@@ -890,11 +904,10 @@ class SingleLayer:
         )
 
     def GetThresholdFieldNonAdiabatic(self, L=1e-6):
-        """### Add docstring!
-        Threshold field for parallel pumping including
+        """Threshold field for parallel pumping including
         radiative losses in the non-adiabatic case.
 
-        This is an approximation which only work when
+        This is an approximation which only works when
         radiative losses are greater than intrinsic,
         i.e. when: v_g / L >> w_r (relaxation frequency).
 
@@ -908,7 +921,6 @@ class SingleLayer:
         -------
         mu_0 * h_th : float
             (T) threshold field for parallel pumping including radiative losses.
-
         """
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))
