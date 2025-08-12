@@ -467,7 +467,6 @@ class SingleLayerNumeric:
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
-        ### Update correct example.
 
         The returned modes are sorted from low to high frequencies,
         omitting the negative-frequency modes.

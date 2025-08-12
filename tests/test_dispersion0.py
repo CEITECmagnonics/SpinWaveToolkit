@@ -85,7 +85,7 @@ class TestClass:
         s = 1e-9
         d = np.array((2, 5, 20))*1e-9
         Ku = 69.6e-3*1150e3/2  # H_u to K_u for Co layer
-        J = -1.5e-3  # interlayer coupling (### Jbl or Jbq???)
+        J = -1.5e-3  # interlayer coupling (bilinear)
         f_dln = np.zeros((nd, refdata.shape[1]))
         notnan = ~np.isnan(refdata[[0, 2, 4]])
         for i in range(nd):
