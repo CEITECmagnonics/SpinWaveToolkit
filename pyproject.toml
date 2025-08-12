@@ -134,7 +134,7 @@ dependencies = [
 # referred to as "extras". For a more extensive definition see:
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
-dev = ["black", "pylint", "pytest", "matplotlib"]  # ### add minimal versions?
+dev = ["black", "pylint", "pytest", "matplotlib", "sphinx"]  # ### add minimal versions?
 test = ["pytest"]
 
 # List URLs that are relevant to your project

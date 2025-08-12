@@ -19,6 +19,10 @@ class SingleLayer:
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
+    Functions related to parametric pumping are based on: 
+    A.G. Gurevich and G.A. Melkov. Magnetization Oscillations and Waves. 
+    CRC Press, 1996.
+
     Parameters
     ----------
     Bext : float
@@ -863,11 +867,6 @@ class SingleLayer:
         """Calculate ellipticity of the precession ellipse for
         all `kxi`.  It is defined such that it falls within [0, 1].
 
-        Based on: A.G. Gurevich and G.A. Melkov. Magnetization
-        Oscillations and Waves. CRC Press, 1996.
-        ### Maybe put the source to the class docstring and state that
-        ### it relates the functions (...) instead of the functions.
-
         Returns
         -------
         ellipticity : ndarray
@@ -884,7 +883,7 @@ class SingleLayer:
         Returns
         -------
         Vk : float
-            (Hz/T) coupling parameter for parallel pumping. 
+            (rad*Hz/T) coupling parameter for parallel pumping. 
         """
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
 
@@ -920,7 +919,8 @@ class SingleLayer:
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping including radiative losses.
+            (T) threshold field for parallel pumping including radiative 
+            losses.
         """
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))
