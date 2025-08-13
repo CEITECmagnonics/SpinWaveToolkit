@@ -14,14 +14,13 @@ class BulkPolariton:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    Models the magnon-polariton in a bulk ferromagnets. Due
-    to the low wavevectors of the magnon-polariton regime, this 
-    model can be also used for the modeling of the magnon-polariton
-    in thin films.
+    Models the magnon-polariton in a bulk ferromagnets. Due to the low 
+    wavevectors of the magnon-polariton regime, this model can be also 
+    used for the modeling the magnon-polariton in thin films.
 
     The model is based on:
     Linear and nonlinear spin waves in magnetic films and superlattices
-    edited by Michael G. Cottam (1994) , chapter 1.2.4
+    edited by Michael G. Cottam (1994), chapter 1.2.4
     ISBN 981-02-1006-X
 
     Parameters
@@ -61,11 +60,6 @@ class BulkPolariton:
     -------
     GetDisperison
     GetGroupVelocity
-    GetLifetime  
-    # ### does it make sense to define lifetime for a polariton?
-    GetDecLen
-    GetDensityOfStates
-    GetBlochFunction
     
     Code example
     ------------
@@ -84,8 +78,7 @@ class BulkPolariton:
     See also
     --------
     SingleLayer, SingleLayerNumeric, Material
-
-    # ### update when finished adding/removing code
+    
     """
 
     def __init__(
