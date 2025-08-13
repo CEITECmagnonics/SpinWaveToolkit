@@ -19,7 +19,7 @@ class BulkPolariton:
     model can be also used for the modeling of the magnon-polariton
     in thin films.
 
-    # ### Model source
+    The model is based on:
     Linear and nonlinear spin waves in magnetic films and superlattices
     edited by Michael G. Cottam (1994) , chapter 1.2.4
     ISBN 981-02-1006-X
