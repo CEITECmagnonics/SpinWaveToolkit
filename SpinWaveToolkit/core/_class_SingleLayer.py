@@ -523,7 +523,7 @@ class SingleLayer:
         )
         return Fnn
 
-    def GetDispersion(self, n=0, nc=-1, nT=0):
+    def GetDispersion(self, n=0, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
         The returned values are in rad*Hz.
 
@@ -531,27 +531,23 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
         """
-        if nc == -1:
-            nc = n
         if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
         else:
             kappa = n * np.pi / self.d
         kxi = np.sqrt(self.kxi**2 + (nT * np.pi / self.weff) ** 2)
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
-        Fnn = self.__GetFnn(n=n, nc=nc, nT=nT)
+        Fnn = self.__GetFnn(n=n, nc=n, nT=nT)
         f = np.sqrt(
             (self.w0 + self.A * self.wM * np.power(k, 2))
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
         )
         return f
 
-    def GetGroupVelocity(self, n=0, nc=-1, nT=0):
+    def GetGroupVelocity(self, n=0, nT=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
@@ -563,8 +559,6 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
 
@@ -573,13 +567,11 @@ class SingleLayer:
         vg : ndarray
             (m/s) tangential group velocity.
         """
-        if nc == -1:
-            nc = n
-        f = self.GetDispersion(n=n, nc=nc, nT=nT)
+        f = self.GetDispersion(n=n, nT=nT)
         vg = np.gradient(f) / np.gradient(self.kxi)
         return vg
 
-    def GetLifetime(self, n=0, nc=-1, nT=0):
+    def GetLifetime(self, n=0, nT=0):
         """Gives lifetimes for defined k.
         Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The result is given in s.
@@ -588,8 +580,6 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
 
@@ -598,18 +588,16 @@ class SingleLayer:
         lifetime : ndarray
             (s) lifetime.
         """
-        if nc == -1:
-            nc = n
         w0_ori = self.w0
         step = 1e-5
         self.w0 = w0_ori * (1 - step)
-        dw_lo = self.GetDispersion(n=n, nc=nc, nT=nT)
+        dw_lo = self.GetDispersion(n=n, nT=nT)
         self.w0 = w0_ori * (1 + step)
-        dw_hi = self.GetDispersion(n=n, nc=nc, nT=nT)
+        dw_hi = self.GetDispersion(n=n, nT=nT)
         self.w0 = w0_ori
         lifetime = (
             (
-                self.alpha * self.GetDispersion(n=n, nc=nc, nT=nT)
+                self.alpha * self.GetDispersion(n=n, nT=nT)
                 + self.gamma * self.mu0dH0
             )
             * (dw_hi - dw_lo)
@@ -617,7 +605,7 @@ class SingleLayer:
         ) ** -1
         return lifetime
 
-    def GetDecLen(self, n=0, nc=-1, nT=0):
+    def GetDecLen(self, n=0, nT=0):
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         The result is given in m.
@@ -626,8 +614,6 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
 
@@ -636,11 +622,7 @@ class SingleLayer:
         declen : ndarray
             (m) decay length.
         """
-        if nc == -1:
-            nc = n
-        return self.GetLifetime(n=n, nc=nc, nT=nT) * self.GetGroupVelocity(
-            n=n, nc=nc, nT=nT
-        )
+        return self.GetLifetime(n=n, nT=nT) * self.GetGroupVelocity(n=n, nT=nT)
 
     def GetSecondPerturbation(self, n, nc):
         """Give degenerate dispersion relation based on the secular
@@ -657,7 +639,7 @@ class SingleLayer:
 
         Returns
         -------
-        wdn, wdnc : ndarray
+        wdn, wdnc : tuple[ndarray]
             (rad*Hz) frequencies of corresponding kxi for the two
             crossing modes.
         """
@@ -768,7 +750,7 @@ class SingleLayer:
             )
         return wdn, wdnc
 
-    def GetDensityOfStates(self, n=0, nc=-1, nT=0):
+    def GetDensityOfStates(self, n=0, nT=0):
         """Give density of states for given mode.
         Density of states is computed as DoS = 1/v_g.
         Output is density of states in 1D for given dispersion
@@ -778,8 +760,6 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
 
@@ -788,11 +768,9 @@ class SingleLayer:
         dos : ndarray
             (s/m) value proportional to density of states.
         """
-        if nc == -1:
-            nc = n
-        return 1 / self.GetGroupVelocity(n=n, nc=nc, nT=nT)
+        return 1 / self.GetGroupVelocity(n=n, nT=nT)
 
-    def GetBlochFunction(self, n=0, nc=-1, nT=0, Nf=200):
+    def GetBlochFunction(self, n=0, nT=0, Nf=200):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
@@ -802,8 +780,6 @@ class SingleLayer:
         ----------
         n : int
             Quantization number.
-        nc : int, optional
-            Second quantization number, used for hybridization.
         nT : int, optional
             Waveguide (transversal) quantization number.
         Nf : int, optional
@@ -816,8 +792,8 @@ class SingleLayer:
         blochFunc : ndarray
             () 2D Bloch function for given kxi and w.
         """
-        w00 = self.GetDispersion(n=n, nc=nc, nT=nT)
-        lifeTime = self.GetLifetime(n=n, nc=nc, nT=nT)
+        w00 = self.GetDispersion(n=n, nT=nT)
+        lifeTime = self.GetLifetime(n=n, nT=nT)
 
         w = np.linspace(
             (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
@@ -885,7 +861,7 @@ class SingleLayer:
         Vk : float
             (rad*Hz/T) coupling parameter for parallel pumping. 
         """
-        return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nc=0, nT=0))
+        return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nT=0))
 
     def GetThresholdField(self):
         """Calculate threshold field for parallel pumping.
