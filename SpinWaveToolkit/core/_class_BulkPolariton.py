@@ -36,7 +36,7 @@ class BulkPolariton:
         ideally at frequencies close to ferromagnetic resonance.
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float or ndarray, optional
+    iota : float or ndarray, optional
         (rad) angle between external field and propagation direction.
     
 
@@ -75,7 +75,7 @@ class BulkPolariton:
         kxi = np.linspace(1e-6, 1e3, 101)
 
         YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG, 
-                                epsilon=3.0, kxi=kxi, theta=np.pi/2)
+                                epsilon=3.0, kxi=kxi, iota=np.pi/2)
         disp = YIGchar.GetDispersion()*1e-9/(2*np.pi)  # GHz
         vg = YIGchar.GetGroupVelocity()*1e-3  # km/s
         lifetime = YIGchar.GetLifetime()*1e9  # ns
@@ -94,7 +94,7 @@ class BulkPolariton:
         material,
         epsilon,
         kxi=np.linspace(1e-6, 1e3, 200),
-        theta=np.pi / 2,
+        iota=np.pi / 2,
     ):
         self._Bext = Bext
         self._epsilon = epsilon
@@ -102,7 +102,7 @@ class BulkPolariton:
         self._gamma = material.gamma
         self._Aex = material.Aex
         self.kxi = np.array(kxi)
-        self.theta = theta
+        self.iota = iota
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
         # Compute Slavin-Kalinikos parameters wM, w0
@@ -163,7 +163,7 @@ class BulkPolariton:
         w = np.zeros((2, np.size(self.kxi, 0)), dtype=np.float64)
         for idx, k in enumerate(self.kxi):
            def f(w):
-               val = (self.w0 - 1/2*(2*self.epsilon*w**2/C**2 - (k*np.cos(self.theta))**2)/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2 - w**2 - (1/2*(k*np.cos(self.theta))**2/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2
+               val = (self.w0 - 1/2*(2*self.epsilon*w**2/C**2 - (k*np.cos(self.iota))**2)/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2 - w**2 - (1/2*(k*np.cos(self.iota))**2/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2
                return val
            wFMR = np.sqrt(self.w0*(self.w0 + self.wM))
            if k==0:
