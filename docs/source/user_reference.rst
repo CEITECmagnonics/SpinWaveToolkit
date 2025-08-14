@@ -1,7 +1,6 @@
 User reference
 ==============
 
-.. autosummary::
-   :toctree: generated/
-   
-   SpinWaveToolkit
+.. automodule:: SpinWaveToolkit
+   :members:
+

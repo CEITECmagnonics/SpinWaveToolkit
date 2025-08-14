@@ -64,27 +64,10 @@ html_theme_options = {
 
 # -- Block for checking pandoc availability --------------------------------
 # (see https://stackoverflow.com/questions/62398231)
+# Get path to pandoc binary (saved to docs/pandoc_path.ignore)
+with open(os.path.join("..", "pandoc_path.ignore"), "r") as f:
+    PANDOC_DIR = f.read().strip("\n ")
+# Add dir containing pandoc binary to the PATH environment variable
+if PANDOC_DIR not in os.environ["PATH"].split(os.pathsep):
+    os.environ["PATH"] += os.pathsep + PANDOC_DIR
 
-from inspect import getsourcefile
-
-# Get path to directory containing this file, conf.py.
-DOCS_DIRECTORY = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-
-def ensure_pandoc_installed(_):
-    import pypandoc
-
-    # Download pandoc if necessary. If pandoc is already installed and on
-    # the PATH, the installed version will be used. Otherwise, we will
-    # download a copy of pandoc into docs/bin/ and add that to our PATH.
-    pandoc_dir = r"C:\Users\228634\AppData\Local\Pandoc"  # ### hide this or just change it
-    # Add dir containing pandoc binary to the PATH environment variable
-    if pandoc_dir not in os.environ["PATH"].split(os.pathsep):
-        os.environ["PATH"] += os.pathsep + pandoc_dir
-    pypandoc.ensure_pandoc_installed(
-        targetfolder=pandoc_dir,
-        delete_installer=True,
-    )
-
-
-def setup(app):
-    app.connect("builder-inited", ensure_pandoc_installed)

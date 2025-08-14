@@ -135,7 +135,7 @@ dependencies = [
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
 dev = ["black", "pylint", "pytest", "matplotlib"]  # ### add minimal versions?
-dev_doc = [
+dev_doc = [  # for development and documentation build
     "black",
     "pylint",
     "pytest",
@@ -143,9 +143,9 @@ dev_doc = [
     "sphinx",
     "pydata-sphinx-theme",
     "numpydoc",
-    "nbsphinx",  # for ipynb files in sphinx documentation
-    "pypandoc",  # for nbsphinx
-]  # ### add minimal versions?
+    "nbsphinx<=0.9.6",  # for ipynb files in sphinx documentation  # ### check their docs if sphinx<8.2 still applies for 0.9.7
+    "pypandoc",  # for nbsphinx (best if pandoc installed manually and path to its binaries pasted to docs/pandoc_path.ignore)
+]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 test = ["pytest"]
 
 # List URLs that are relevant to your project
