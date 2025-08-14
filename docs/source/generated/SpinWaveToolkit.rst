@@ -1,0 +1,6 @@
+﻿SpinWaveToolkit
+===============
+
+.. automodule:: SpinWaveToolkit
+
+   

@@ -18,4 +18,9 @@ documentation for details.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   examples
+      _example_nbs/dispersion_relation_basic.ipynb
+      _example_nbs/SAF_dispersion.ipynb
+   user_reference
+
 
