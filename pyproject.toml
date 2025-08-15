@@ -145,6 +145,8 @@ dev_doc = [  # for development and documentation build
     "numpydoc",
     "nbsphinx<=0.9.6",  # for ipynb files in sphinx documentation  # ### check their docs if sphinx<8.2 still applies for 0.9.7
     "pypandoc",  # for nbsphinx (best if pandoc installed manually and path to its binaries pasted to docs/pandoc_path.ignore)
+    "sphinx-design",  # for nice design elements
+    "sphinx-gallery",  # for ipynb gallery styles
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 test = ["pytest"]
 

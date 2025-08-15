@@ -1,4 +1,4 @@
-User reference
+API reference
 ==============
 
 .. automodule:: SpinWaveToolkit

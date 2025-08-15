@@ -20,8 +20,9 @@ documentation for details.
    :caption: Contents:
    :hidden:
 
+   getting_started
    examples
-   user_reference
+   api_reference
    release_notes
 
 

@@ -22,6 +22,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "nbsphinx",
+    "sphinx_design",
+    'sphinx_gallery.load_style',
 ]
 
 templates_path = ['_templates']
