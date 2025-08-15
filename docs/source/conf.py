@@ -60,6 +60,11 @@ html_theme_options = {
     ],
     "secondary_sidebar_items": ["page-toc", "sourcelink"],
     # ### add a version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
+    "announcement": "This site is currently under <b>intensive construction</b>."
+    + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
+    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or'
+    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
+    + ' your comments.</i>',  # ### remove after stable state of documentation is reached
 
 }
 # ### add favicon (see https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon)

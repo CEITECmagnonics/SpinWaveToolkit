@@ -6,14 +6,18 @@
 SpinWaveToolkit documentation
 =============================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
-.. note::
-   :collapsible:
+.. tip::
    
-   This project is under active development.
+   Add your content using ``reStructuredText`` syntax. See the
+   `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
+   documentation for details.
+
+
+.. warning::
+   .. :collapsible:
+   
+   Needs to be updated.
+
 
 .. toctree::
    :maxdepth: 2
@@ -24,5 +28,37 @@ documentation for details.
    examples
    api_reference
    release_notes
+   publications
 
 
+
+
+
+
+
+
+.. _howtocite:
+
+Cite us
+-------
+
+If you use SpinWaveToolkit in your work, please cite it as follows:
+
+.. [1] Wojewoda, O., & Klíma, J. *SpinWaveToolkit: Set of tools useful in spin wave research.* GitHub, 2025.
+       `<https://github.com/CEITECmagnonics/SpinWaveToolkit>`_
+
+
+.. code-block:: TeX
+
+   @online{swt,
+       author = {Wojewoda, Ondřej and Klíma, Jan},
+       title = {SpinWaveToolkit: Set of tools useful in spin wave research},
+       year = {2025},
+       publisher = {GitHub},
+       version = {1.0.0},
+       url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
+       language = {en},
+       urldate = {2025-03-09},
+   }
+
+All sources of models used within the module are cited in their respective documentation. Consider citing them as well if you use these models.
