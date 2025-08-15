@@ -6,6 +6,7 @@ Here is a list of examples that demonstrate how to use the SpinWaveToolkit. The 
 .. toctree::
    :maxdepth: 1
    :caption: Available examples:
+   :hidden:
    
    _example_nbs/dispersion_relation_basic
    _example_nbs/SAFdispersion_simple
