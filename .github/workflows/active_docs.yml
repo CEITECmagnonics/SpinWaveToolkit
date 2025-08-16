@@ -58,9 +58,6 @@ jobs:
           cd docs
           make html
 
-      - name: Save curated versions.json
-        run: cp docs/source/versions.json /tmp/versions.json
-
       - name: Deploy to gh-pages
         run: |
           mv docs/_build/html /tmp/html
