@@ -1,22 +1,18 @@
-name: Build and Deploy Docs for Active Version
+name: Build and Deploy Docs
 
 on:
   push:
-    branches:
-      - master
-      - new-release-1.1.0
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        version: # add versions to build docs for
-          - v1.1
+
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ matrix.version }}
+          fetch-depth: 0   # fetch all tags so we can parse versions
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,6 +22,36 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .[deploy]
+          pip install jq
+      # jq to parse JSON
+      
+      - name: Determine docs version folder
+        run: |
+          ref=${GITHUB_REF_NAME}
+
+          if [[ "$ref" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+            version="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+          else
+            echo "Unrecognized tag format: $ref" >&2
+            exit 1
+          fi
+
+          echo "DOCS_VERSION=$version" >> $GITHUB_ENV
+
+      - name: Check if version is mutable in versions.json
+        run: |
+          # Fetch versions.json from main branch (standard after stable)
+          # curl -sL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/master/docs/source/versions.json -o /tmp/versions.json
+          # Read versions.json from the current commit (for testing, ### temporary)
+          cp docs/source/versions.json /tmp/versions.json
+
+          # Check if this version has mutable: true
+          is_mutable=$(jq --arg ver "$DOCS_VERSION" '.[] | select(.version==$ver) | .mutable' /tmp/versions.json)
+
+          if [[ "$is_mutable" != "true" ]]; then
+            echo "Docs update skipped for $DOCS_VERSION (not mutable)"
+            exit 0
+          fi
 
       - name: Build docs
         run: |
@@ -37,19 +63,19 @@ jobs:
 
       - name: Deploy to gh-pages
         run: |
-          mv docs/_build/html /tmp/${{ matrix.version }}
+          mv docs/_build/html /tmp/html
+          cp docs/source/versions.json /tmp/versions.json
 
-          git fetch origin gh-pages
-          git checkout gh-pages
+          git fetch origin gh-pages || true
+          git checkout gh-pages || git checkout --orphan gh-pages
 
-          rm -rf ${{ matrix.version }}
-          cp -r /tmp/${{ matrix.version }}/* ${{ matrix.version }}/
+          rm -rf "$DOCS_VERSION"
+          cp -r /tmp/html "$DOCS_VERSION"
 
-          # Restore curated versions.json
           cp /tmp/versions.json versions.json
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ${{ matrix.version }} versions.json
-          git commit -m "Update docs for ${{ matrix.version }}" || echo "No changes"
+          git add "$DOCS_VERSION" versions.json
+          git commit -m "Update docs for $DOCS_VERSION (from $GITHUB_REF_NAME)" || echo "No changes"
           git push origin gh-pages
