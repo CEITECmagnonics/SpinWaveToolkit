@@ -80,12 +80,12 @@ html_theme_options = {
 }
 # ### add favicon (see https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon)
 
-# -- Block for checking pandoc availability --------------------------------
-# (see https://stackoverflow.com/questions/62398231)
-# Get path to pandoc binary (saved to docs/pandoc_path.ignore)
-with open(os.path.join("..", "pandoc_path.ignore"), "r") as f:
-    PANDOC_DIR = f.read().strip("\n ")
-# Add dir containing pandoc binary to the PATH environment variable
-if PANDOC_DIR not in os.environ["PATH"].split(os.pathsep):
-    os.environ["PATH"] += os.pathsep + PANDOC_DIR
+# # -- Block for checking pandoc availability --------------------------------
+# # (see https://stackoverflow.com/questions/62398231)
+# # Get path to pandoc binary (saved to docs/pandoc_path.ignore)
+# with open(os.path.join("..", "pandoc_path.ignore"), "r") as f:
+#     PANDOC_DIR = f.read().strip("\n ")
+# # Add dir containing pandoc binary to the PATH environment variable
+# if PANDOC_DIR not in os.environ["PATH"].split(os.pathsep):
+#     os.environ["PATH"] += os.pathsep + PANDOC_DIR
 
