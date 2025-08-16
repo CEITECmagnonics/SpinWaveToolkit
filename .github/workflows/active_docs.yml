@@ -2,8 +2,9 @@ name: Build and Deploy Docs
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - master
+      - new-release-1.1.0  # ### remove after stable
 
 jobs:
   build-deploy:
@@ -11,8 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0   # fetch all tags so we can parse versions
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -22,36 +21,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .[deploy]
-          pip install jq
-      # jq to parse JSON
       
       - name: Determine docs version folder
         run: |
-          ref=${GITHUB_REF_NAME}
-
-          if [[ "$ref" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
-            version="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-          else
-            echo "Unrecognized tag format: $ref" >&2
-            exit 1
-          fi
-
+          version="v1.1"
           echo "DOCS_VERSION=$version" >> $GITHUB_ENV
-
-      - name: Check if version is mutable in versions.json
-        run: |
-          # Fetch versions.json from main branch (standard after stable)
-          # curl -sL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/master/docs/source/versions.json -o /tmp/versions.json
-          # Read versions.json from the current commit (for testing, ### temporary)
-          cp docs/source/versions.json /tmp/versions.json
-
-          # Check if this version has mutable: true
-          is_mutable=$(jq --arg ver "$DOCS_VERSION" '.[] | select(.version==$ver) | .mutable' /tmp/versions.json)
-
-          if [[ "$is_mutable" != "true" ]]; then
-            echo "Docs update skipped for $DOCS_VERSION (not mutable)"
-            exit 0
-          fi
 
       - name: Build docs
         run: |
@@ -60,7 +34,8 @@ jobs:
 
       - name: Deploy to gh-pages
         run: |
-          mv docs/_build/html /tmp/html
+          mv docs/build/html /tmp/html
+          # Save curated versions.json
           cp docs/source/versions.json /tmp/versions.json
 
           git fetch origin gh-pages || true
