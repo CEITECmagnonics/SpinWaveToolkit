@@ -5,13 +5,15 @@
 
 import os
 
+import SpinWaveToolkit
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SpinWaveToolkit'
 copyright = '2025, CEITECmagnonics and SpinWaveToolkit contributors'
 author = 'Ondřej Wojewoda'
-release = '1.1.0'
+release = SpinWaveToolkit.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -58,14 +60,23 @@ html_theme_options = {
             "type": "fontawesome",
         },
     ],
+    "navbar_align": "left",
+    # "navbar_start": ["navbar-logo", "version-switcher"],
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": ["version-switcher", "navbar-nav"],
     "secondary_sidebar_items": ["page-toc", "sourcelink"],
+    "footer_start": ["copyright"],
+    "footer_center": ["sphinx-version"],
     # ### add a version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
+    "switcher": {
+        "json_url": "https://nano.ceitec.cz/versions.json",  # ### change URL to real site and do so also in the json file
+        "version_match": ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
+    },
     "announcement": "This site is currently under <b>intensive construction</b>."
     + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or'
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
     + ' your comments.</i>',  # ### remove after stable state of documentation is reached
-
 }
 # ### add favicon (see https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon)
 

@@ -1,0 +1,55 @@
+name: Build and Deploy Docs for Active Version
+
+on:
+  push:
+    branches:
+      - master
+      - new-release-1.1.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: # add versions to build docs for
+          - v1.1
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ matrix.version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install .[deploy]
+
+      - name: Build docs
+        run: |
+          cd docs
+          make html
+
+      - name: Save curated versions.json
+        run: cp docs/source/versions.json /tmp/versions.json
+
+      - name: Deploy to gh-pages
+        run: |
+          mv docs/_build/html /tmp/${{ matrix.version }}
+
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          rm -rf ${{ matrix.version }}
+          cp -r /tmp/${{ matrix.version }}/* ${{ matrix.version }}/
+
+          # Restore curated versions.json
+          cp /tmp/versions.json versions.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${{ matrix.version }} versions.json
+          git commit -m "Update docs for ${{ matrix.version }}" || echo "No changes"
+          git push origin gh-pages

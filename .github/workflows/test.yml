@@ -11,15 +11,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version:
-          # - '3.7'  # is not supported by any latest OS
-          # - '3.8'  # has problems with project.license-files in pyproject.toml
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
-          - '3.13'
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        # test on ubuntu only on push, otherwise on all platforms
+        os: ${{ github.event_name == 'push' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest","macos-latest"]' }}
+        # python-version: ["3.9","3.10","3.11","3.12","3.13"]
+        # '3.7'  # is not supported by any latest OS
+        # '3.8'  # has problems with project.license-files in pyproject.toml
+        python-version: ${{ github.event_name == 'push' && '["3.13"]' || '["3.9","3.10","3.11","3.12","3.13"]' }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
