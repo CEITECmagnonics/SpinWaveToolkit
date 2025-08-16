@@ -41,9 +41,10 @@ jobs:
           git fetch origin gh-pages || true
           git checkout gh-pages || git checkout --orphan gh-pages
 
-          # remove initially, then remove this line
-          rm -rf
-          # rm -rf "$DOCS_VERSION"
+          # remove initially, then remove these lines
+          git rm -rf
+          rm '.gitignore'
+          # git rm -rf "$DOCS_VERSION"
           cp -r /tmp/html "$DOCS_VERSION"
 
           cp /tmp/versions.json versions.json
