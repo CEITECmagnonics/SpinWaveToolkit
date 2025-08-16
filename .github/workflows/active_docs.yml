@@ -43,7 +43,6 @@ jobs:
 
           # remove initially, then remove these lines
           git rm -rf .
-          rm '.gitignore'
           # git rm -rf "$DOCS_VERSION"
           cp -r /tmp/html "$DOCS_VERSION"
 
