@@ -50,6 +50,13 @@ Here is a list of some Python physics modules with nice documentation and develo
 - **PyPa sampleproject**: [GitHub](https://github.com/pypa/sampleproject)
 
 
+## Documentation
+We write our [docs] in `.rst` format and build them (also) with the autodocumenting feature of the `sphinx` module. All versions of the [docs] are backed-up in the `gh-pages` branch of the [SpinWaveToolkit][SWTrepo] repository. Therefore it is utterly important, that **contributors do NOT commit anything to the `gh-pages` branch!**
+
+> [!important]
+> **Do NOT commit anything to the `gh-pages` branch!** It is probably just a temporary solution and it would be nice to find a better way to version the docs.
+
+
 ## Other notes
 
 ### Example of use for [black] and [pylint]
@@ -79,6 +86,8 @@ Check the currently available tests in the [tests](https://github.com/CEITECmagn
 [GitHub Desktop]:https://desktop.github.com/
 [Issues]:https://github.com/CEITECmagnonics/SpinWaveToolkit/issues
 [SWTpy]:https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/master/SpinWaveToolkit
+[SWTrepo]:https://github.com/CEITECmagnonics/SpinWaveToolkit
+[docs]:https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/
 [PEP8]:https://peps.python.org/pep-0008/
 [black]:https://black.readthedocs.io/en/stable/index.html
 [magpylib_gh]:https://github.com/magpylib/magpylib
@@ -86,5 +95,4 @@ Check the currently available tests in the [tests](https://github.com/CEITECmagn
 [tetrax_rtd]:https://tetrax.readthedocs.io/en/latest/index.html
 [pylint]:https://pylint.readthedocs.io/en/stable/
 [pytest]:https://docs.pytest.org/en/stable/contents.html
-
 

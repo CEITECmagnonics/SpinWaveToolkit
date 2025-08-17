@@ -67,9 +67,9 @@ html_theme_options = {
     "secondary_sidebar_items": ["page-toc", "sourcelink"],
     "footer_start": ["copyright"],
     "footer_center": ["sphinx-version"],
-    # ### add a version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
+    # ### check correct state of the version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
     "switcher": {
-        "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # ### change URL to real site and do so also in the json file
+        "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
         "version_match": ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
     },
     "announcement": "This site is currently under <b>intensive construction</b>."
