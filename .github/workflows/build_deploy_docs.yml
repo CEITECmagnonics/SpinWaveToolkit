@@ -1,0 +1,96 @@
+name: Build and Deploy Docs
+
+on:
+  push:
+    branches:
+      - master
+      - new-release-1.1.0  # remove after stable
+
+permissions:
+  contents: write   # need write for pushing to gh-pages
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install .[deploy]
+
+      - name: Determine docs version folder
+        run: |
+          # ### MANUALLY SET CURRENT DOCS_VERSION HERE
+          version="v1.1"
+          echo "DOCS_VERSION=$version" >> $GITHUB_ENV
+
+      - name: Build docs
+        run: |
+          cd docs
+          make html
+
+      - name: Fetch existing gh-pages (if exists)
+        run: |
+          git fetch origin gh-pages || true
+          mkdir -p site
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add /tmp/gh-pages origin/gh-pages
+            cp -r /tmp/gh-pages/* site/ || true
+          fi
+
+      - name: Add new docs version
+        run: |
+          # Clear and replace version folder
+          rm -rf site/$DOCS_VERSION
+          mkdir -p site/$DOCS_VERSION
+          cp -r docs/build/html/* site/$DOCS_VERSION/
+          
+          # Save curated versions.json
+          cp docs/source/versions.json site/
+          
+          # Copy redirect file (index0.html -> index.html)
+          cp docs/source/index0.html site/index.html
+          
+          # Update latest alias
+          rm -rf site/latest
+          cp -r docs/build/html site/latest
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Push updated site back to gh-pages
+        run: |
+          cd site
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b gh-pages
+          git add .
+          git commit -m "Update docs for $DOCS_VERSION"
+          git push --force origin gh-pages
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
