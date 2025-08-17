@@ -58,7 +58,6 @@ If you use SpinWaveToolkit in your work, please cite it as follows:
        version = {1.0.0},
        url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
        language = {en},
-       urldate = {2025-03-09},
    }
 
 All sources of models used within the module are cited in their respective documentation. Consider citing them as well if you use these models.
