@@ -1,9 +1,9 @@
 # SpinWaveToolkit
 
-SpinWaveToolkit is a Python module which provides analytical tools for spin-wave physics and research.
+SpinWaveToolkit is an open-source Python package which provides analytical tools for spin-wave physics and research.
 
 > [!TIP]
-> This module could use some updating. If you want to contrubute, see [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
+> This package could use some updating. If you want to contrubute, see [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
 
 
 ## Installation
@@ -33,7 +33,7 @@ for global modules.
 
 
 ## Dependencies
-The SpinWaveToolkit module is compatible with Python >3.7, and uses the following modules:
+The SpinWaveToolkit package is compatible with Python >3.7, and uses the following modules:
 - [numpy] >1.20 (>2.0 is also ok, bugs be reported in [Issues])
 - [scipy] >1.8
 
@@ -41,7 +41,7 @@ The SpinWaveToolkit module is compatible with Python >3.7, and uses the followin
 > If you encounter compatibility errors in contradiction with this list, let us know by posting your findings in a new [Issue][Issues].
 
 ## About
-This module provides analytical tools in spin-wave physics. This section gives an overview of its capabilites. All functionalities are described in the [SpinWaveToolkit Documentation][docs].
+This package provides analytical tools in spin-wave physics. This section gives an overview of its capabilites. All functionalities are described in the [SpinWaveToolkit Documentation][docs].
 
 Features:
 - Calculation of the dispersion relation and derived quantities for several systems using analytical, semi-analytical, and numerical models. These include
@@ -90,7 +90,7 @@ BibTeX entry:
 }
 ```
 
-All sources of models used within the module are cited in their respective documentation. Consider citing them as well if you use these models.
+All sources of models used within the SpinWaveToolkit are cited in their respective documentation. Consider citing them as well if you use these models.
 
 
 

@@ -41,7 +41,7 @@ nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_theme_options = {
-    "header_links_before_dropdown": 4,
+    "header_links_before_dropdown": 5,
     "logo": {
         "image_light": "logo_light.png",
         "image_dark": "logo_dark.png",
