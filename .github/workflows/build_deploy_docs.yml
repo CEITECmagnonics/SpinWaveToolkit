@@ -64,9 +64,9 @@ jobs:
           # Copy redirect file (index0.html -> index.html)
           cp docs/source/index0.html site/index.html
           
-          # Update latest alias
-          rm -rf site/latest
-          cp -r docs/build/html site/latest
+          # Update 'stable' alias
+          rm -rf site/stable
+          cp -r docs/build/html site/stable
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
