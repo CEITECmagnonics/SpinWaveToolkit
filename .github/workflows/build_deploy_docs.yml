@@ -82,6 +82,7 @@ jobs:
           git checkout -b gh-pages
           git add .
           git commit -m "Update docs for $DOCS_VERSION"
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git push --force origin gh-pages
 
   deploy:
