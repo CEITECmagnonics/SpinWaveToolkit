@@ -1,6 +1,6 @@
 # SpinWaveToolkit
 
-SpinWaveToolkit is a Python module, which provides analytical tools for spin-wave physics and research.
+SpinWaveToolkit is a Python module which provides analytical tools for spin-wave physics and research.
 
 > [!TIP]
 > This module could use some updating. If you want to contrubute, see [CONTRIBUTING GUIDELINES](CONTRIBUTING.md).
@@ -33,13 +33,12 @@ for global modules.
 
 
 ## Dependencies
-
-> [!WARNING]
-> This section lacks proof and was not much checked.
-
 The SpinWaveToolkit module is compatible with Python >3.7, and uses the following modules:
 - [numpy] >1.20 (>2.0 is also ok, bugs be reported in [Issues])
 - [scipy] >1.8
+
+> [!NOTE]
+> If you encounter compatibility errors in contradiction with this list, let us know by posting your findings in a new [Issue][Issues].
 
 ## About
 This module provides analytical tools in spin-wave physics. This section gives an overview of its capabilites. All functionalities are described in the [SpinWaveToolkit Documentation][docs].

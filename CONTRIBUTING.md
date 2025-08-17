@@ -3,7 +3,7 @@
 > [!NOTE]
 > Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch is not allowed anymore (via branch protection rules). Only changes based on Branch & Pull Request workflow are allowed.
 
-We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open new Issues to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues.
+We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open a new Issue to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues. Please check if any relevant issue is already posted and consider raising your concern there rather than creating a new issue.
 
 For more general talks about new features, improvements, etc., use the GitHub [Discussions](https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions) in this repository. 
 
@@ -20,8 +20,8 @@ The SpinWaveToolkit repository adapts the following structure:
     - `BLSmodel.py` - submodule for modelling BLS signal
     - `greenAndFresnel.py` - submodule for functions used for em wave propagation characteristics, mainly in BLS signal modelling
     - `core` - folder with all classes as individual scripts (e.g. for Material class named _class_Material.py), usually each model type has its own class
-  - **docs** - documentation that will be later displayed on [ReadTheDocs](https://readthedocs.org/) or GitHub Wiki of this repository (TBD), preferrably emulated by [Sphinx](https://www.sphinx-doc.org/en/master/) (theme and usage TBD)
-  - **examples** - folder containing use cases and examples in Jupyter Notebook format
+  - **docs** - documentation which build is deployed to [GitHub Pages][docs], currently emulated by [Sphinx](sphinx)  using the [PyData Sphinx theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
+  - **examples** - folder containing use cases and examples, preferably in Jupyter Notebook format
   - other files are project configuration files, readme, etc.
 
 
@@ -51,7 +51,9 @@ Here is a list of some Python physics modules with nice documentation and develo
 
 
 ## Documentation
-We write our [docs] in `.rst` format and build them (also) with the autodocumenting feature of the `sphinx` module. All versions of the [docs] are backed-up in the `gh-pages` branch of the [SpinWaveToolkit][SWTrepo] repository. Therefore it is utterly important, that **contributors do NOT commit anything to the `gh-pages` branch!**
+We write our [docs] in `.rst` format and build them (also) with the autodocumenting feature of the [sphinx] module. All versions of the [docs] are backed-up in the `gh-pages` branch of the [SpinWaveToolkit][SWTrepo] repository. Therefore it is utterly important, that **contributors do NOT commit anything to the `gh-pages` branch!**
+
+In the current setup, there is only one version of docs for every minor release, i.e. newer patches (third number in the version string) are automatically overwritting docs of older patches.
 
 > [!important]
 > **Do NOT commit anything to the `gh-pages` branch!** It is probably just a temporary solution and it would be nice to find a better way to version the docs.
@@ -95,4 +97,5 @@ Check the currently available tests in the [tests](https://github.com/CEITECmagn
 [tetrax_rtd]:https://tetrax.readthedocs.io/en/latest/index.html
 [pylint]:https://pylint.readthedocs.io/en/stable/
 [pytest]:https://docs.pytest.org/en/stable/contents.html
+[sphinx]:https://www.sphinx-doc.org/en/master/
 
