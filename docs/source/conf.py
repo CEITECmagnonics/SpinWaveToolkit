@@ -81,6 +81,7 @@ html_theme_options = {
     + ' your comments.</i>',  # ### remove after stable state of documentation is reached
 }
 pygments_style = "sphinx"
+nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
 
 # # -- Block for checking pandoc availability --------------------------------
 # # (see https://stackoverflow.com/questions/62398231)
