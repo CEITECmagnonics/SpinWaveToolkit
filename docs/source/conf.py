@@ -80,6 +80,7 @@ html_theme_options = {
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
     + ' your comments.</i>',  # ### remove after stable state of documentation is reached
 }
+pygments_style = "sphinx"
 
 # # -- Block for checking pandoc availability --------------------------------
 # # (see https://stackoverflow.com/questions/62398231)

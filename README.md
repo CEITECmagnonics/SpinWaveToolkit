@@ -70,7 +70,7 @@ decLen = PyChar.GetDecLen()*1e6  # um
 ```
 For more examples (with images) look [here](https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/examples.html).
 
-## Cite Us
+## Cite us
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
 

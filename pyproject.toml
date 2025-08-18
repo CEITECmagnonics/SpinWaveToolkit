@@ -171,9 +171,10 @@ test = ["pytest"]
 # what's used to render the link text on PyPI.
 [project.urls]
 "Homepage" = "https://github.com/CEITECmagnonics/SpinWaveToolkit"
+"Documentation" = "https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/index.html"
 "Bug Reports" = "https://github.com/CEITECmagnonics/SpinWaveToolkit/issues"
 "Forum" = "https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions"
-# ### Add: Changelog, Documentation
+"Release Notes" = "https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/release_notes.html"
 
 
 # This is configuration specific to the `setuptools` build backend.

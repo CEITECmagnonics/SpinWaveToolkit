@@ -75,7 +75,7 @@ If you use SpinWaveToolkit in your work, please cite it as follows:
 .. [1] Wojewoda, O., & Klíma, J. *SpinWaveToolkit: Set of tools useful in spin wave research.* GitHub, 2025. `<https://github.com/CEITECmagnonics/SpinWaveToolkit>`_
 
 
-.. code-block:: TeX
+.. code-block:: bibtex
 
    @online{swt,
        author = {Wojewoda, Ondřej and Klíma, Jan},
