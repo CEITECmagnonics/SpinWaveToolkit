@@ -40,11 +40,13 @@ nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might 
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_logo = "_static/logo.svg"
+html_favicon = "_static/logo.svg"  # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon
 html_theme_options = {
     "header_links_before_dropdown": 5,
     "logo": {
-        "image_light": "logo_light.png",
-        "image_dark": "logo_dark.png",
+        "text": "SpinWaveToolkit",
+        "image_dark": "_static/logo.svg",
     },
     "icon_links": [
         {
@@ -78,7 +80,6 @@ html_theme_options = {
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
     + ' your comments.</i>',  # ### remove after stable state of documentation is reached
 }
-# ### add favicon (see https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon)
 
 # # -- Block for checking pandoc availability --------------------------------
 # # (see https://stackoverflow.com/questions/62398231)
