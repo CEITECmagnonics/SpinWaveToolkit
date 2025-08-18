@@ -13,5 +13,6 @@ Here is a list of examples that demonstrate how to use the SpinWaveToolkit. The 
     :name: ipynb_gallery
 
     _example_nbs/dispersion_relation_basic
+    _example_nbs/dispersion_relation_fieldsweeps
     _example_nbs/SAFdispersion_simple
 
