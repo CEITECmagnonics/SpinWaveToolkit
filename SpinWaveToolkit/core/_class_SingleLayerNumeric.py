@@ -54,6 +54,12 @@ class SingleLayerNumeric:
             strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
+    N : int, optional
+        number of modes to calculate, default is 3.
+        This parameter defines the size of the system matrix
+        and the number of modes to calculate.  The size of the
+        system matrix is `2*N x 2*N`, so for N=3 it is 6x6.
+        The modes are sorted from low to high frequencies.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
@@ -100,6 +106,7 @@ class SingleLayerNumeric:
     __bTacchi
     __PnncTacchi
     __QnncTacchi
+    __Ck
 
     Code example
     ------------
@@ -135,12 +142,14 @@ class SingleLayerNumeric:
         boundary_cond=1,
         dp=0,
         KuOOP=0,
+        N=3,
     ):
         self._Bext = Bext
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
         self._KuOOP = KuOOP
+        self.N = N
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -210,6 +219,15 @@ class SingleLayerNumeric:
         self._KuOOP = val
         self.wU = self.gamma * 2 * val / self.Ms
 
+    @property
+    def N(self):
+        """number of modes to calculate."""
+        return self._N
+
+    @N.setter
+    def N(self, val):
+        self._N = val
+
     def __CnncTacchi(self, n, nc, k, phi):
         """Calculate the C_{n,nc}."""
         return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
@@ -220,7 +238,7 @@ class SingleLayerNumeric:
 
     def __qnncTacchi(self, n, nc, k, phi):
         """Calculate the q_{n,nc}."""
-        return -self.wM / 2 * np.sin(phi) * self.__QnncTacchi(n, nc, k)
+        return -2 * self.wM * np.sin(phi) * self.__QnncTacchi(n, nc, k)
 
     def __OmegankTacchi(self, n, k):
         """Calculate the w_{n,k}."""
@@ -325,16 +343,13 @@ class SingleLayerNumeric:
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
         if self.boundary_cond == 1:
+            norm = 1.0 / np.sqrt((1 + (1 if n == 0 else 0)) * 
+                                 (1 + (1 if nc == 0 else 0)))
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            Qnn = (
-                kxi**2
-                / kc**2
-                * (
-                    kappac**2 / (kappac**2 - kappa**2) * 2 / (kxi * self.d)
-                    - kxi**2 / (2 * k**2) * Fn
-                )
-                * ((1 - (-1) ** (n + nc)) / 2)
-            )
+            Qnn = (kxi**2 / kc**2) * ( (kappac**2/(kappac**2 - kappa**2)) * 
+                    2/(kxi*self.d) - (kxi**2)/(2*k**2) * Fn ) \
+              * ((1 - (-1)**(n+nc)) / 2) * norm
+            
         elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -453,6 +468,48 @@ class SingleLayerNumeric:
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
+    
+    def _Ck(self, k, phi, N=3):
+        """
+        Build Tacchi/Kalinikos C_k with N thickness modes (size 2N x 2N).
+        Default N=3, which gives 6x6 matrix.
+        """
+        C = np.zeros((2*N, 2*N), dtype=float)
+        b = self.__bTacchi()
+
+        # Diagonal 2x2 blocks for each mode n
+        for n in range(N):
+            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k, phi)
+            pnn = self.__pnncTacchi(n, n, k, phi)
+            i = 2*n
+            C[i,   i  ] = -ann
+            C[i,   i+1] = -(b + pnn)
+            C[i+1, i  ] =  (b + pnn)
+            C[i+1, i+1] =  ann
+
+        # Off-diagonal couplings between modes n != m
+        # Same parity (both even or both odd): P-couplings => C,p blocks
+        # Opposite parity (one even, one odd): Q-couplings => q blocks
+        for n in range(N):
+            for m in range(N):
+                if n == m:
+                    continue
+                i, j = 2*n, 2*m
+                if (n - m) % 2 == 0:
+                    # same parity -> C,p block; keep your (col_mode, row_mode) call order
+                    Cmn = self.__CnncTacchi(m, n, k, phi)
+                    pmn = self.__pnncTacchi(m, n, k, phi)
+                    C[i,   j  ] += -Cmn
+                    C[i,   j+1] += -pmn
+                    C[i+1, j  ] +=  pmn
+                    C[i+1, j+1] +=  Cmn
+                else:
+                    # opposite parity -> q block
+                    qmn = self.__qnncTacchi(m, n, k, phi)  # note antisymmetry is inside your function
+                    C[i,   j+1] += -qmn
+                    C[i+1, j  ] += -qmn
+
+        return C
 
     def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).
@@ -483,64 +540,15 @@ class SingleLayerNumeric:
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
-        wV = np.zeros((3, np.size(ks, 0)))
-        vV = np.zeros((6, 3, np.size(ks, 0)))
+        wV = np.zeros((self.N, np.size(ks, 0)))
+        vV = np.zeros((2*self.N, self.N, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
-                [
-                    [
-                        -(self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
-                        0,
-                        -self.__qnncTacchi(1, 0, k, phi),
-                        -self.__CnncTacchi(2, 0, k, phi),
-                        -self.__pnncTacchi(2, 0, k, phi),
-                    ],
-                    [
-                        (self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
-                        (self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
-                        -self.__qnncTacchi(1, 0, k, phi),
-                        0,
-                        self.__pnncTacchi(2, 0, k, phi),
-                        self.__CnncTacchi(2, 0, k, phi),
-                    ],
-                    [
-                        0,
-                        -self.__qnncTacchi(0, 1, k, phi),
-                        -(self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
-                        0,
-                        -self.__qnncTacchi(2, 1, k, phi),
-                    ],
-                    [
-                        -self.__qnncTacchi(0, 1, k, phi),
-                        0,
-                        (self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
-                        (self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
-                        -self.__qnncTacchi(2, 1, k, phi),
-                        0,
-                    ],
-                    [
-                        -self.__CnncTacchi(0, 2, k, phi),
-                        -self.__pnncTacchi(0, 2, k, phi),
-                        0,
-                        -self.__qnncTacchi(1, 2, k, phi),
-                        -(self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
-                    ],
-                    [
-                        self.__pnncTacchi(0, 2, k, phi),
-                        self.__CnncTacchi(0, 2, k, phi),
-                        -self.__qnncTacchi(1, 2, k, phi),
-                        0,
-                        (self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
-                        (self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
-                    ],
-                ],
+                self._Ck(k=k, phi=phi, N=self.N),
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
-            indi = np.argsort(w)[3:]  # sort low-to-high and crop to positive
+            indi = np.argsort(w)[self.N:]  # sort low-to-high and crop to positive
             wV[:, idx] = w[indi]  # eigenvalues (dispersion)
             vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
         return wV, vV
