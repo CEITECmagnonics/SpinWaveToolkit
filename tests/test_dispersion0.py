@@ -20,40 +20,47 @@ class TestClass:
                              boundary_cond=bc)
         f_sl = sl.GetDispersion()*1e-9/np.pi/2
         sln = SWT.SingleLayerNumeric(bext, mat, d, kxi, theta, phi,
-                                    boundary_cond=bc)
+                                     boundary_cond=bc)
         f_sln = sln.GetDispersion()[0]*1e-9/np.pi/2
+        slsc = SWT.SingleLayerSCcoupled(bext, mat, d, kxi, np.inf)
+        f_slsc = slsc.GetDispersion()*1e-9/np.pi/2
         zeroth = 0  # select the lowest mode
         if show:
             import matplotlib.pyplot as plt
             plt.plot(kxi, f_sl, label="SL")
             plt.plot(kxi, f_sln[zeroth], label="SLN")
+            plt.plot(kxi, f_slsc, label="SLSC")
             plt.title("f(k) (GHz)")
             plt.legend(loc="upper left")
             plt.show()
 
-        assert np.all(np.isclose(f_sl, f_sln[zeroth], atol=4e-3))
+        assert np.all(np.isclose(f_sl, f_sln[zeroth], f_slsc, atol=4e-3))
 
         vg_sl = sl.GetGroupVelocity()*1e-3
         vg_sln = sln.GetGroupVelocity(zeroth)*1e-3
+        vg_slsc = slsc.GetGroupVelocity()*1e-3
         if show:
             plt.plot(kxi, vg_sl, label="SL")
             plt.plot(kxi, vg_sln, label="SLN")
+            plt.plot(kxi, vg_slsc, label="SLSC")
             plt.title("v_gt(k) (um/ns)")
             plt.legend(loc="lower left")
             plt.show()
 
-        assert np.all(np.isclose(vg_sl, vg_sln, atol=4e-3))
+        assert np.all(np.isclose(vg_sl, vg_sln, vg_slsc, atol=4e-3))
 
         dec_sl = sl.GetDecLen()*1e6
         dec_sln = sln.GetDecLen(zeroth)*1e6
+        dec_slsc = slsc.GetDecLen()*1e6
         if show:
             plt.plot(kxi, dec_sl, label="SL")
             plt.plot(kxi, dec_sln, label="SLN")
+            plt.plot(kxi, dec_slsc, label="SLSC")
             plt.title("Lam(k) (um)")
             plt.legend(loc="lower left")
             plt.show()
 
-        assert np.all(np.isclose(dec_sl, dec_sln, atol=4e-3))
+        assert np.all(np.isclose(dec_sl, dec_sln, dec_slsc, atol=4e-3))
 
     def test_double_layer(self):
         """Dispersion calculation test comparing the model to
@@ -78,7 +85,7 @@ class TestClass:
         s = 1e-9
         d = np.array((2, 5, 20))*1e-9
         Ku = 69.6e-3*1150e3/2  # H_u to K_u for Co layer
-        J = -1.5e-3  # interlayer coupling (### Jbl or Jbq???)
+        J = -1.5e-3  # interlayer coupling (bilinear)
         f_dln = np.zeros((nd, refdata.shape[1]))
         notnan = ~np.isnan(refdata[[0, 2, 4]])
         for i in range(nd):

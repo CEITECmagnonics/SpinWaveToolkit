@@ -1,9 +1,9 @@
 # Rules and documentation logic for contributors
 
 > [!NOTE]
-> Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch will be allowed until a stable state of the repository is reached. Since then, only changes based on Branch & Pull Request workflow will be allowed and `master` branch protection rules will be issued (at least minimum amount of approvals and requirement of pull requests).
+> Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch is not allowed anymore (via branch protection rules). Only changes based on Branch & Pull Request workflow are allowed.
 
-We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open new Issues to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues.
+We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open a new Issue to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues. Please check if any relevant issue is already posted and consider raising your concern there rather than creating a new issue.
 
 For more general talks about new features, improvements, etc., use the GitHub [Discussions](https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions) in this repository. 
 
@@ -17,9 +17,11 @@ The SpinWaveToolkit repository adapts the following structure:
   - **SpinWaveToolkit** - the module base folder
     - `__init__.py` - script for importing all submodules (file where all useful classes, functions and constants are imported so that they are accessible from the first level module)
     - `helpers.py` - place for supplemental functions, not directly related a specific model, should not have any imports from other parts of this module
+    - `BLSmodel.py` - submodule for modelling BLS signal
+    - `greenAndFresnel.py` - submodule for functions used for em wave propagation characteristics, mainly in BLS signal modelling
     - `core` - folder with all classes as individual scripts (e.g. for Material class named _class_Material.py), usually each model type has its own class
-  - **docs** - documentation that will be later displayed on [ReadTheDocs](https://readthedocs.org/) or GitHub Wiki of this repository (TBD), preferrably emulated by [Sphinx](https://www.sphinx-doc.org/en/master/) (theme and usage TBD)
-  - **examples** - folder containing use cases and examples in Jupyter Notebook format
+  - **docs** - documentation which build is deployed to [GitHub Pages][docs], currently emulated by [Sphinx](sphinx)  using the [PyData Sphinx theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
+  - **examples** - folder containing use cases and examples, preferably in Jupyter Notebook format
   - other files are project configuration files, readme, etc.
 
 
@@ -28,24 +30,33 @@ The SpinWaveToolkit repository adapts the following structure:
 All direct contributors ([CEITECmagnonics] members) are requested to use the following workflow:
 - Have this repository cloned to your local drive (simplest way to do this is using [GitHub Desktop] - ask colleagues for eventual help/introduction).
 - Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
-- When working on some critical file (e.g. [SpinWaveToolkit][SWTpy]), it's good to let others know, e.g. via MS Teams, to prevent conflicts.
-- When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module file(s). Examples and other scripts rely mostly on your feeling for nice code.
+- When working on some critical file (e.g. [_class_SingleLayer.py](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/master/SpinWaveToolkit/core/_class_SingleLayer.py)), it's good to let others know, e.g. via MS Teams, to prevent conflicts.
+- When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module files. Examples and other scripts rely mostly on your feeling for nice code.
 - For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
 > [!NOTE]
 > [black] does not change the docstrings, apart from too long lines.
 - Use [pylint] for checking code errors and formatting issues (best if rated 10/10).
-- Use [pytest] to check the functionality of the module.
+- Use [pytest] to check the functionality of the module. It's also good if you could always create some tests for new functionalities, see [below](#notes-on-pytest).
 
 For others, the adhering to the same workflow is recommended. Not doing so might result in not accepting Pull Requests (or more precisely, in requiring modifications before accepting).
 
 > [!TIP]
-> If you don't know how to use [black], [pylint], and [pytest], check this [section](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CONTRIBUTING.md#example-of-use-for-black-and-pylint) below.
+> If you don't know how to use [black], [pylint], and [pytest], check this [section](#example-of-use-for-black-and-pylint) below.
 
 ## Where to get inspiration
 Here is a list of some Python physics modules with nice documentation and development workflow:
 - **magpylib**: [GitHub][magpylib_gh], [ReadTheDocs][magpylib_rtd]
 - **TetraX**: [repository](https://codebase.helmholtz.cloud/micromagnetic-modeling/tetrax/-/tree/main), [ReadTheDocs][tetrax_rtd]
 - **PyPa sampleproject**: [GitHub](https://github.com/pypa/sampleproject)
+
+
+## Documentation
+We write our [docs] in `.rst` format and build them (also) with the autodocumenting feature of the [sphinx] module. All versions of the [docs] are backed-up in the `gh-pages` branch of the [SpinWaveToolkit][SWTrepo] repository. Therefore it is utterly important, that **contributors do NOT commit anything to the `gh-pages` branch!**
+
+In the current setup, there is only one version of docs for every minor release, i.e. newer patches (third number in the version string) are automatically overwritting docs of older patches.
+
+> [!important]
+> **Do NOT commit anything to the `gh-pages` branch!** It is probably just a temporary solution and it would be nice to find a better way to version the docs.
 
 
 ## Other notes
@@ -76,7 +87,9 @@ Check the currently available tests in the [tests](https://github.com/CEITECmagn
 [CEITECmagnonics]:https://github.com/CEITECmagnonics
 [GitHub Desktop]:https://desktop.github.com/
 [Issues]:https://github.com/CEITECmagnonics/SpinWaveToolkit/issues
-[SWTpy]:https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/reclass/SpinWaveToolkit
+[SWTpy]:https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/master/SpinWaveToolkit
+[SWTrepo]:https://github.com/CEITECmagnonics/SpinWaveToolkit
+[docs]:https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/
 [PEP8]:https://peps.python.org/pep-0008/
 [black]:https://black.readthedocs.io/en/stable/index.html
 [magpylib_gh]:https://github.com/magpylib/magpylib
@@ -84,5 +97,5 @@ Check the currently available tests in the [tests](https://github.com/CEITECmagn
 [tetrax_rtd]:https://tetrax.readthedocs.io/en/latest/index.html
 [pylint]:https://pylint.readthedocs.io/en/stable/
 [pytest]:https://docs.pytest.org/en/stable/contents.html
-
+[sphinx]:https://www.sphinx-doc.org/en/master/
 

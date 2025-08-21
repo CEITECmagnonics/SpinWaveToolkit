@@ -4,7 +4,7 @@ Core (private) file for the `SingleLayerNumeric` class.
 
 import numpy as np
 from numpy import linalg
-from SpinWaveToolkit.helpers import *
+from SpinWaveToolkit.helpers import MU0, roots
 
 __all__ = ["SingleLayerNumeric"]
 
@@ -12,7 +12,7 @@ __all__ = ["SingleLayerNumeric"]
 class SingleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
-    propagation length for up to three lowest-order modes.
+    propagation length for desired number of modes.
 
     The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
@@ -29,20 +29,20 @@ class SingleLayerNumeric:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m) layer thickness (in z direction)
-    kxi : float or ndarray, default np.linspace(1e-12, 25e6, 200)
+    kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, default np.pi/2
+    theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally
         in-plane magnetization.
-    phi : float or ndarray, default np.pi/2
+    phi : float or ndarray, optional
         (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
-    boundary_cond : {1, 2, 3, 4}, default 1
+    boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
-        pinned BC.
+        pinned BC.  Default is 1.
         ### The only working BCs are 1 right now, some functions
             implement 2 and 4, but it is not complete!
     dp : float, optional
@@ -54,6 +54,12 @@ class SingleLayerNumeric:
             strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
+    N : int, optional
+        Number of modes to calculate, default is 3.
+        This parameter defines the size of the system matrix
+        and the number of modes to calculate.  The size of the
+        system matrix is `2*N x 2*N`, so for N=3 it is 6x6.
+        The modes are sorted from low to high frequencies.
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
@@ -87,6 +93,7 @@ class SingleLayerNumeric:
     GetLifetime
     GetDecLen
     GetDensityOfStates
+    GetBlochFunction
     GetExchangeLen
 
     Private methods
@@ -99,6 +106,7 @@ class SingleLayerNumeric:
     __bTacchi
     __PnncTacchi
     __QnncTacchi
+    __Ck
 
     Code example
     ------------
@@ -134,12 +142,14 @@ class SingleLayerNumeric:
         boundary_cond=1,
         dp=0,
         KuOOP=0,
+        N=3,
     ):
         self._Bext = Bext
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
         self._KuOOP = KuOOP
+        self.N = N
         self.kxi = np.array(kxi)
         self.theta = theta
         self.phi = phi
@@ -209,6 +219,15 @@ class SingleLayerNumeric:
         self._KuOOP = val
         self.wU = self.gamma * 2 * val / self.Ms
 
+    @property
+    def N(self):
+        """number of modes to calculate."""
+        return self._N
+
+    @N.setter
+    def N(self, val):
+        self._N = val
+
     def __CnncTacchi(self, n, nc, k, phi):
         """Calculate the C_{n,nc}."""
         return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
@@ -219,7 +238,7 @@ class SingleLayerNumeric:
 
     def __qnncTacchi(self, n, nc, k, phi):
         """Calculate the q_{n,nc}."""
-        return -self.wM / 2 * np.sin(phi) * self.__QnncTacchi(n, nc, k)
+        return -2 * self.wM * np.sin(phi) * self.__QnncTacchi(n, nc, k)
 
     def __OmegankTacchi(self, n, k):
         """Calculate the w_{n,k}."""
@@ -324,16 +343,20 @@ class SingleLayerNumeric:
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
         if self.boundary_cond == 1:
+            norm = 1.0 / np.sqrt(
+                (1 + (1 if n == 0 else 0)) * (1 + (1 if nc == 0 else 0))
+            )
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
             Qnn = (
-                kxi**2
-                / kc**2
+                (kxi**2 / kc**2)
                 * (
-                    kappac**2 / (kappac**2 - kappa**2) * 2 / (kxi * self.d)
-                    - kxi**2 / (2 * k**2) * Fn
+                    (kappac**2 / (kappac**2 - kappa**2)) * 2 / (kxi * self.d)
+                    - (kxi**2) / (2 * k**2) * Fn
                 )
                 * ((1 - (-1) ** (n + nc)) / 2)
+                * norm
             )
+
         elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -453,6 +476,50 @@ class SingleLayerNumeric:
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
 
+    def _Ck(self, k, phi, N=3):
+        """
+        Build Tacchi/Kalinikos C_k with N thickness modes (size 2N x 2N).
+        Default N=3, which gives 6x6 matrix.
+        """
+        C = np.zeros((2 * N, 2 * N), dtype=float)
+        b = self.__bTacchi()
+
+        # Diagonal 2x2 blocks for each mode n
+        for n in range(N):
+            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k, phi)
+            pnn = self.__pnncTacchi(n, n, k, phi)
+            i = 2 * n
+            C[i, i] = -ann
+            C[i, i + 1] = -(b + pnn)
+            C[i + 1, i] = b + pnn
+            C[i + 1, i + 1] = ann
+
+        # Off-diagonal couplings between modes n != m
+        # Same parity (both even or both odd): P-couplings => C,p blocks
+        # Opposite parity (one even, one odd): Q-couplings => q blocks
+        for n in range(N):
+            for m in range(N):
+                if n == m:
+                    continue
+                i, j = 2 * n, 2 * m
+                if (n - m) % 2 == 0:
+                    # same parity -> C,p block; keep your (col_mode, row_mode) call order
+                    Cmn = self.__CnncTacchi(m, n, k, phi)
+                    pmn = self.__pnncTacchi(m, n, k, phi)
+                    C[i, j] += -Cmn
+                    C[i, j + 1] += -pmn
+                    C[i + 1, j] += pmn
+                    C[i + 1, j + 1] += Cmn
+                else:
+                    # opposite parity -> q block
+                    qmn = self.__qnncTacchi(
+                        m, n, k, phi
+                    )  # note antisymmetry is inside your function
+                    C[i, j + 1] += -qmn
+                    C[i + 1, j] += -qmn
+
+        return C
+
     def GetDispersion(self):
         """Gives frequencies for defined k (Dispersion relation).
         Based on the model in:
@@ -466,7 +533,6 @@ class SingleLayerNumeric:
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
-        ### Update correct example.
 
         The returned modes are sorted from low to high frequencies,
         omitting the negative-frequency modes.
@@ -483,64 +549,15 @@ class SingleLayerNumeric:
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
-        wV = np.zeros((3, np.size(ks, 0)))
-        vV = np.zeros((6, 3, np.size(ks, 0)))
+        wV = np.zeros((self.N, np.size(ks, 0)))
+        vV = np.zeros((2 * self.N, self.N, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
-                [
-                    [
-                        -(self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
-                        0,
-                        -self.__qnncTacchi(1, 0, k, phi),
-                        -self.__CnncTacchi(2, 0, k, phi),
-                        -self.__pnncTacchi(2, 0, k, phi),
-                    ],
-                    [
-                        (self.__bTacchi() + self.__pnncTacchi(0, 0, k, phi)),
-                        (self.__ankTacchi(0, k) + self.__CnncTacchi(0, 0, k, phi)),
-                        -self.__qnncTacchi(1, 0, k, phi),
-                        0,
-                        self.__pnncTacchi(2, 0, k, phi),
-                        self.__CnncTacchi(2, 0, k, phi),
-                    ],
-                    [
-                        0,
-                        -self.__qnncTacchi(0, 1, k, phi),
-                        -(self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
-                        0,
-                        -self.__qnncTacchi(2, 1, k, phi),
-                    ],
-                    [
-                        -self.__qnncTacchi(0, 1, k, phi),
-                        0,
-                        (self.__bTacchi() + self.__pnncTacchi(1, 1, k, phi)),
-                        (self.__ankTacchi(1, k) + self.__CnncTacchi(1, 1, k, phi)),
-                        -self.__qnncTacchi(2, 1, k, phi),
-                        0,
-                    ],
-                    [
-                        -self.__CnncTacchi(0, 2, k, phi),
-                        -self.__pnncTacchi(0, 2, k, phi),
-                        0,
-                        -self.__qnncTacchi(1, 2, k, phi),
-                        -(self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
-                        -(self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
-                    ],
-                    [
-                        self.__pnncTacchi(0, 2, k, phi),
-                        self.__CnncTacchi(0, 2, k, phi),
-                        -self.__qnncTacchi(1, 2, k, phi),
-                        0,
-                        (self.__bTacchi() + self.__pnncTacchi(2, 2, k, phi)),
-                        (self.__ankTacchi(2, k) + self.__CnncTacchi(2, 2, k, phi)),
-                    ],
-                ],
+                self._Ck(k=k, phi=phi, N=self.N),
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
-            indi = np.argsort(w)[3:]  # sort low-to-high and crop to positive
+            indi = np.argsort(w)[self.N :]  # sort low-to-high and crop to positive
             wV[:, idx] = w[indi]  # eigenvalues (dispersion)
             vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
         return wV, vV
@@ -555,9 +572,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -575,14 +592,14 @@ class SingleLayerNumeric:
 
     def GetLifetime(self, n=0):
         """Gives lifetimes for defined k.
-        lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+        Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -616,9 +633,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -638,9 +655,9 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, default 0
-            Quantization number.  If -1, data
-            for all (positive) calculated modes are returned.
+        n : {-1, 0, 1, 2}, optional
+            Quantization number.  If -1, data for all (positive)
+            calculated modes are returned.  Default is 0.
 
         Returns
         -------
@@ -648,6 +665,41 @@ class SingleLayerNumeric:
             (s/m) value proportional to density of states.
         """
         return 1 / self.GetGroupVelocity(n=n)
+
+    def GetBlochFunction(self, n=0, Nf=200):
+        """Give Bloch function for given mode.
+        Bloch function is calculated with margin of 10% of
+        the lowest and the highest frequency (including
+        Gilbert broadening).
+
+        Parameters
+        ----------
+        n : {0, 1, 2}, optional
+            Quantization number.  The -1 value is not supported here.
+            Default is 0.
+        Nf : int, optional
+            Number of frequency levels for the Bloch function.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) frequency axis for the 2D Bloch function.
+        blochFunc : ndarray
+            () 2D Bloch function for given kxi and w.
+        """
+        w, _ = self.GetDispersion()
+        lifeTime = self.GetLifetime(n=n)
+        w00 = w[n]
+
+        w = np.linspace(
+            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
+            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
+            Nf,
+        )
+        wMat = np.tile(w, (len(lifeTime), 1)).T
+        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        return w, blochFunc
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
