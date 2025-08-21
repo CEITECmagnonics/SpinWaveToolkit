@@ -12,7 +12,7 @@ __all__ = ["SingleLayerNumeric"]
 class SingleLayerNumeric:
     """Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
-    propagation length for up to three lowest-order modes.
+    propagation length for desired number of modes.
 
     The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
@@ -55,7 +55,7 @@ class SingleLayerNumeric:
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
     N : int, optional
-        number of modes to calculate, default is 3.
+        Number of modes to calculate, default is 3.
         This parameter defines the size of the system matrix
         and the number of modes to calculate.  The size of the
         system matrix is `2*N x 2*N`, so for N=3 it is 6x6.
