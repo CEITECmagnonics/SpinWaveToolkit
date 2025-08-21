@@ -1,9 +1,9 @@
-name: Build and Deploy Docs
+name: Build and Deploy Docs - Dev version
 
 on:
   push:
     branches:
-      - master
+      - new-release
 
 permissions:
   contents: write   # need write for pushing to gh-pages
@@ -33,7 +33,7 @@ jobs:
       - name: Determine docs version folder
         run: |
           # ### MANUALLY SET CURRENT DOCS_VERSION HERE
-          version="v1.1"
+          version="dev"
           echo "DOCS_VERSION=$version" >> $GITHUB_ENV
 
       - name: Build docs

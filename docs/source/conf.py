@@ -13,7 +13,7 @@ import SpinWaveToolkit
 project = 'SpinWaveToolkit'
 copyright = '2025, CEITECmagnonics and SpinWaveToolkit contributors'
 author = 'Ondřej Wojewoda'
-release = SpinWaveToolkit.__version__
+release = os.environ.get("DOCS_VERSION", SpinWaveToolkit.__version__)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -72,7 +72,7 @@ html_theme_options = {
     # ### check correct state of the version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
     "switcher": {
         "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
-        "version_match": ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
+        "version_match": release if release == "dev" else ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
     },
     "announcement": "This site is currently under <b>intensive construction</b>."
     + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
