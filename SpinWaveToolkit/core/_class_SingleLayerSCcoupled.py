@@ -609,9 +609,7 @@ class SingleLayerSCcoupled:
         """
         return 1 / self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
 
-    def GetBlochFunction(
-        self, model="original", tol=1e-5, d_sc=np.inf, d_is=0, Nf=200
-    ):
+    def GetBlochFunction(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0, Nf=200):
         """Give Bloch function for given mode.
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including

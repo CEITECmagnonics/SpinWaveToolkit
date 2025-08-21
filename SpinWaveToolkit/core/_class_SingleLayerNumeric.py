@@ -343,13 +343,20 @@ class SingleLayerNumeric:
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
         if self.boundary_cond == 1:
-            norm = 1.0 / np.sqrt((1 + (1 if n == 0 else 0)) * 
-                                 (1 + (1 if nc == 0 else 0)))
+            norm = 1.0 / np.sqrt(
+                (1 + (1 if n == 0 else 0)) * (1 + (1 if nc == 0 else 0))
+            )
             Fn = 2 / (kxi * self.d) * (1 - (-1) ** n * np.exp(-kxi * self.d))
-            Qnn = (kxi**2 / kc**2) * ( (kappac**2/(kappac**2 - kappa**2)) * 
-                    2/(kxi*self.d) - (kxi**2)/(2*k**2) * Fn ) \
-              * ((1 - (-1)**(n+nc)) / 2) * norm
-            
+            Qnn = (
+                (kxi**2 / kc**2)
+                * (
+                    (kappac**2 / (kappac**2 - kappa**2)) * 2 / (kxi * self.d)
+                    - (kxi**2) / (2 * k**2) * Fn
+                )
+                * ((1 - (-1) ** (n + nc)) / 2)
+                * norm
+            )
+
         elif self.boundary_cond == 4:
             dp = self.dp
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -468,24 +475,24 @@ class SingleLayerNumeric:
             kappa0[kappa0 == 0.0] = np.nan  # omit 0 (probably only first is 0)
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
-    
+
     def _Ck(self, k, phi, N=3):
         """
         Build Tacchi/Kalinikos C_k with N thickness modes (size 2N x 2N).
         Default N=3, which gives 6x6 matrix.
         """
-        C = np.zeros((2*N, 2*N), dtype=float)
+        C = np.zeros((2 * N, 2 * N), dtype=float)
         b = self.__bTacchi()
 
         # Diagonal 2x2 blocks for each mode n
         for n in range(N):
             ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k, phi)
             pnn = self.__pnncTacchi(n, n, k, phi)
-            i = 2*n
-            C[i,   i  ] = -ann
-            C[i,   i+1] = -(b + pnn)
-            C[i+1, i  ] =  (b + pnn)
-            C[i+1, i+1] =  ann
+            i = 2 * n
+            C[i, i] = -ann
+            C[i, i + 1] = -(b + pnn)
+            C[i + 1, i] = b + pnn
+            C[i + 1, i + 1] = ann
 
         # Off-diagonal couplings between modes n != m
         # Same parity (both even or both odd): P-couplings => C,p blocks
@@ -494,20 +501,22 @@ class SingleLayerNumeric:
             for m in range(N):
                 if n == m:
                     continue
-                i, j = 2*n, 2*m
+                i, j = 2 * n, 2 * m
                 if (n - m) % 2 == 0:
                     # same parity -> C,p block; keep your (col_mode, row_mode) call order
                     Cmn = self.__CnncTacchi(m, n, k, phi)
                     pmn = self.__pnncTacchi(m, n, k, phi)
-                    C[i,   j  ] += -Cmn
-                    C[i,   j+1] += -pmn
-                    C[i+1, j  ] +=  pmn
-                    C[i+1, j+1] +=  Cmn
+                    C[i, j] += -Cmn
+                    C[i, j + 1] += -pmn
+                    C[i + 1, j] += pmn
+                    C[i + 1, j + 1] += Cmn
                 else:
                     # opposite parity -> q block
-                    qmn = self.__qnncTacchi(m, n, k, phi)  # note antisymmetry is inside your function
-                    C[i,   j+1] += -qmn
-                    C[i+1, j  ] += -qmn
+                    qmn = self.__qnncTacchi(
+                        m, n, k, phi
+                    )  # note antisymmetry is inside your function
+                    C[i, j + 1] += -qmn
+                    C[i + 1, j] += -qmn
 
         return C
 
@@ -541,14 +550,14 @@ class SingleLayerNumeric:
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
         wV = np.zeros((self.N, np.size(ks, 0)))
-        vV = np.zeros((2*self.N, self.N, np.size(ks, 0)))
+        vV = np.zeros((2 * self.N, self.N, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
                 self._Ck(k=k, phi=phi, N=self.N),
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
-            indi = np.argsort(w)[self.N:]  # sort low-to-high and crop to positive
+            indi = np.argsort(w)[self.N :]  # sort low-to-high and crop to positive
             wV[:, idx] = w[indi]  # eigenvalues (dispersion)
             vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
         return wV, vV

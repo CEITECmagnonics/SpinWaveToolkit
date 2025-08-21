@@ -14,8 +14,8 @@ class BulkPolariton:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    Models the magnon-polariton in a bulk ferromagnets. Due to the low 
-    wavevectors of the magnon-polariton regime, this model can be also 
+    Models the magnon-polariton in a bulk ferromagnets. Due to the low
+    wavevectors of the magnon-polariton regime, this model can be also
     used for the modeling the magnon-polariton in thin films.
 
     The model is based on:
@@ -37,7 +37,7 @@ class BulkPolariton:
         (rad/m) k-vector (wavenumber), usually a vector.
     iota : float or ndarray, optional
         (rad) angle between external field and propagation direction.
-    
+
 
     Attributes (same as Parameters, plus these)
     -------------------------------------------
@@ -60,7 +60,7 @@ class BulkPolariton:
     -------
     GetDisperison
     GetGroupVelocity
-    
+
     Code example
     ------------
     Example of calculation of the dispersion relation `f(k_xi)`, and
@@ -68,7 +68,7 @@ class BulkPolariton:
     .. code-block:: python
         kxi = np.linspace(1e-6, 1e3, 101)
 
-        YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG, 
+        YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG,
                                 epsilon=3.0, kxi=kxi, iota=np.pi/2)
         disp = YIGchar.GetDispersion()*1e-9/(2*np.pi)  # GHz
         vg = YIGchar.GetGroupVelocity()*1e-3  # km/s
@@ -78,7 +78,7 @@ class BulkPolariton:
     See also
     --------
     SingleLayer, SingleLayerNumeric, Material
-    
+
     """
 
     def __init__(
@@ -111,7 +111,7 @@ class BulkPolariton:
     def Bext(self, val):
         self._Bext = val
         self.w0 = self.gamma * val
-        
+
     @property
     def epsilon(self):
         """dielectric function real value ()"""
@@ -144,7 +144,7 @@ class BulkPolariton:
         self.w0 = val * self.Bext
 
     def GetDispersion(self):
-        """Gives frequencies for defined k (Dispersion relation) for 
+        """Gives frequencies for defined k (Dispersion relation) for
         both hybridized modes.  The returned values are in rad*Hz.
 
         Returns
@@ -155,24 +155,57 @@ class BulkPolariton:
         """
         w = np.zeros((2, np.size(self.kxi, 0)), dtype=np.float64)
         for idx, k in enumerate(self.kxi):
-           def f(w):
-               val = (self.w0 - 1/2*(2*self.epsilon*w**2/C**2 - (k*np.cos(self.iota))**2)/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2 - w**2 - (1/2*(k*np.cos(self.iota))**2/(k**2 - self.epsilon*w**2/C**2)*self.wM)**2
-               return val
-           wFMR = np.sqrt(self.w0*(self.w0 + self.wM))
-           if k==0:
-               w[0,idx] = 0
-           else:
-               w[0,idx]=least_squares(fun=f,x0=wFMR*0.01, bounds=(0, wFMR)).x
-           if C*k/np.sqrt(self.epsilon)<wFMR:
-               w[1,idx]=least_squares(fun=f,x0=wFMR*2, bounds=(wFMR*1.2, wFMR*1e15)).x
-           else:
-               w[1,idx]=least_squares(fun=f,x0=C*k/np.sqrt(self.epsilon)*1.01, bounds=(C*k/np.sqrt(self.epsilon)*0.8, C*k/np.sqrt(self.epsilon)*2)).x
-           # w[0,idx]=fsolve(f,wFMR*0.5)
-           # w[1,idx]=fsolve(f,wFMR*50)
+
+            def f(w):
+                val = (
+                    (
+                        self.w0
+                        - 1
+                        / 2
+                        * (
+                            2 * self.epsilon * w**2 / C**2
+                            - (k * np.cos(self.iota)) ** 2
+                        )
+                        / (k**2 - self.epsilon * w**2 / C**2)
+                        * self.wM
+                    )
+                    ** 2
+                    - w**2
+                    - (
+                        1
+                        / 2
+                        * (k * np.cos(self.iota)) ** 2
+                        / (k**2 - self.epsilon * w**2 / C**2)
+                        * self.wM
+                    )
+                    ** 2
+                )
+                return val
+
+            wFMR = np.sqrt(self.w0 * (self.w0 + self.wM))
+            if k == 0:
+                w[0, idx] = 0
+            else:
+                w[0, idx] = least_squares(fun=f, x0=wFMR * 0.01, bounds=(0, wFMR)).x
+            if C * k / np.sqrt(self.epsilon) < wFMR:
+                w[1, idx] = least_squares(
+                    fun=f, x0=wFMR * 2, bounds=(wFMR * 1.2, wFMR * 1e15)
+                ).x
+            else:
+                w[1, idx] = least_squares(
+                    fun=f,
+                    x0=C * k / np.sqrt(self.epsilon) * 1.01,
+                    bounds=(
+                        C * k / np.sqrt(self.epsilon) * 0.8,
+                        C * k / np.sqrt(self.epsilon) * 2,
+                    ),
+                ).x
+            # w[0,idx]=fsolve(f,wFMR*0.5)
+            # w[1,idx]=fsolve(f,wFMR*50)
         return w
-    
+
     def GetGroupVelocity(self):
-        """Gives (tangential) group velocities for defined k and both 
+        """Gives (tangential) group velocities for defined k and both
         hybridized modes.  The group velocity is computed as vg = dw/dk.
         The result is given in m/s.
 
@@ -188,7 +221,5 @@ class BulkPolariton:
         f = self.GetDispersion()
         vg = np.empty_like(f)
         for idm, fM in enumerate(f):
-            vg[idm,:] = np.gradient(fM) / np.gradient(self.kxi)
+            vg[idm, :] = np.gradient(fM) / np.gradient(self.kxi)
         return vg
-
-

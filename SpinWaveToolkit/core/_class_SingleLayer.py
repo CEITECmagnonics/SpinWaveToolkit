@@ -19,8 +19,8 @@ class SingleLayer:
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
-    Functions related to parametric pumping are based on: 
-    A.G. Gurevich and G.A. Melkov. Magnetization Oscillations and Waves. 
+    Functions related to parametric pumping are based on:
+    A.G. Gurevich and G.A. Melkov. Magnetization Oscillations and Waves.
     CRC Press, 1996.
 
     Parameters
@@ -596,10 +596,7 @@ class SingleLayer:
         dw_hi = self.GetDispersion(n=n, nT=nT)
         self.w0 = w0_ori
         lifetime = (
-            (
-                self.alpha * self.GetDispersion(n=n, nT=nT)
-                + self.gamma * self.mu0dH0
-            )
+            (self.alpha * self.GetDispersion(n=n, nT=nT) + self.gamma * self.mu0dH0)
             * (dw_hi - dw_lo)
             / (w0_ori * 2 * step)
         ) ** -1
@@ -855,11 +852,11 @@ class SingleLayer:
         spin wave modes.
 
         Vk = gamma * Bk / (2 * wk),
-        
+
         Returns
         -------
         Vk : float
-            (rad*Hz/T) coupling parameter for parallel pumping. 
+            (rad*Hz/T) coupling parameter for parallel pumping.
         """
         return self.gamma * self.__GetBk() / (2 * self.GetDispersion(n=0, nT=0))
 
@@ -895,7 +892,7 @@ class SingleLayer:
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping including radiative 
+            (T) threshold field for parallel pumping including radiative
             losses.
         """
 
