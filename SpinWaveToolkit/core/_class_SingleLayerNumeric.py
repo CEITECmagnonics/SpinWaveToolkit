@@ -527,12 +527,14 @@ class SingleLayerNumeric:
 
         The model formulates a system matrix and then numerically solves
         its eigenvalues and eigenvectors. The eigenvalues represent the
-        dispersion relation (as the matrix is 6x6 it has 6 eigenvalues).
-        The eigen values represent 3 lowest spin-wave modes
-        (3 with negative and positive frequency).  The eigenvectors
+        dispersion relation (as the matrix is `2*N x 2*N` it has `2*N` 
+        eigenvalues).
+        The eigen values represent `N` lowest spin-wave modes
+        (`N` with negative and positive frequency).  The eigenvectors
         represent the amplitude of the individual spin-wave modes and
         can be used to calculate spin-wave profile (see example
         NumericCalculationofDispersionModeProfiles.py).
+        # ### Update example when it's ready
 
         The returned modes are sorted from low to high frequencies,
         omitting the negative-frequency modes.
@@ -540,12 +542,12 @@ class SingleLayerNumeric:
         Returns
         -------
         wV : ndarray
-            (rad*Hz) frequencies of the 3 lowest spin-wave modes.
-            Has a shape of `(3, N)`, where `N = kxi.shape[0]`.
+            (rad*Hz) frequencies of the `N` lowest spin-wave modes.
+            Has a shape of `(3, M)`, where `M = kxi.shape[0]`.
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
             given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of `(6, 3, N)`, where `N = kxi.shape[0]`.
+            Has a shape of `(2*N, N, M)`, where `M = kxi.shape[0]`.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
@@ -572,7 +574,7 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2, ..., N-1}, optional
             Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
@@ -597,7 +599,7 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2, ..., N-1}, optional
             Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
@@ -633,7 +635,7 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2, ..., N-1}, optional
             Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
@@ -655,7 +657,7 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {-1, 0, 1, 2}, optional
+        n : {-1, 0, 1, 2, ..., N-1}, optional
             Quantization number.  If -1, data for all (positive)
             calculated modes are returned.  Default is 0.
 
@@ -674,7 +676,7 @@ class SingleLayerNumeric:
 
         Parameters
         ----------
-        n : {0, 1, 2}, optional
+        n : {0, 1, 2, ..., N-1}, optional
             Quantization number.  The -1 value is not supported here.
             Default is 0.
         Nf : int, optional
