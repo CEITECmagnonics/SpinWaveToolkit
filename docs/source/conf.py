@@ -88,6 +88,7 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 
 # -- Extension configuration -------------------------------------------------
 
+autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
 numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
 numpydoc_xref_aliases = {
     # python

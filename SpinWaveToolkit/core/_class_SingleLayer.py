@@ -52,8 +52,9 @@ class SingleLayer:
         0 means totally unpinned. Can be calculated as ``dp=Ks/Aex``,
         see https://doi.org/10.1103/PhysRev.131.594.
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material`), plus these]
     Ms : float
         (A/m) saturation magnetization.
     gamma : float
