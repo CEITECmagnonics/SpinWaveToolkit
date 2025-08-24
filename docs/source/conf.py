@@ -28,6 +28,7 @@ extensions = [
     "nbsphinx",
     "sphinx_design",
     'sphinx_gallery.load_style',
+    "sphinx_toolbox.collapse",
 ]
 
 templates_path = ['_templates']

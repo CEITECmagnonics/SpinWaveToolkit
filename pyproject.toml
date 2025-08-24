@@ -156,6 +156,8 @@ deploy = [  # for automated build and deployment of documentation to GH Pages
     "pypandoc",  # for nbsphinx (best if pandoc installed manually and path to its binaries pasted to docs/pandoc_path.ignore)
     "sphinx-design",  # for nice design elements
     "sphinx-gallery",  # for ipynb gallery styles
+    "ipython",  # for ipynb kernel and syntax linting
+    "sphinx-toolbox",  # for special tools (collapsible sections, ...)
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 test = ["pytest"]
 
