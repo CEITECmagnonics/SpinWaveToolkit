@@ -14,7 +14,6 @@ General functions
 
 .. autofunction:: SpinWaveToolkit.roots
 
-.. autofunction:: SpinWaveToolkit.wavelength2wavenumber
 
 
 BLS related functions

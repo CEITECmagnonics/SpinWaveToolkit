@@ -60,7 +60,7 @@ Where to go
     .. grid-item-card:: :octicon:`log;6em;`
         :text-align: center
 
-        Details about a specific element can be found at the :doc:`api_reference`.
+        Details about a specific element can be found at the :doc:`api_reference/index`.
 
 
 

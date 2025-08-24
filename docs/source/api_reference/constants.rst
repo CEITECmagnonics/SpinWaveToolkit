@@ -3,7 +3,7 @@ Constants
 
 .. autodata:: SpinWaveToolkit.MU0
 
-.. autodata:: SpinWaveToolkit.E
+.. autodata:: SpinWaveToolkit.C
 
 .. autodata:: SpinWaveToolkit.HBAR
 
