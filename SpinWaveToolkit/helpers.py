@@ -49,7 +49,7 @@ def wavelength2wavenumber(wavelength):
 
     Parameters
     ----------
-    wavelength : float or ndarray
+    wavelength : float or array_like
         (m) wavelength of the wave.
 
     Returns
@@ -65,7 +65,7 @@ def wavelength2wavenumber(wavelength):
 
 
 def wrapAngle(angle):
-    """Wrap angle in radians to range [0, 2*np.pi).
+    """Wrap angle in radians to range ``[0, 2*np.pi)``.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def wrapAngle(angle):
     Returns
     -------
     wrapped_angle : float or ndarray
-        (rad) angle wrapped to [0, 2*np.pi).
+        (rad) angle wrapped to ``[0, 2*np.pi)``.
     """
     # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
     return np.mod(angle, 2 * np.pi)
@@ -104,7 +104,7 @@ def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
 
 def rootsearch(f, a, b, dx, args=()):
     """Search for a root of a continuous function within an
-    interval [a, b].
+    interval `[a, b]`.
 
     This function is used as a preliminary search with coarse
     sampling.  Precise position of the root can be found with
@@ -128,7 +128,7 @@ def rootsearch(f, a, b, dx, args=()):
     x1, x2 : float or None
         (x units) left and right boundaries of size `stepsize`
         containing a root.
-        Returns (None, None) if no roots found.
+        Returns ``(None, None)`` if no roots found.
 
     See also
     --------
@@ -151,7 +151,7 @@ def rootsearch(f, a, b, dx, args=()):
 def bisect(f, x1, x2, epsilon=1e-9, args=()):
     """Simple bisection method of root finding.
 
-    Must contain only one root in the given interval!
+    Must contain only **one root** in the given interval!
 
     Parameters
     ----------
@@ -199,7 +199,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
 
 
 def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
-    """Find all roots of a continuous function `f(x, *args)` within a
+    """Find all roots of a continuous function ``f(x, *args)`` within a
     given interval `[a, b]`.
 
     Detects all roots spaced at least by `dx` with a precision
@@ -213,7 +213,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
     Parameters
     ----------
     f : callable
-        Function to evaluate, f(x, *args).
+        Function to evaluate with signature ``f(x, *args)``.
     a, b : float
         (x units) left and right boundaries of the interval to search.
     dx : float

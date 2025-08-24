@@ -122,6 +122,7 @@ __all__ = [
     "SingleLayerNumeric",
     "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
+    "BulkPolariton",
     "ObjectiveLens",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not

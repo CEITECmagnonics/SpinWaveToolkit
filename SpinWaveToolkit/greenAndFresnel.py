@@ -14,7 +14,8 @@ This module implements:
                 layer, ordered from the top (superstrate) to bottom.
     - PM      : array of permeabilities for each layer (usually ones)
     - d       : array of thicknesses for the layers between the 
-                superstrate and substrate (length should be `len(DF)-2`)
+                superstrate and substrate (length should be 
+                ``len(DF)-2``)
     - source_layer_index: (1-indexed) index of the layer where the 
                 source is located.
     - output_layer_index: (1-indexed) index of the layer where the 
@@ -53,7 +54,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         ones).
     d : array_like
         (m) array of thicknesses for the layers between the superstrate
-        and substrate.  Length should be `len(DF) - 2`.
+        and substrate.  Length should be ``len(DF) - 2``.
     source_layer_index : int
         0-indexed index of the layer where the source (induced
         polarization) is located.
@@ -411,7 +412,8 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
         (m) wavelength of the light.
     tp, ts : list or array_like
         Fresnel coefficients for p- and s-polarization, respectively.
-        Each is expected to have two elements (e.g. tp[0] and tp[1]).
+        Each is expected to have two elements (e.g. ``tp[0]`` and 
+        ``tp[1]``).
 
     Returns
     -------

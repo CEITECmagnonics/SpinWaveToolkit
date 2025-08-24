@@ -36,17 +36,17 @@ def getBLSsignal(
         Sweep vector of the Bloch functions. Usually frequency of spin
         waves.
     KxKyBloch : tuple[ndarray]
-        (rad/m) tuple containing the 1D grids (kx_grid, ky_grid) on
+        (rad/m) tuple containing the 1D grids ``(kx_grid, ky_grid)`` on
         which the Bloch functions are defined.
     Bloch : ndarray
-        Array with shape (3, Nf, Nkx, Nky) containing the Bloch function
-        components (Mx, My, Mz) for each frequency and KxKy grid point.
+        Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch function
+        components ``(Mx, My, Mz)`` for each frequency and KxKy grid point.
     Exy : ndarray
         (m) XY grid for the electric field.
-        2D array with shape (Ny, Nx) containing the X and Y
+        2D array with shape ``(Ny, Nx)`` containing the X and Y
         coordinates of the electric field.
     E : ndarray
-        (V/m) 3D array with shape (3, Ny, Nx) containing the X, Y, Z
+        (V/m) 3D array with shape ``(3, Ny, Nx)`` containing the X, Y, Z
         components of the electric field.
     DF : ndarray
         () vector of the complex dielectric functions for each material
@@ -78,11 +78,11 @@ def getBLSsignal(
     -------
     ExS : ndarray
         (V/m) scattered electric field in the X axis.
-        1D array with shape (Nf,) containing the scattered electric
+        1D array with shape ``(Nf,)`` containing the scattered electric
         field in the X direction for each frequency in SweepBloch.
     EyS : ndarray
         (V/m) scattered electric field in the Y axis.
-        1D array with shape (Nf,) containing the scattered electric
+        1D array with shape ``(Nf,)`` containing the scattered electric
         field in the Y direction for each frequency in SweepBloch.
     """
     k0 = 2 * np.pi / wavelength

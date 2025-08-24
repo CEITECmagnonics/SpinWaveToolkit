@@ -49,7 +49,7 @@ class SingleLayer:
         pinned BC.  Default is 1.
     dp : float, optional
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
-        0 means totally unpinned. Can be calculated as `dp=Ks/Aex`,
+        0 means totally unpinned. Can be calculated as ``dp=Ks/Aex``,
         see https://doi.org/10.1103/PhysRev.131.594.
 
     Attributes (same as Parameters, plus these)
@@ -69,15 +69,15 @@ class SingleLayer:
         `w0 = MU0*gamma*Hext`
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `wM = MU0*gamma*Ms`
+        ``wM = MU0*gamma*Ms``
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
-        `A = Aex*2/(Ms**2*MU0)`
+        ``A = Aex*2/(Ms**2*MU0)``
 
     Methods
     -------
     GetPartiallyPinnedKappa
-    GetDisperison
+    GetDispersion
     GetGroupVelocity
     GetLifetime
     GetDecLen
@@ -640,7 +640,7 @@ class SingleLayer:
         Returns
         -------
         wdn, wdnc : tuple[ndarray]
-            (rad*Hz) frequencies of corresponding kxi for the two
+            (rad*Hz) frequencies of corresponding `kxi` for the two
             crossing modes.
         """
         if self.boundary_cond == 4:
@@ -790,7 +790,7 @@ class SingleLayer:
         w : ndarray
             (rad*Hz) frequency axis for the 2D Bloch function.
         blochFunc : ndarray
-            () 2D Bloch function for given kxi and w.
+            () 2D Bloch function for given `kxi` and `w`.
         """
         w00 = self.GetDispersion(n=n, nT=nT)
         lifeTime = self.GetLifetime(n=n, nT=nT)
@@ -814,7 +814,7 @@ class SingleLayer:
         all `kxi`.
 
         Taking that wk^2 = Ak^2 - |Bk|^2,
-        where wk is the frequency f from GetDispersion() function.
+        where wk is the frequency `f` from `GetDispersion()` function.
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -831,7 +831,7 @@ class SingleLayer:
         all `kxi`.
 
         Taking that wk^2 = Ak^2 - |Bk|^2,
-        where wk is the frequency f from GetDispersion() function.
+        where wk is the frequency `f` from `GetDispersion()` function.
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 
@@ -854,7 +854,7 @@ class SingleLayer:
         """Calculate coupling parameter of the parallel pumped
         spin wave modes.
 
-        Vk = gamma * Bk / (2 * wk),
+        Vk = gamma * Bk / (2 * wk)
 
         Returns
         -------

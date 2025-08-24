@@ -25,7 +25,7 @@ class Material:
         (J/m) exchange stiffness constant.
     alpha : float
         () Gilbert damping.
-    gamma : float, default 28.1e9*2*np.pi
+    gamma : float, default ``28.1e9*2*np.pi``
         (rad*Hz/T) gyromagnetic ratio.
     mu0dH0 : float
         (T) inhomogeneous broadening.
@@ -64,7 +64,7 @@ class Material:
     def get_pinning(self):
         """Calculates the symmetric pinning parameter on a surface
         with a given surface anisotropy. The result is in rad/m.
-        `p=-2*pi*Ku/Aex`
+        ``p=-2*np.pi*Ku/Aex``
 
         ### Is this correct?
 

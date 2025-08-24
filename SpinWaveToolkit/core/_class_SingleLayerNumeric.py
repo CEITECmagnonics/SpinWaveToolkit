@@ -75,20 +75,20 @@ class SingleLayerNumeric:
         (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Hext`
+        ``w0 = MU0*gamma*Hext``
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `wM = MU0*gamma*Ms`
+        ``wM = MU0*gamma*Ms``
     A : float
         (m^2) parameter in Slavin-Kalinikos equation.
-        `A = Aex*2/(Ms**2*MU0)`
+        ``A = Aex*2/(Ms**2*MU0)``
     wU : float
         (rad*Hz) circular frequency of OOP anisotropy field,
         used in the Tacchi model.
 
     Methods
     -------
-    GetDisperison
+    GetDispersion
     GetGroupVelocity
     GetLifetime
     GetDecLen
@@ -480,8 +480,8 @@ class SingleLayerNumeric:
 
     def _Ck(self, k, phi, N=3):
         """
-        Build Tacchi/Kalinikos C_k with N thickness modes (size 2N x 2N).
-        Default N=3, which gives 6x6 matrix.
+        Build Tacchi/Kalinikos `C_k` with `N` thickness modes (size `2N x 2N`).
+        Default ``N=3``, which gives 6x6 matrix.
         """
         C = np.zeros((2 * N, 2 * N), dtype=float)
         b = self.__bTacchi()
@@ -545,11 +545,11 @@ class SingleLayerNumeric:
         -------
         wV : ndarray
             (rad*Hz) frequencies of the `N` lowest spin-wave modes.
-            Has a shape of `(3, M)`, where `M = kxi.shape[0]`.
+            Has a shape of ``(N, M)``, where ``M = kxi.shape[0]``.
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
             given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of `(2*N, N, M)`, where `M = kxi.shape[0]`.
+            Has a shape of ``(2*N, N, M)``, where ``M = kxi.shape[0]``.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
         phi = self.phi
@@ -572,7 +572,7 @@ class SingleLayerNumeric:
         The result is given in m/s.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
@@ -633,7 +633,7 @@ class SingleLayerNumeric:
         Output is given in m.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
@@ -655,7 +655,7 @@ class SingleLayerNumeric:
         characteristics.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
