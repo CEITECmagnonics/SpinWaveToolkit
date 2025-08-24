@@ -2,6 +2,7 @@ Installation
 ============
 
 Currently you can either 
+
 1. *(recommended)* install latest release from PyPI via `pip` by typing in the command line
 
 .. code-block:: bash
@@ -29,6 +30,10 @@ Currently you can either
         C:\<python-installation-folder>\Python<python-version>\Lib\site-packages
 
     for global modules.
+
+    .. note::
+
+        This approach still works, since `SpinWaveToolkit` is a pure Python package without any compiled extensions. However, it is not recommended, since it does not automatically install dependencies.
 
 
 Dependencies
