@@ -61,8 +61,9 @@ class SingleLayerNumeric:
         system matrix is `2*N x 2*N`, so for N=3 it is 6x6.
         The modes are sorted from low to high frequencies.
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material`), plus these]
     Ms : float
         (A/m) saturation magnetization.
     gamma : float

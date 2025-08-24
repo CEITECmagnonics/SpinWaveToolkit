@@ -44,8 +44,9 @@ class SingleLayerSCcoupled:
     lam : float, optional
         (m) penetration depth of the superconducting layer.
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material`), plus these]
     Ms : float
         (A/m) saturation magnetization.
     gamma : float

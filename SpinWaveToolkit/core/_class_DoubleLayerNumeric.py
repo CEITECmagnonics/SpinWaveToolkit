@@ -67,8 +67,9 @@ class DoubleLayerNumeric:
         (rad) initial value of magnetization in-plane angle of the
         first and second layer, used for energy minimization.
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material` and `material2`), plus these]
     alpha : float
         () Gilbert damping.
     gamma : float

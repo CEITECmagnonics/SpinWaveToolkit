@@ -39,8 +39,9 @@ class BulkPolariton:
         (rad) angle between external field and propagation direction.
 
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material`), plus these]
     Ms : float
         (A/m) saturation magnetization.
     gamma : float

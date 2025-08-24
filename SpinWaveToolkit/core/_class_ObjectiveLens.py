@@ -30,6 +30,10 @@ class ObjectiveLens:
     f : float
         (m) focal length of the objective lens.
 
+    Attributes
+    ----------
+    same as Parameters
+
     Methods
     -------
     getFocalFieldRad(z, rho_max, N)
