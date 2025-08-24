@@ -77,8 +77,8 @@ class SingleLayerSCcoupled:
     __GetDispersionHandle
 
 
-    Example
-    -------
+    Examples
+    --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the lowest-order mode in a 30 nm
     thick NiFe (Permalloy) layer covered by a sufficiently thick
@@ -395,10 +395,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
@@ -451,10 +451,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
@@ -491,10 +491,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
@@ -545,10 +545,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
@@ -586,10 +586,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
@@ -625,10 +625,10 @@ class SingleLayerSCcoupled:
             `"approx0"` uses the APPROXIMATE formulas inspired by the
             Mruczkiewicz & Krawczyk 2014 paper,
             https://doi.org/10.1063/1.4868905
-            and this dispersion relation is given by..
-                f = f_DE + (f_PEC - f_DE)*(-R_k_mod),
-            where R_k_mod is a modified reflection factor as..
-                R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc).
+            and this dispersion relation is given by
+            ``f = f_DE + (f_PEC - f_DE)*(-R_k_mod)``,
+            where R_k_mod is a modified reflection factor as
+            ``R_k_mod = R_k*exp(-2*k*d_is)*tanh(ks*d_sc)``.
             `"approx1"` uses the modified reflection factor, directly
             in the dispersion calculation, but also gives only an
             APPROXIMATE result, as the modified reflection factor
