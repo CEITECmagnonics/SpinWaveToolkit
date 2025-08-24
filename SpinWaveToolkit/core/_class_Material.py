@@ -25,12 +25,12 @@ class Material:
         (J/m) exchange stiffness constant.
     alpha : float
         () Gilbert damping.
-    gamma : float, default ``28.1e9*2*np.pi``
-        (rad*Hz/T) gyromagnetic ratio.
-    mu0dH0 : float
-        (T) inhomogeneous broadening.
-    Ku : float
-        (J/m^2) surface anisotropy strength.
+    gamma : float, optional
+        (rad*Hz/T) gyromagnetic ratio.  Default ``28.1e9*2*np.pi``.
+    mu0dH0 : float, optional
+        (T) inhomogeneous broadening.  Default is 0.
+    Ku : float, optional
+        (J/m^2) surface anisotropy strength.  Default is 0.
         (Currently unused in any dispersion calculations.)
 
     Attributes

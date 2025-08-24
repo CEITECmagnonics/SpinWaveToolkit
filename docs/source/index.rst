@@ -21,7 +21,7 @@ SpinWaveToolkit Documentation
    getting_started
    examples
    user_guide
-   api_reference
+   api_reference/index
    release_notes
    publications
 

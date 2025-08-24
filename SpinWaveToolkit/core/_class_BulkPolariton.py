@@ -61,8 +61,8 @@ class BulkPolariton:
     GetDispersion
     GetGroupVelocity
 
-    Example
-    -------
+    Examples
+    --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for a magnon-polariton in a bulk YIG.
 

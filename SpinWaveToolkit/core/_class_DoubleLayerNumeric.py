@@ -103,8 +103,8 @@ class DoubleLayerNumeric:
     GetBlochFunction
     GetExchangeLen
 
-    Example
-    -------
+    Examples
+    --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the acoustic mode in a 30 nm
     thick NiFe (Permalloy) bilayer.
