@@ -88,6 +88,7 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 
 # -- Extension configuration -------------------------------------------------
 
+numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
 numpydoc_xref_aliases = {
     # python
     "sequence": ":term:`python:sequence`",
@@ -99,6 +100,14 @@ numpydoc_xref_aliases = {
     "ndarray": "numpy.ndarray",
     "array-like": ":term:`numpy:array_like`",
     "array_like": ":term:`numpy:array_like`",
+    # SpinWaveToolkit
+    "Material": "SpinWaveToolkit.Material",
+    "SingleLayer": "SpinWaveToolkit.SingleLayer",
+    "SingleLayerNumeric": "SpinWaveToolkit.SingleLayerNumeric",
+    "SingleLayerSCcoupled": "SpinWaveToolkit.SingleLayerSCcoupled",
+    "DoubleLayerNumeric": "SpinWaveToolkit.DoubleLayerNumeric",
+    "BulkPolariton": "SpinWaveToolkit.BulkPolariton",
+    "ObjectiveLens": "SpinWaveToolkit.ObjectiveLens",
 }
 
 intersphinx_mapping = {

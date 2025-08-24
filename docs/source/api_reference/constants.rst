@@ -9,4 +9,4 @@ Constants
 
 .. autodata:: SpinWaveToolkit.KB
 
-Material constants are defined in :doc:`classes/Material`.
+Pre-defined materials (constants of type :doc:`classes/Material`) are defined in :doc:`classes/Material` class documentation.
