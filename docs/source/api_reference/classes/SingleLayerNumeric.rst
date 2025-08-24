@@ -1,5 +1,5 @@
-SingleLayerNumeric
-==================
+``SpinWaveToolkit.SingleLayerNumeric``
+======================================
 
 .. autoclass:: SpinWaveToolkit.SingleLayerNumeric
    :members:

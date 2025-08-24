@@ -1,5 +1,5 @@
-SingleLayer
-===========
+``SpinWaveToolkit.SingleLayer``
+===============================
 
 .. autoclass:: SpinWaveToolkit.SingleLayer
    :members:

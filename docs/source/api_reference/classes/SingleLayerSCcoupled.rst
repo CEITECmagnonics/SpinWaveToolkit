@@ -1,5 +1,5 @@
-SingleLayerSCcoupled
-====================
+``SpinWaveToolkit.SingleLayerSCcoupled``
+========================================
 
 .. autoclass:: SpinWaveToolkit.SingleLayerSCcoupled
    :members:

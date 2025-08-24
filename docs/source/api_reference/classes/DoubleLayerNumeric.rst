@@ -1,5 +1,5 @@
-DoubleLayerNumeric
-==================
+``SpinWaveToolkit.DoubleLayerNumeric``
+======================================
 
 .. autoclass:: SpinWaveToolkit.DoubleLayerNumeric
    :members:
