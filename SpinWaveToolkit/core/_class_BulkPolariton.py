@@ -61,11 +61,13 @@ class BulkPolariton:
     GetDisperison
     GetGroupVelocity
 
-    Code example
-    ------------
+    Example
+    -------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for a magnon-polariton in a bulk YIG.
+
     .. code-block:: python
+    
         kxi = np.linspace(1e-6, 1e3, 101)
 
         YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG,

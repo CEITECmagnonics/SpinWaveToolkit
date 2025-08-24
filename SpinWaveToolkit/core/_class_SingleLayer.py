@@ -97,12 +97,14 @@ class SingleLayer:
     __GetAk
     __GetBk
 
-    Code example
-    ------------
+    Example
+    -------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the lowest-order mode in a 30 nm
     thick NiFe (Permalloy) layer.
+
     .. code-block:: python
+    
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,

@@ -103,12 +103,14 @@ class DoubleLayerNumeric:
     GetBlochFunction
     GetExchangeLen
 
-    Code example
-    ------------
+    Example
+    -------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the acoustic mode in a 30 nm
     thick NiFe (Permalloy) bilayer.
+
     .. code-block:: python
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,

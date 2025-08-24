@@ -76,7 +76,9 @@ Example
 Example of calculation of the dispersion relation `f(k_xi)`, and
 other important quantities, for the lowest-order mode in a 30 nm
 thick NiFe (Permalloy) layer.
+
 .. code-block:: python
+
     import numpy as np
     import SpinWaveToolkit as SWT
 
