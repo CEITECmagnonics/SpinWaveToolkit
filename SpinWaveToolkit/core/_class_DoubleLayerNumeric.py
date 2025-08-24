@@ -92,6 +92,7 @@ class DoubleLayerNumeric:
 
     Methods
     -------
+    
     GetDisperison
     GetPhis
     GetFreeEnergyIP

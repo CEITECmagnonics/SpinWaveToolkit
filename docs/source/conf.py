@@ -23,6 +23,8 @@ extensions = [
     "sphinx.ext.apidoc",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.intersphinx",
     "nbsphinx",
     "sphinx_design",
     'sphinx_gallery.load_style',
@@ -83,14 +85,32 @@ html_theme_options = {
 pygments_style = "sphinx"
 nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
 
+
+# -- Extension configuration -------------------------------------------------
+
+numpydoc_xref_aliases = {
+    # python
+    "sequence": ":term:`python:sequence`",
+    "iterable": ":term:`python:iterable`",
+    "string": "str",
+    # numpy
+    "array": "numpy.ndarray",
+    "dtype": "numpy.dtype",
+    "ndarray": "numpy.ndarray",
+    "array-like": ":term:`numpy:array_like`",
+    "array_like": ":term:`numpy:array_like`",
+}
+
+intersphinx_mapping = {
+    "python": ("http://docs.python.org/", None),
+    "numpy": ("https://www.numpy.org/devdocs", None),
+    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
+}
+
+
 # # -- Block for checking pandoc availability --------------------------------
 # # (see https://stackoverflow.com/questions/62398231)
-# # Get path to pandoc binary (saved to docs/pandoc_path.ignore)
-# with open(os.path.join("..", "pandoc_path.ignore"), "r") as f:
-#     PANDOC_DIR = f.read().strip("\n ")
-# # Add dir containing pandoc binary to the PATH environment variable
-# if PANDOC_DIR not in os.environ["PATH"].split(os.pathsep):
-#     os.environ["PATH"] += os.pathsep + PANDOC_DIR
 
 from inspect import getsourcefile
 

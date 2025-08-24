@@ -9,7 +9,8 @@ __all__ = ["SingleLayer"]
 
 
 class SingleLayer:
-    """Compute spin wave characteristic in dependance to k-vector
+    """
+    Compute spin wave characteristic in dependance to k-vector
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
@@ -555,7 +556,7 @@ class SingleLayer:
         The result is given in m/s.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
