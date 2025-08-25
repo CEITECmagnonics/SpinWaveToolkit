@@ -38,7 +38,7 @@ First, you need to choose the appropriate model for your experiment. This depend
 - one magnetic layer dipolarly coupled to a superconducting layer - :py:class:`.SingleLayerSCcoupled`
 - magnon-polariton in a bulk ferromagnet (very small wavevectors) - :py:class:`.BulkPolariton`
 
-Let's assume a single magnetic layer for the following examples. Therefore, we will use the :py:class:`SingleLayer` class.
+Let's assume a single magnetic layer for the following examples. Therefore, we will use the :py:class:`.SingleLayer` class.
 
 Define your material
 ^^^^^^^^^^^^^^^^^^^^
@@ -51,7 +51,7 @@ To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You
 
 Set up geometry and conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. We will calculate the dispersion for wavevectors up to 30 rad/µm in the direction perpendicular to the magnetization (i.e. Damon-Eshbach geometry).
+Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. We will calculate the dispersion for wavevectors up to 30 rad/µm in the direction perpendicular to the magnetization (i.e. Damon-Eshbach geometry). For simplicity, totally unpinned spins at the boundaries are assumed.
 
 .. code-block:: python
 
@@ -68,7 +68,25 @@ Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. 
 
 Retrieve dispersion relation
 ----------------------------
+To calculate the dispersion relation, simply call the :py:meth:`.SingleLayer.GetDispersion` method of the model instance. This will return the frequencies of the spin wave modes in rad/s (angular frequency), but spin waves are usually studied in the GHz frequencies.
 
+.. code-block:: python
+
+   f = sl.GetDispersion() / (2e9 * np.pi)  # rad/s to GHz
+
+In this model, we can also simply calculate higher-order perpendicular standing spin wave modes by specifying the mode number as an argument to :py:meth:`.SingleLayer.GetDispersion`. For example, to get the first three modes
+
+.. code-block:: python
+
+   f0 = sl.GetDispersion(mode=0) / (2e9 * np.pi)  # fundamental mode (same as `f` above)
+   f1 = sl.GetDispersion(mode=1) / (2e9 * np.pi)  # first PSSW mode
+   f2 = sl.GetDispersion(mode=2) / (2e9 * np.pi)  # second PSSW mode
+
+or more concisely
+
+.. code-block:: python
+
+   modes = np.array([sl.GetDispersion(mode=i) / (2e9 * np.pi) for i in range(3)])
 
 
 Calculate other quantities
