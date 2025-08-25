@@ -46,7 +46,7 @@ To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You
 
 .. code-block:: python
 
-   NiFe = swt.Material(Ms=800e3, A=16e-12, alpha=0.007, gamma=30*2e9*np.pi)
+   NiFe = swt.Material(Ms=800e3, Aex=16e-12, alpha=0.007, gamma=30*2e9*np.pi)
 
 
 Set up geometry and conditions
@@ -57,7 +57,7 @@ Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. 
 
    Bext = 10e-3  # (T) magnetic field
    d = 30e-9  # (m) thickness of the layer
-   k = np.linspace(0, 30e6, 200)  # (rad/m) wavevector range
+   k = np.linspace(0, 30e6, 200)+1  # (rad/m) wavevector range (+1 to avoid NaN at k=0)
    theta = np.pi/2  # (rad) angle of magnetization from thin film normal
    phi = np.pi/2  # (rad) angle of wavevector from in-plane magnetization
    bc = 1  # boundary condition (1 for totally unpinned)
@@ -74,24 +74,50 @@ To calculate the dispersion relation, simply call the :py:meth:`.SingleLayer.Get
 
    f = sl.GetDispersion() / (2e9 * np.pi)  # rad/s to GHz
 
-In this model, we can also simply calculate higher-order perpendicular standing spin wave modes by specifying the mode number as an argument to :py:meth:`.SingleLayer.GetDispersion`. For example, to get the first three modes
+In this model, we can also simply calculate higher-order perpendicular standing spin wave (PSSW) modes by specifying the mode number as an argument to :py:meth:`.SingleLayer.GetDispersion`. For example, to get the first three modes
 
 .. code-block:: python
 
-   f0 = sl.GetDispersion(mode=0) / (2e9 * np.pi)  # fundamental mode (same as `f` above)
-   f1 = sl.GetDispersion(mode=1) / (2e9 * np.pi)  # first PSSW mode
-   f2 = sl.GetDispersion(mode=2) / (2e9 * np.pi)  # second PSSW mode
+   f0 = sl.GetDispersion(n=0) / (2e9 * np.pi)  # fundamental mode (same as `f` above)
+   f1 = sl.GetDispersion(n=1) / (2e9 * np.pi)  # first PSSW mode
+   f2 = sl.GetDispersion(n=2) / (2e9 * np.pi)  # second PSSW mode
 
 or more concisely
 
 .. code-block:: python
 
-   modes = np.array([sl.GetDispersion(mode=i) / (2e9 * np.pi) for i in range(3)])
+   modes = np.array([sl.GetDispersion(n=i) / (2e9 * np.pi) for i in range(3)])
 
+which can be then easily plotted e.g. as
+
+.. code-block:: python
+
+   for i in range(3):
+       plt.plot(k*1e-6, modes[i], label=f"$n={i}$")
+   plt.xlabel(r"wavevector $k$ (rad/µm)")
+   plt.ylabel(r"frequency $f$ (GHz)")
+   plt.legend(loc="lower right")
+
+.. image:: _static/getting_started/img0.png
+   :scale: 100%
+   :alt: Dispersion relation of three lowest order modes for DE spin waves.
 
 Calculate other quantities
 --------------------------
+Similarly to the dispersion relation, other quantities can be calculated. For example, the group velocity can be obtained by calling :py:meth:`.SingleLayer.GetGroupVelocity`. Analogically, the lifetime and decay length are retrieved. Those are numerically calculated based on the dispersion relation for the given PSSW mode.
 
+.. code-block:: python
+
+   ...
+   vg = sl.GetGroupVelocity(n=0)*1e-3  # m/s to um/ns
+   tau = sl.GetLifetime(n=0)*1e9  # s to ns
+   lam = sl.GetDecLen(n=0)*1e6  # m to um
+   ...
+
+
+.. image:: _static/getting_started/img1.png
+   :scale: 100%
+   :alt: Other derived quantities of three lowest order modes for DE spin waves.
 
 Change parameters
 -----------------
