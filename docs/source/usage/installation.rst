@@ -40,8 +40,8 @@ Dependencies
 ------------
 
 The SpinWaveToolkit package is compatible with Python >3.7, and uses the following modules:
-- :doc:`numpy` >1.20 (>2.0 is also ok, bugs be reported in `Issues <https://github.com/CEITECmagnonics/SpinWaveToolkit/issues>`_)
-- :doc:`scipy` >1.8
+* :py:mod:`numpy` >1.20 (>2.0 is also ok, bugs be reported in `Issues <https://github.com/CEITECmagnonics/SpinWaveToolkit/issues>`_)
+* :py:mod:`scipy` >1.8
 
 .. note::
 

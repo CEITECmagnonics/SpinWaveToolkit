@@ -32,17 +32,17 @@ Choose a model
 ^^^^^^^^^^^^^^
 First, you need to choose the appropriate model for your experiment. This depends mainly on the configuration. Currently, there are these dispersion models:
 
-- single magnetic layer (zeroth perturbation - omits intermode coupling, mainly for thin films) - :doc:`SingleLayer`
-- single magnetic layer with intermode coupling (useful for thicker layers) - :doc:`SingleLayerNumeric`
-- two coupled magnetic layers (e.g. syntheric antiferromagnets) - :doc:`DoubleLayerNumeric`
-- one magnetic layer dipolarly coupled to a superconducting layer - :doc:`SingleLayerSCcoupled`
-- magnon-polariton in a bulk ferromagnet (very small wavevectors) - :doc:`BulkPolariton`
+- single magnetic layer (zeroth perturbation - omits intermode coupling, mainly for thin films) - :py:class:`SingleLayer`
+- single magnetic layer with intermode coupling (useful for thicker layers) - :py:class:`SingleLayerNumeric`
+- two coupled magnetic layers (e.g. syntheric antiferromagnets) - :py:class:`DoubleLayerNumeric`
+- one magnetic layer dipolarly coupled to a superconducting layer - :py:class:`SingleLayerSCcoupled`
+- magnon-polariton in a bulk ferromagnet (very small wavevectors) - :py:class:`BulkPolariton`
 
-Let's assume a single magnetic layer for the following examples. Therefore, we will use the :doc:`SingleLayer` class.
+Let's assume a single magnetic layer for the following examples. Therefore, we will use the :py:class:`SingleLayer` class.
 
 Define your material
 ^^^^^^^^^^^^^^^^^^^^
-To handle materials, `SpinWaveToolkit` uses the :doc:`Material` class. You can either use one of the predefined materials (see documentation of :doc:`Material`), or define your own by specifying its parameters
+To handle materials, `SpinWaveToolkit` uses the :py:class:`Material` class. You can either use one of the predefined materials (see documentation of :py:class:`Material`), or define your own by specifying its parameters
 
 .. code-block:: python
 
