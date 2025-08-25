@@ -15,7 +15,7 @@ The easiest way to install `SpinWaveToolkit` is via pip from PyPI. To do this, o
 
     py -m pip install SpinWaveToolkit --user
 
-Other installation approaches are descried in the :doc:`User Guide <user_guide/usage/installation>`.
+Other installation approaches are descried in the :doc:`User Guide <usage/installation>`.
 
 
 Setting up the experiment
@@ -32,17 +32,17 @@ Choose a model
 ^^^^^^^^^^^^^^
 First, you need to choose the appropriate model for your experiment. This depends mainly on the configuration. Currently, there are these dispersion models:
 
-- single magnetic layer (zeroth perturbation - omits intermode coupling, mainly for thin films) - :py:class:`SpinWaveToolkit.SingleLayer`
-- single magnetic layer with intermode coupling (useful for thicker layers) - :class:`SingleLayerNumeric`
+- single magnetic layer (zeroth perturbation - omits intermode coupling, mainly for thin films) - :py:class:`.SingleLayer`
+- single magnetic layer with intermode coupling (useful for thicker layers) - :py:class:`.SingleLayerNumeric`
 - two coupled magnetic layers (e.g. syntheric antiferromagnets) - :py:class:`.DoubleLayerNumeric`
-- one magnetic layer dipolarly coupled to a superconducting layer - :py:class:`SingleLayerSCcoupled`
-- magnon-polariton in a bulk ferromagnet (very small wavevectors) - :py:class:`BulkPolariton`
+- one magnetic layer dipolarly coupled to a superconducting layer - :py:class:`.SingleLayerSCcoupled`
+- magnon-polariton in a bulk ferromagnet (very small wavevectors) - :py:class:`.BulkPolariton`
 
 Let's assume a single magnetic layer for the following examples. Therefore, we will use the :py:class:`SingleLayer` class.
 
 Define your material
 ^^^^^^^^^^^^^^^^^^^^
-To handle materials, `SpinWaveToolkit` uses the :py:class:`Material` class. You can either use one of the predefined materials (see documentation of :py:class:`Material`), or define your own by specifying its parameters
+To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You can either use one of the predefined materials (see documentation of :py:class:`.Material`), or define your own by specifying its parameters
 
 .. code-block:: python
 
@@ -51,8 +51,10 @@ To handle materials, `SpinWaveToolkit` uses the :py:class:`Material` class. You 
 
 Set up geometry and conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. We will calculate the dispersion for wavevectors up to 30 rad/µm in the direction perpendicular to the magnetization (i.e. Damon-Eshbach geometry).
 
 .. code-block:: python
+
    Bext = 10e-3  # (T) magnetic field
    d = 30e-9  # (m) thickness of the layer
    k = np.linspace(0, 30e6, 200)  # (rad/m) wavevector range

@@ -38,7 +38,7 @@ Features
   * coupled magnetic double layer (e.g. a synthetic antiferromagnet),
   * single magnetic layer inductively coupled to a superconducting layer from one side.
 
-* Simple magnetic material management using a `Material` class.
+* Simple magnetic material management using a :py:class:`.Material` class.
 * Functions for modelling Brillouin light scattering (BLS) signal and experiments.
 
 
