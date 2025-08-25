@@ -99,7 +99,6 @@ which can be then easily plotted e.g. as
    plt.legend(loc="lower right")
 
 .. image:: _static/getting_started/img0.png
-   :scale: 100%
    :alt: Dispersion relation of three lowest order modes for DE spin waves.
 
 Calculate other quantities
@@ -116,15 +115,37 @@ Similarly to the dispersion relation, other quantities can be calculated. For ex
 
 
 .. image:: _static/getting_started/img1.png
-   :scale: 100%
    :alt: Other derived quantities of three lowest order modes for DE spin waves.
+
+.. note::
+
+   The methods for dispersion relation, group velocity, lifetime, and decay length are usually implemented in all dispersion models with a similar syntax. For exact syntax and full list of the supported methods, refer to the appropriate :doc:`class documentation <api_reference/classes>`.
 
 Change parameters
 -----------------
+With the instance of the respective model, it is simple to change individual parameters, as most of them are also accessible at attributes of the same name as the input parameters. For example to change now to backward volume spin waves, just change the in-plane angle ``phi`` of our :py:class:`.SingleLayer` instance.
 
+.. code-block:: python
+
+   sl.phi = 0  # change to 0 rad
+   f_bv = sl.GetDispersion()/2e9/np.pi
+
+.. add the image of bv vs de (use f and f_bv)
 
 Sweeps
 ^^^^^^
+This can be further used to make sweeps of certain parameters. Here we show a field sweep of the dispersion relation in the sample defined above.
+
+.. code-block:: python
+
+   # ### write the code!!!
+
+.. add image
+
+That's it! You have learned the basic usage of the `SpinWaveToolkit`! Now you can head over to the :doc:`user_guide` and :doc:`examples` for more tutorials. If you encounter any problems, see the appropriate topic in the :doc:`api_reference` or let us know in the `Discussions on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions>`_.
+
+
+
 
 
 
