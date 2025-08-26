@@ -67,8 +67,9 @@ class DoubleLayerNumeric:
         (rad) initial value of magnetization in-plane angle of the
         first and second layer, used for energy minimization.
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material` and `material2`), plus these]
     alpha : float
         () Gilbert damping.
     gamma : float
@@ -77,22 +78,22 @@ class DoubleLayerNumeric:
         (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        `w0 = MU0*gamma*Hext`.
+        ``w0 = MU0*gamma*Hext``.
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
-        `wM = MU0*gamma*Ms`.
+        ``wM = MU0*gamma*Ms``.
     A, A2 : float
         (m^2) parameter in Slavin-Kalinikos equation,
-        `A = Aex*2/(Ms**2*MU0)`.
+        ``A = Aex*2/(Ms**2*MU0)``.
     Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,
-        `Hani = 2*Ku/material.Ms/MU0`.
+        ``Hani = 2*Ku/material.Ms/MU0``.
     Ms, Ms2 : float
         (A/m) saturation magnetization.
 
     Methods
     -------
-    GetDisperison
+    GetDispersion
     GetPhis
     GetFreeEnergyIP
     GetFreeEnergyOOP
@@ -103,12 +104,14 @@ class DoubleLayerNumeric:
     GetBlochFunction
     GetExchangeLen
 
-    Code example
-    ------------
+    Examples
+    --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the acoustic mode in a 30 nm
     thick NiFe (Permalloy) bilayer.
+
     .. code-block:: python
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
@@ -288,11 +291,12 @@ class DoubleLayerNumeric:
         -------
         wV : ndarray
             (rad*Hz) frequencies of the acoustic and optic spin-wave
-            modes.  Has a shape of `(2, N)`, where `N = kxi.shape[0]`.
+            modes.  Has a shape of ``(2, N)``, where 
+            ``N = kxi.shape[0]``.
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
             given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of `(4, 2, N)`, where `N = kxi.shape[0]`.
+            Has a shape of ``(4, 2, N)``, where ``N = kxi.shape[0]``.
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -643,7 +647,7 @@ class DoubleLayerNumeric:
         The result is given in m/s
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
@@ -703,7 +707,7 @@ class DoubleLayerNumeric:
         Output is given in m.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
@@ -725,7 +729,7 @@ class DoubleLayerNumeric:
         characteristics.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------

@@ -1,9 +1,9 @@
-name: Build and Deploy Docs
+name: Build and Deploy Docs - Dev version
 
 on:
   push:
     branches:
-      - master
+      - new-release
 
 permissions:
   contents: write   # need write for pushing to gh-pages
@@ -32,8 +32,8 @@ jobs:
 
       - name: Determine docs version folder
         run: |
-          # ### MANUALLY SET CURRENT DOCS_VERSION HERE
-          version="v1.1"
+          # dev IS THE CURRENT DOCS_VERSION HERE
+          version="dev"
           echo "DOCS_VERSION=$version" >> $GITHUB_ENV
 
       - name: Build docs
@@ -62,10 +62,6 @@ jobs:
           
           # Copy redirect file (index0.html -> index.html)
           cp docs/source/index0.html site/index.html
-          
-          # Update 'stable' alias
-          rm -rf site/stable
-          cp -r docs/build/html site/stable
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3

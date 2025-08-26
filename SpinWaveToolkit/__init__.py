@@ -76,7 +76,9 @@ Example
 Example of calculation of the dispersion relation `f(k_xi)`, and
 other important quantities, for the lowest-order mode in a 30 nm
 thick NiFe (Permalloy) layer.
+
 .. code-block:: python
+
     import numpy as np
     import SpinWaveToolkit as SWT
 
@@ -110,7 +112,7 @@ from .core._class_BulkPolariton import *
 from .core._class_ObjectiveLens import *
 
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __all__ = [
     "helpers",
     "greenAndFresnel",
@@ -120,6 +122,7 @@ __all__ = [
     "SingleLayerNumeric",
     "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
+    "BulkPolariton",
     "ObjectiveLens",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not

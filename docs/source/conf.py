@@ -13,7 +13,7 @@ import SpinWaveToolkit
 project = 'SpinWaveToolkit'
 copyright = '2025, CEITECmagnonics and SpinWaveToolkit contributors'
 author = 'Ondřej Wojewoda'
-release = SpinWaveToolkit.__version__
+release = os.environ.get("DOCS_VERSION", SpinWaveToolkit.__version__)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -23,9 +23,12 @@ extensions = [
     "sphinx.ext.apidoc",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.intersphinx",
     "nbsphinx",
     "sphinx_design",
     'sphinx_gallery.load_style',
+    "sphinx_toolbox.collapse",
 ]
 
 templates_path = ['_templates']
@@ -72,7 +75,7 @@ html_theme_options = {
     # ### check correct state of the version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
     "switcher": {
         "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
-        "version_match": ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
+        "version_match": release if release == "dev" else ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
     },
     "announcement": "This site is currently under <b>intensive construction</b>."
     + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
@@ -83,14 +86,43 @@ html_theme_options = {
 pygments_style = "sphinx"
 nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
 
+
+# -- Extension configuration -------------------------------------------------
+
+autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
+numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
+numpydoc_xref_aliases = {
+    # python
+    "sequence": ":term:`python:sequence`",
+    "iterable": ":term:`python:iterable`",
+    "string": "str",
+    # numpy
+    "array": "numpy.ndarray",
+    "dtype": "numpy.dtype",
+    "ndarray": "numpy.ndarray",
+    "array-like": ":term:`numpy:array_like`",
+    "array_like": ":term:`numpy:array_like`",
+    # SpinWaveToolkit
+    "Material": "SpinWaveToolkit.Material",
+    "SingleLayer": "SpinWaveToolkit.SingleLayer",
+    "SingleLayerNumeric": "SpinWaveToolkit.SingleLayerNumeric",
+    "SingleLayerSCcoupled": "SpinWaveToolkit.SingleLayerSCcoupled",
+    "DoubleLayerNumeric": "SpinWaveToolkit.DoubleLayerNumeric",
+    "BulkPolariton": "SpinWaveToolkit.BulkPolariton",
+    "ObjectiveLens": "SpinWaveToolkit.ObjectiveLens",
+}
+
+intersphinx_mapping = {
+    "python": ("http://docs.python.org/", None),
+    "numpy": ("https://www.numpy.org/devdocs", None),
+    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+}
+
+
 # # -- Block for checking pandoc availability --------------------------------
 # # (see https://stackoverflow.com/questions/62398231)
-# # Get path to pandoc binary (saved to docs/pandoc_path.ignore)
-# with open(os.path.join("..", "pandoc_path.ignore"), "r") as f:
-#     PANDOC_DIR = f.read().strip("\n ")
-# # Add dir containing pandoc binary to the PATH environment variable
-# if PANDOC_DIR not in os.environ["PATH"].split(os.pathsep):
-#     os.environ["PATH"] += os.pathsep + PANDOC_DIR
 
 from inspect import getsourcefile
 

@@ -30,13 +30,17 @@ class ObjectiveLens:
     f : float
         (m) focal length of the objective lens.
 
+    Attributes
+    ----------
+    same as Parameters
+
     Methods
     -------
     getFocalFieldRad(z, rho_max, N)
         Compute the focal field using the radial formulation.
     getFocalFieldAzm(z, rho_max, N)
         Compute the focal field using the azimuthal formulation
-        (with E_z = 0).
+        (with ``E_z = 0``).
     getFocalField(z, rho_max, N)
         Compute the focal field using a general formulation.
     """
@@ -49,8 +53,8 @@ class ObjectiveLens:
 
     def _scattered_interpolant(self, x, y, z, XI, YI):
         """
-        Interpolates scattered data (x, y, z) onto a regular grid
-        (XI, YI).
+        Interpolates scattered data ``(x, y, z)`` onto a regular grid
+        ``(XI, YI)``.
 
         Uses linear interpolation with a nearest-neighbor fallback for
         undefined points.
@@ -70,7 +74,7 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (z = 0 corresponds to the focal
+            (m) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
             (m) maximum radial coordinate for evaluation.
@@ -170,7 +174,7 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (z = 0 corresponds to the focal
+            (m) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
             (m) maximum radial coordinate for evaluation.
@@ -251,15 +255,15 @@ class ObjectiveLens:
     def getFocalFieldAzm(self, z, rho_max, N):
         """
         Compute the focal field using an azimuthal formulation
-        (E_z = 0).
+        (``E_z = 0``).
 
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (z = 0 corresponds to the focal
+            (m) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (### unit?) maximum radial coordinate for evaluation.
+            (m) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -268,7 +272,7 @@ class ObjectiveLens:
         xi, yi : 1D numpy arrays
             Vectors defining the interpolation grid.
         Exi, Eyi, Ezi : ndarray
-            Complex electric field components on the grid (with E_z
+            Complex electric field components on the grid (with ``E_z``
             identically zero).  Specified as 2D arrays.
         """
         k0 = 2 * np.pi / self.wavelength

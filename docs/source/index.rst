@@ -21,7 +21,7 @@ SpinWaveToolkit Documentation
    getting_started
    examples
    user_guide
-   api_reference
+   api_reference/index
    release_notes
    publications
 
@@ -38,7 +38,7 @@ Features
   * coupled magnetic double layer (e.g. a synthetic antiferromagnet),
   * single magnetic layer inductively coupled to a superconducting layer from one side.
 
-* Simple magnetic material management using a `Material` class.
+* Simple magnetic material management using a :py:class:`.Material` class.
 * Functions for modelling Brillouin light scattering (BLS) signal and experiments.
 
 
@@ -60,7 +60,7 @@ Where to go
     .. grid-item-card:: :octicon:`log;6em;`
         :text-align: center
 
-        Details about a specific element can be found at the :doc:`api_reference`.
+        Details about a specific element can be found at the :doc:`api_reference/index`.
 
 
 

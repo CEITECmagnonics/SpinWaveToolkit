@@ -39,8 +39,9 @@ class BulkPolariton:
         (rad) angle between external field and propagation direction.
 
 
-    Attributes (same as Parameters, plus these)
-    -------------------------------------------
+    Attributes
+    ----------
+    [same as Parameters (except `material`), plus these]
     Ms : float
         (A/m) saturation magnetization.
     gamma : float
@@ -51,21 +52,23 @@ class BulkPolariton:
         (T) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Hext`
+        ``w0 = MU0*gamma*Hext``
     wM : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
-        `w0 = MU0*gamma*Ms`
+        ``w0 = MU0*gamma*Ms``
 
     Methods
     -------
-    GetDisperison
+    GetDispersion
     GetGroupVelocity
 
-    Code example
-    ------------
+    Examples
+    --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for a magnon-polariton in a bulk YIG.
+
     .. code-block:: python
+    
         kxi = np.linspace(1e-6, 1e3, 101)
 
         YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG,
@@ -144,14 +147,14 @@ class BulkPolariton:
         self.w0 = val * self.Bext
 
     def GetDispersion(self):
-        """Gives frequencies for defined k (Dispersion relation) for
+        """Gives frequencies for defined k (dispersion relation) for
         both hybridized modes.  The returned values are in rad*Hz.
 
         Returns
         -------
         w : ndarray
             (rad*Hz) frequencies of the two hybridized modes.  Has shape
-            `(2, kxi.shape[0])`, where the first is the mode index.
+            ``(2, kxi.shape[0])``, where the first is the mode index.
         """
         w = np.zeros((2, np.size(self.kxi, 0)), dtype=np.float64)
         for idx, k in enumerate(self.kxi):
@@ -210,12 +213,12 @@ class BulkPolariton:
         The result is given in m/s.
 
         .. warning::
-            Works only when `kxi.shape[0] >= 2`.
+            Works only when ``kxi.shape[0] >= 2``.
 
         Returns
         -------
         vg : ndarray
-            (m/s) tangential group velocity.  Has shape `(2, kxi.shape[0])`,
+            (m/s) tangential group velocity.  Has shape ``(2, kxi.shape[0])``,
             where the first is the mode index.
         """
         f = self.GetDispersion()
