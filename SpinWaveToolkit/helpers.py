@@ -17,8 +17,7 @@ __all__ = [
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
-"""(N/A^2) permeability of vacuum"""
-C = 299792458.0  #: (m/s) Speed of light
+C = 299792458.0  #: (m/s) speed of light
 KB = 1.38064852e-23  #: (J/K) Boltzmann constant
 HBAR = 1.054571817e-34  #: (J s) reduced Planck constant
 

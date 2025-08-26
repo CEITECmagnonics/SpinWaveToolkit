@@ -147,6 +147,9 @@ This can be further used to make sweeps of certain parameters. Here we show a fi
 
 .. add image (plot with disps colormapped to viridis)
 
+
+---------------------
+
 That's it! You have learned the basic usage of the `SpinWaveToolkit`! Now you can head over to the :doc:`user_guide` and :doc:`examples` for more tutorials. If you encounter any problems, see the appropriate topic in the :doc:`api_reference/index` or let us know in the `Discussions on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions>`_.
 
 
