@@ -112,7 +112,7 @@ from .core._class_BulkPolariton import *
 from .core._class_ObjectiveLens import *
 
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __all__ = [
     "helpers",
     "greenAndFresnel",
