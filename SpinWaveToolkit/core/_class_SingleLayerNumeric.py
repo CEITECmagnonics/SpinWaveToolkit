@@ -230,30 +230,41 @@ class SingleLayerNumeric:
     @N.setter
     def N(self, val):
         self._N = val
+    
+    def __ang_coeff(self):
+        th = self.theta
+        ph = self.phi
+        s = np.sin; c = np.cos
+        A = - s(th)**2
+        E = s(ph)**2 + c(th)**2 * c(ph)**2
+        D = -2.0 * s(th) * s(ph)
+        # B and C not used in the mapping below; included for completeness:
+        B = - np.sin(2.0*th) * np.cos(ph)
+        C =  0.5 * np.sin(2.0*th) * np.cos(ph)
+        return A, B, C, D, E
+
 
     def __CnncTacchi(self, n, nc, k, phi):
-        """Calculate the C_{n,nc}."""
-        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return 0.5 * self.wM * (A + E) * self.__PnncTacchi(n, nc, k)
 
     def __pnncTacchi(self, n, nc, k, phi):
-        """Calculate the p_{n,nc}."""
-        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return -0.5 * self.wM * (E - A) * self.__PnncTacchi(n, nc, k)
 
     def __qnncTacchi(self, n, nc, k, phi):
-        """Calculate the q_{n,nc}."""
-        return -2 * self.wM * np.sin(phi) * self.__QnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return self.wM * D * self.__QnncTacchi(n, nc, k)
 
     def __OmegankTacchi(self, n, k):
-        """Calculate the w_{n,k}."""
         return self.w0 + self.wM * self.A * (k**2 + (n * np.pi / self.d) ** 2)
 
     def __ankTacchi(self, n, k):
-        """Calculate the a_{n,k}."""
-        return self.__OmegankTacchi(n, k) + self.wM / 2 - self.wU / 2
+        return self.__OmegankTacchi(n, k) + 0.5*self.wM*np.sin(self.theta)**2 - 0.5*self.wU
 
     def __bTacchi(self):
-        """Calculate the b."""
-        return self.wM / 2 - self.wU / 2
+        return 0.5*self.wM*np.sin(self.theta)**2 - 0.5*self.wU
+
 
     def __PnncTacchi(self, n, nc, kxi):
         """Gives dimensionless propagation vector.
