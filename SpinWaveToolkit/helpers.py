@@ -246,3 +246,26 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
             xs.append(root)
     # return xs
     return np.round(xs, -np.log10(eps).astype(int))
+
+def sphr2cart(theta, phi, r=1.0):
+    """Convert spherical coordinates to cartesian.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    theta : float
+        (rad) polar angle (from surface normal).
+    phi : float
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float, optional
+        (length unit) radial distance. Default is 1.
+
+    Returns
+    -------
+    xyz : ndarray
+        (length unit) vector of shape ``(3, ...)`` as for (x, y, z).
+    """
+    st, ct = np.sin(theta), np.cos(theta)
+    cp, sp = np.cos(phi), np.sin(phi)
+    return np.array([r*st*cp, r*st*sp, r*ct], dtype=np.float64)
