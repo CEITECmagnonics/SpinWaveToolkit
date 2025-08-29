@@ -14,6 +14,7 @@ __all__ = [
     "wavelength2wavenumber",
     "wrapAngle",
     "roots",
+    "sphr2cart"
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
