@@ -110,6 +110,7 @@ from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
 from .core._class_BulkPolariton import *
 from .core._class_ObjectiveLens import *
+from .core._class_MacrospinEquilibrium import *
 
 
 __version__ = "1.1.1dev"
@@ -124,6 +125,7 @@ __all__ = [
     "DoubleLayerNumeric",
     "BulkPolariton",
     "ObjectiveLens",
+    "MacrospinEquilibrium",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not
 #   worry about re-importing also stuff like numpy as e.g. `SWT.np` as `np` :D

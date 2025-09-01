@@ -14,7 +14,8 @@ __all__ = [
     "wavelength2wavenumber",
     "wrapAngle",
     "roots",
-    "sphr2cart"
+    "sphr2cart",
+    "cart2sphr",
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -270,3 +271,30 @@ def sphr2cart(theta, phi, r=1.0):
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
     return np.array([r*st*cp, r*st*sp, r*ct], dtype=np.float64)
+
+def cart2sphr(x, y, z):
+    """Convert cartesian coordinates to spherical.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    x, y, z : float or array_like
+        (length unit) cartesian coordinates.
+
+    Returns
+    -------
+    theta : float or ndarray
+        (rad) polar angle (from surface normal).
+    phi : float or ndarray
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float or ndarray
+        (length unit) radial distance.
+    """
+    x = np.array(x, dtype=np.float64)
+    y = np.array(y, dtype=np.float64)
+    z = np.array(z, dtype=np.float64)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+    return theta, phi, r
