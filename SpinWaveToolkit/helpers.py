@@ -2,6 +2,8 @@
 Place for all helping functions and constants in this module.
 """
 
+from time import time
+import sys
 import numpy as np
 
 __all__ = [
@@ -16,6 +18,7 @@ __all__ = [
     "roots",
     "sphr2cart",
     "cart2sphr",
+    "ProgressBar"
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -249,6 +252,7 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
     # return xs
     return np.round(xs, -np.log10(eps).astype(int))
 
+
 def sphr2cart(theta, phi, r=1.0):
     """Convert spherical coordinates to cartesian.
 
@@ -271,6 +275,7 @@ def sphr2cart(theta, phi, r=1.0):
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
     return np.array([r*st*cp, r*st*sp, r*ct], dtype=np.float64)
+
 
 def cart2sphr(x, y, z):
     """Convert cartesian coordinates to spherical.
@@ -298,3 +303,102 @@ def cart2sphr(x, y, z):
     theta = np.arccos(z / r)
     phi = np.arctan2(y, x)
     return theta, phi, r
+
+
+class ProgressBar:
+    """
+    Prints a progress bar to console. 
+    
+    Time counting starts when a new instance of this class is created.
+
+    Parameters
+    ----------
+    niter : int
+        Total number of iterations.
+    bar_len : int, optional
+        Length of the progress bar (in characters).  Default is 20.
+    
+    Attributes
+    ----------
+    niter : int
+        Total number of iterations.
+    bar_len : int
+        Length of the progress bar (in characters).
+    t_start : float
+        (s) starting time.  Default is the time of instantiation of the 
+        object returned by ``time.time()``.
+    i : int
+        Current iteration.
+    up_every : int
+        Divisor of `i` that signals updating the progress bar.
+
+    Methods
+    -------
+    next
+    finish
+
+    Examples
+    --------
+
+    .. code-block:: python
+       
+       from time import sleep
+
+       niter = 55
+       pb = ProgressBar(niter)
+       for i in range(niter):
+           sleep(0.1)  # replace this by some calculation step
+           pb.next()
+       pb.finish()
+
+    Notes
+    -----
+    The output is usually rewriting itself until 100 % is reached.  This
+    is true for outputs in terminals (bash, powershell, command prompt, 
+    ...).  However, for the python's default IDE, the IDLE, this can 
+    print pretty ugly.  To fix this, change the attribute 
+    ``ProgressBar._lend`` to ``"\\n"`` when using IDLE to run the 
+    scripts.
+
+    See also
+    --------
+    MacrospinEquilibrium
+
+    """
+    def __init__(
+            self,
+            niter,
+            bar_len=20
+        ):
+        self.niter = niter
+        self.bar_len = bar_len
+        self.t_start = time()
+        self.i = 0
+        self.up_every = max(niter // bar_len, 1)
+        self._lend = ""  # line end character
+
+    def __up(self):
+        """Calculate current status and print it to stdout."""
+        elapsed = time() - self.t_start
+        perc = (self.i + 1) / self.niter
+        etc = elapsed / perc - elapsed
+        fill = int(self.bar_len * perc)
+        bar = "#" * fill + "-" * (self.bar_len - fill)
+        sys.stdout.write(
+            f"\r[{bar}] {perc*100:5.1f} % | elapsed: {elapsed:5.1f} s | ETC: {etc:5.1f} s"
+            + self._lend
+        )
+        sys.stdout.flush()
+
+    def next(self, step=1):
+        """Advance by the amount of `step` and eventually print output."""
+        self.i += step
+        if self.i % self.up_every == 0 or self.i == self.niter - 1:
+            self.__up()
+    
+    def finish(self):
+        """End the progress bar process."""
+        self.i = self.niter - 1
+        self.__up()
+        print()  # newline after progress bar
+
