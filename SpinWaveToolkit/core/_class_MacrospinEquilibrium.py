@@ -3,7 +3,7 @@ Core (private) file for the `MacrospinEquilibrium` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr
+from SpinWaveToolkit.helpers import MU0, sphr2cart, cart2sphr
 from scipy.optimize import minimize
 
 __all__ = ["MacrospinEquilibrium"]
@@ -15,14 +15,15 @@ class MacrospinEquilibrium:
     approximation.
 
     Usually searches for a local equilibrium based on the initial 
-    position.
+    position.  (The equilibrium is a minimum in the energy density 
+    landscape.)
 
     Includes the effect of the thin film's demagnetizing field (dipolar 
     energy), external field (Zeeman energy) and any number of uniaxial 
     anisotropies with arbitrary directions of the anisotropy axis.
 
-    All angles are given in the laboratory frame of reference, i.e.
-    `z || thin film normal`, and `x || IP projection of spin wave 
+    All angles are given in the laboratory (lab) frame of reference, 
+    i.e. `z || thin film normal`, and `x || IP projection of spin wave 
     wavevector`.
     
     .. note:: 
@@ -34,14 +35,22 @@ class MacrospinEquilibrium:
     ----------
     Ms : float
         (A/m) saturation magnetization of the magnetic material.
-    d : float
-        (m) thickness of the magnetic film.
     Bext : float
         (T) magnitude of external field.
     theta_H, phi_H : float
         (rad) polar and azimuthal angles of the external field 
         direction.
-    theta, phi : float
+    theta, phi : float or None
+        (rad) polar and azimuthal angle of magnetization.  Serves as the 
+        starting point for ``minimize``.  If None, the values are 
+        inferred from `theta_H` and `phi_H`, respectively.  Default is 
+        None.
+    demag : (3, 3) array or None, optional
+        The demagnetization tensor in the lab frame.  If None, 
+        ``np.diag([0.0, 0.0, 1.0])`` is used, which corresponds to an
+        infinite thin film in the xy plane.  Default is None.
+    verbose: bool, optional
+        Additional informative output to console?  Default is True.
 
     Attributes
     ----------
@@ -53,9 +62,41 @@ class MacrospinEquilibrium:
         Dictionary containing the spherical coordinates of the external 
         magnetic field.  It has keys {"Bext", "theta_H", "phi_H"}.
     M : dict
+        Dictionary containing the spherical coordinates of 
+        magnetization.  It has keys {"theta", "phi"}.
+    b : (3,) array
+        Unit vector of external magnetic field.  Depends on `Bext`.
+    demag : (3, 3) array
+        The demagnetization tensor in the lab frame.
+    anis : dict
+        Dictionary of anisotropies.  Each (uniaxial) anisotropy has
+        a unique name key, which can be then used to access its 
+        properties, which are stored as another dictionary with the 
+        following keys:
+
+        - "Ku" - uniax. anisotropy strength (J/m^3)
+        - "theta" - polar angle of anisotropy axis (rad)
+        - "phi" - azimuthal angle of anisotropy axis (rad)
+        - "Na" - corresponding tensor calculated from the three 
+            parameters above.
+    
+    Na_tot : (3, 3) array
+        Sum of all anisotropy tensors.  Depends on `anis`.
+    eden_zeeman, eden_demag, eden_anis_uni : float
+        (J/m^3) Zeeman, dipolar, and uniax. anisotropy energy density,
+        respectively.  Stored as results of the last `minimize()` call.
+    res : scipy.optimize.OptimizeResult
+        Full output of the `scipy.optimize.minimize` function from the 
+        last calculation.  (That is, given as None until first run.)
+    verbose : bool
+        Additional informative output to console?
 
     Methods
     -------
+    add_uniaxial_anisotropy
+    recalc_params
+    minimize
+    eval_energy
 
     Examples
     --------
@@ -69,16 +110,15 @@ class MacrospinEquilibrium:
     def __init__(
             self,
             Ms,
-            d, 
             Bext, 
             theta_H, 
             phi_H,
             theta=None,
             phi=None,
-            demag=None
+            demag=None,
+            verbose=True,
         ):
         self.Ms = Ms
-        self.d = d
 
         self.M = {
             "theta": theta if theta is not None else theta_H,
@@ -89,23 +129,21 @@ class MacrospinEquilibrium:
             "theta_H": theta_H,
             "phi_H": phi_H,
         }
-        self.b = sphr2cart(theta_H, phi_H)  # unit vector of Bext in lab ### remake this similarly to Na_tot, so that it is always calculated from the current Bext (maybe too computationally demanding. Ask chatgpt what to do.)
+        self.b = sphr2cart(theta_H, phi_H)  # unit vector of Bext in lab frame
         self.demag = demag if demag is not None else np.diag([0.0, 0.0, 1.0])
+        self.verbose = verbose
         # preallocations
         self.anis = {}
-        self._Na_tot = np.zeros((3, 3), dtype=np.float64)
+        self.Na_tot = np.zeros((3, 3), dtype=np.float64)
         self.eden_zeeman, self.eden_demag, self.eden_anis_uni = 0.0, 0.0, 0.0
         self.res = None  # full `scipy.optimize.minimize` output
     
-    @property
-    def Na_tot(self):
-        """Summed tensors of all anisotropies."""
-        return np.sum([self.anis[i]["Na"] for i in self.anis.keys()], 0)
-    
-    @Na_tot.setter
-    def Na_tot(self, val):
-        raise TypeError("Na_tot cannot be assigned any values! "
-                        + "Define individual anisotropies instead.")
+    def recalc_params(self):
+        """Recalculate/update the values of dependent variables, e.g.
+        field unit vector and total anistropy tensor.
+        """
+        self.Na_tot = np.sum([self.anis[i]["Na"] for i in self.anis.keys()], 0)
+        self.b = sphr2cart(self.Bext["theta_H"], self.Bext["phi_H"])
     
     def add_uniaxial_anisotropy(self, name, Ku=0.0, theta=0.0, phi=0.0, Na=None):
         """Add uniaxial anisotropy to the system.  Only the first order 
@@ -119,14 +157,14 @@ class MacrospinEquilibrium:
             silently overwritten.
         Ku : float
             (J/m^3) uniaxial anisotropy constant.  Easy plane anisotropy 
-            for Ku > 0 and easy axis for Ku < 0.  Unused if `tensor` is 
+            for Ku > 0 and easy axis for Ku < 0.  Unused if `Na` is 
             specified.
         theta : float
             (rad) polar angle of the anisotropy axis in the lab frame.
-            Unused if `tensor` is specified.
+            Unused if `Na` is specified.
         phi : float
             (rad) azimuthal angle of the anisotropy axis in the lab 
-            frame.  Unused if `tensor` is specified.
+            frame.  Unused if `Na` is specified.
         Na : (3, 3) array or None, optional
             Uniaxial anisotropy tensor.  Can be used for direct 
             assignment.  However, when used, the other parameters are 
@@ -136,8 +174,9 @@ class MacrospinEquilibrium:
         u = sphr2cart(theta, phi)
         Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2))
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
+        self.recalc_params()
 
-    def minimize(self, scipy_kwargs={}):
+    def minimize(self, scipy_kwargs={}, verbose=None):
         """Evaluate the minimization problem.
          
         Uses the `scipy.optimize.minimize` function to find the minimum
@@ -153,6 +192,10 @@ class MacrospinEquilibrium:
             `scipy.optimize.minimize`.  If a ``"constraints"`` setting 
             key is used, its value must be a list of constraints (see
             documentation of :py:func:`scipy.optimize.minimize`).
+        verbose : bool or None, optional
+            Additional informative output to console?  If None, the 
+            value is inferred from the ``verbose`` attribute.  Default 
+            is None.
         
         .. note::
            
@@ -163,19 +206,22 @@ class MacrospinEquilibrium:
            is not implemented here.
         
         """
+        if verbose is None:
+            verbose = self.verbose
 
         def fun(_x):
             """placeholder for energy evaluations"""
             return self.eval_energy(_x)
         
         m0 = sphr2cart(self.M["theta"], self.M["phi"])
+        self.recalc_params()
         cons = [{'type': 'eq', 'fun': lambda _m: np.dot(_m, _m) - 1.0}]
         if "constraints" in scipy_kwargs.keys():
             scipy_kwargs["constraints"] += cons
         else:
             scipy_kwargs["constraints"] = cons
 
-        self.res = minimize(fun, m0, constraints=cons, **scipy_kwargs)
+        self.res = minimize(fun, m0, **scipy_kwargs)
         if self.res.success:
             # print(f"Minimum successfully found after {self.res.nit} iterations.")
             print(f"Minimum successfully found.")

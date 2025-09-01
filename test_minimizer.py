@@ -9,7 +9,7 @@ def main():
     # min_kwargs = {"method": "SLSQP", "options": {"disp": 1, "tol": 1e-12}}
     min_kwargs = {}
     maceq = swt.MacrospinEquilibrium(
-        Ms=800e3, d=50e-9, Bext=150e-3, theta_H=np.deg2rad(10), 
+        Ms=800e3, Bext=150e-3, theta_H=np.deg2rad(10), 
         phi_H=np.deg2rad(60), theta=0, phi=12
     )
     maceq.add_uniaxial_anisotropy("uni0", Ku=-150e3, theta=0, phi=np.deg2rad(10))
