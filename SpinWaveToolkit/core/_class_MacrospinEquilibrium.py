@@ -3,7 +3,7 @@ Core (private) file for the `MacrospinEquilibrium` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, sphr2cart, cart2sphr
+from SpinWaveToolkit.helpers import MU0, sphr2cart, cart2sphr, ProgressBar
 from scipy.optimize import minimize
 
 __all__ = ["MacrospinEquilibrium"]
@@ -17,6 +17,12 @@ class MacrospinEquilibrium:
     Usually searches for a local equilibrium based on the initial 
     position.  (The equilibrium is a minimum in the energy density 
     landscape.)
+
+    .. caution::
+
+       The model might get stuck in labile equilibrium, therefore it is 
+       encouraged to slightly perturb the angles (e.g. by 1 µrad) to get 
+       more reliable results from the calculations.
 
     Includes the effect of the thin film's demagnetizing field (dipolar 
     energy), external field (Zeeman energy) and any number of uniaxial 
@@ -157,7 +163,7 @@ class MacrospinEquilibrium:
             silently overwritten.
         Ku : float
             (J/m^3) uniaxial anisotropy constant.  Easy plane anisotropy 
-            for Ku > 0 and easy axis for Ku < 0.  Unused if `Na` is 
+            for Ku < 0 and easy axis for Ku > 0.  Unused if `Na` is 
             specified.
         theta : float
             (rad) polar angle of the anisotropy axis in the lab frame.
@@ -213,9 +219,10 @@ class MacrospinEquilibrium:
             """placeholder for energy evaluations"""
             return self.eval_energy(_x)
         
-        m0 = sphr2cart(self.M["theta"], self.M["phi"])
+        m0 = sphr2cart(self.M["theta"]*0.999+1e-3, self.M["phi"]*0.999+1e-3)
         self.recalc_params()
         cons = [{'type': 'eq', 'fun': lambda _m: np.dot(_m, _m) - 1.0}]
+        scipy_kwargs = dict(scipy_kwargs)  # Make a shallow copy so you don't modify the original
         if "constraints" in scipy_kwargs.keys():
             scipy_kwargs["constraints"] += cons
         else:
@@ -224,9 +231,9 @@ class MacrospinEquilibrium:
         self.res = minimize(fun, m0, **scipy_kwargs)
         if self.res.success:
             # print(f"Minimum successfully found after {self.res.nit} iterations.")
-            print(f"Minimum successfully found.")
+            print(f"Minimum successfully found.") if verbose else None
         else:
-            print(f"Not converged.\n{self.res.message}")
+            print(f"Not converged.\n{self.res.message}") if verbose else None
 
         # save final state
         self.M["theta"], self.M["phi"], _ = cart2sphr(*self.res.x)
@@ -244,15 +251,73 @@ class MacrospinEquilibrium:
             a sum of all components (float). Returns a list of 
             components otherwise.
         """
-        Bext = self.Bext["Bext"]
-
         # Zeeman
-        eZ = - self.Ms * Bext * float(np.dot(m, self.b))
+        eZ = - self.Ms * self.Bext["Bext"] * float(np.dot(m, self.b))
 
         # demag
         ed = 0.5 * MU0 * self.Ms**2 * float(m @ self.demag @ m)
 
         # uniaxial anisotropies
-        ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
+        if self.anis == {}:
+            ea_uni = 0
+        else:
+            ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
 
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
+
+    def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs={}):
+        """Calculate a hysteresis curve from a vector of swept field 
+        values.
+        
+        Any of the input (field-related) values can be swept, but the 
+        other two have to be either of same shape or floats.
+
+        Parameters
+        ----------
+        Bext : float or (N,) array
+            (T) amplitude of external magnetic field (can be negative).
+        theta_H : float or (N,) array
+            (rad) polar angle of external magnetic field.
+        phi_H : float or (N,) array
+            (rad) azimuthal angle of external magnetic field.
+        scipy_kwargs : dict
+            dictionary with settings passed to 
+            `scipy.optimize.minimize`.  If a ``"constraints"`` setting 
+            key is used, its value must be a list of constraints (see
+            documentation of :py:func:`scipy.optimize.minimize`).  
+            This is not a sweepable parameter!
+
+        
+        Returns
+        -------
+        theta, phi : (N,) array
+            (rad) angles related to magnetization direction at each
+            point of the sweep.
+
+            
+        Notes
+        -----
+        To get a projection of magnetization in a certain direction,
+        you can just put the output of this method to the `sphr2cart` 
+        function provided by `SpinWaveToolkit`.
+
+        For sweeping other parameters, the user is encouraged to write 
+        their own script in a similarly to this method.  Currently, we 
+        do not plan to implement a general sweep.
+        """
+        n = np.shape(Bext + theta_H + phi_H)[0]
+        ones = np.ones(n)
+        Bext, theta_H, phi_H = ones * Bext, ones * theta_H, ones * phi_H
+        theta, phi = np.empty(n), np.empty(n)
+
+        pb = ProgressBar(n)
+        for i in range(n):
+            self.Bext["Bext"] = Bext[i]
+            self.Bext["theta_H"] = theta_H[i]
+            self.Bext["phi_H"] = phi_H[i]
+            self.minimize(scipy_kwargs=scipy_kwargs, verbose=False)
+            theta[i], phi[i] = self.M["theta"], self.M["phi"]
+            pb.next()
+        pb.finish()
+
+        return theta, phi
