@@ -14,13 +14,18 @@ class MacrospinEquilibrium:
     Compute magnetization equilibrium direction in a macrospin 
     approximation.
 
+    Can be used to find static equilibrium position before calculating
+    the spin-wave dispersion relation in other classes.  See 
+    :doc:`examples` for more.  # ### update exact example (e.g. a layer 
+    with PMA)
+
     Usually searches for a local equilibrium based on the initial 
     position.  (The equilibrium is a minimum in the energy density 
     landscape.)
 
     .. caution::
 
-       The model might get stuck in labile equilibrium, therefore it is 
+       The model might get stuck in labile equilibria, therefore it is 
        encouraged to slightly perturb the angles (e.g. by 1 µrad) to get 
        more reliable results from the calculations.
 
@@ -107,6 +112,18 @@ class MacrospinEquilibrium:
     Examples
     --------
 
+    .. code-block:: python
+
+        maceq = MacrospinEquilibrium(
+            Ms=800e3, Bext=150e-3, theta_H=np.deg2rad(10), 
+            phi_H=np.deg2rad(60), theta=0, phi=np.deg2rad(30)
+        )
+        maceq.add_uniaxial_anisotropy("uni0", Ku=15e3, theta=0, phi=0)
+        maceq.add_uniaxial_anisotropy("uni1", Ku=10e3, 
+            theta=np.deg2rad(70), phi=np.pi/2)
+        maceq.minimize()
+        print(maceq.M)
+
     See also
     --------
     SingleLayer, SingleLayerNumeric, Material
@@ -151,7 +168,7 @@ class MacrospinEquilibrium:
         self.Na_tot = np.sum([self.anis[i]["Na"] for i in self.anis.keys()], 0)
         self.b = sphr2cart(self.Bext["theta_H"], self.Bext["phi_H"])
     
-    def add_uniaxial_anisotropy(self, name, Ku=0.0, theta=0.0, phi=0.0, Na=None):
+    def add_uniaxial_anisotropy(self, name, Ku=0.0, theta=0.0, phi=0.0, Bani=None, Na=None):
         """Add uniaxial anisotropy to the system.  Only the first order 
         constant is assumed.
         
@@ -171,6 +188,10 @@ class MacrospinEquilibrium:
         phi : float
             (rad) azimuthal angle of the anisotropy axis in the lab 
             frame.  Unused if `Na` is specified.
+        Bani : float, optional
+            (T) uniaxial anisotropy field.  If specified, `Ku` input is 
+            not used, but rather is recalculated from `Bani` as
+            ``Ku = Ms*Bani/2``.  Default is None.
         Na : (3, 3) array or None, optional
             Uniaxial anisotropy tensor.  Can be used for direct 
             assignment.  However, when used, the other parameters are 
@@ -178,7 +199,8 @@ class MacrospinEquilibrium:
 
         """
         u = sphr2cart(theta, phi)
-        Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2))
+        Ku = Ku if Bani is None else Bani*self.Ms/2
+        Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2)) if Na is None else Na
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
         self.recalc_params()
 
@@ -219,7 +241,7 @@ class MacrospinEquilibrium:
             """placeholder for energy evaluations"""
             return self.eval_energy(_x)
         
-        m0 = sphr2cart(self.M["theta"]*0.999+1e-3, self.M["phi"]*0.999+1e-3)
+        m0 = sphr2cart(self.M["theta"]*0.999+10e-3, self.M["phi"]*0.999+10e-3)
         self.recalc_params()
         cons = [{'type': 'eq', 'fun': lambda _m: np.dot(_m, _m) - 1.0}]
         scipy_kwargs = dict(scipy_kwargs)  # Make a shallow copy so you don't modify the original

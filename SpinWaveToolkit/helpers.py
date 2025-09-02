@@ -342,14 +342,14 @@ class ProgressBar:
 
     .. code-block:: python
        
-       from time import sleep
+        from time import sleep
 
-       niter = 55
-       pb = ProgressBar(niter)
-       for i in range(niter):
-           sleep(0.1)  # replace this by some calculation step
-           pb.next()
-       pb.finish()
+        niter = 55
+        pb = ProgressBar(niter)
+        for i in range(niter):
+            sleep(0.1)  # replace this by some calculation step
+            pb.next()
+        pb.finish()
 
     Notes
     -----
