@@ -33,8 +33,8 @@ def getBLSsignal(
     Parameters
     ----------
     SweepBloch : ndarray
-        Sweep vector of the Bloch functions. Usually frequency of spin
-        waves.
+        Sweep vector of the Bloch functions with shape ``(Nf,)``. 
+        Usually frequency of spin waves.
     KxKyBloch : tuple[ndarray]
         (rad/m) tuple containing the 1D grids ``(kx_grid, ky_grid)`` on
         which the Bloch functions are defined.
@@ -87,11 +87,10 @@ def getBLSsignal(
     Px, Py, Pz : ndarray
         (V/m) induced polarization in the magnetic layer.  Corresponds 
         to `P` in eq. (3) in Wojewoda et al. PRB 110, 224428 (2024).
-        Each array has shape (Nf, 2*Nq-1, 2*Nq-1).
-        ### (?) Ondro, check this if correct, pls.
+        Each array has shape ``(Nf, 2*Nq-1, 2*Nq-1)``.
     Qx, Qy : ndarray
         (rad/m) k-space grids for polarizations `Px`, `Py`, `Pz`.
-        Each array has shape (2*Nq-1, 2*Nq-1).
+        Each array has shape ``(2*Nq-1, 2*Nq-1)``.
     """
     k0 = 2 * np.pi / wavelength
 
