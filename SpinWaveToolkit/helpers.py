@@ -69,21 +69,26 @@ def wavelength2wavenumber(wavelength):
     return 2 * np.pi / np.array(wavelength)
 
 
-def wrapAngle(angle):
-    """Wrap angle in radians to range ``[0, 2*np.pi)``.
+def wrapAngle(angle, amin=0, amax=2*np.pi):
+    """Wrap angle in radians to range ``[amin, amax)``, by default
+    ``[0, 2*np.pi)``.
 
     Parameters
     ----------
     angle : float or array_like
         (rad) angle to wrap.
+    amin : float, optional
+        (rad) minimum value of the interval (inclusive).
+    amax : float, optional
+        (rad) maximum value of the interval (exclusive).
 
     Returns
     -------
     wrapped_angle : float or ndarray
-        (rad) angle wrapped to ``[0, 2*np.pi)``.
+        (rad) angle wrapped to ``[amin, amax)``.
     """
-    # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
-    return np.mod(angle, 2 * np.pi)
+    angle = np.asarray(angle)
+    return (angle - amin) % (amax - amin) + amin
 
 
 def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):

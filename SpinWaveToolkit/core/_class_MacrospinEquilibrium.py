@@ -3,7 +3,7 @@ Core (private) file for the `MacrospinEquilibrium` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, sphr2cart, cart2sphr, ProgressBar
+from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr, ProgressBar
 from scipy.optimize import minimize
 
 __all__ = ["MacrospinEquilibrium"]
@@ -199,12 +199,12 @@ class MacrospinEquilibrium:
 
         """
         u = sphr2cart(theta, phi)
-        Ku = Ku if Bani is None else Bani*self.Ms/2
+        Ku = Ku if (Bani is None or Bani == 0) else Bani*self.Ms/2
         Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2)) if Na is None else Na
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
         self.recalc_params()
 
-    def minimize(self, scipy_kwargs={}, verbose=None):
+    def minimize(self, scipy_kwargs={"method": "Nelder-Mead"}, verbose=None):
         """Evaluate the minimization problem.
          
         Uses the `scipy.optimize.minimize` function to find the minimum
@@ -217,9 +217,11 @@ class MacrospinEquilibrium:
         ----------
         scipy_kwargs : dict, optional
             dictionary with settings passed to 
-            `scipy.optimize.minimize`.  If a ``"constraints"`` setting 
-            key is used, its value must be a list of constraints (see
-            documentation of :py:func:`scipy.optimize.minimize`).
+            `scipy.optimize.minimize`.  Cannot contain ``"tol"`` and
+            ``"bounds"`` keywords, as they are fixly set here.
+            Default is ``{"method": "Nelder-Mead"}``.  Try changing the
+            optimization method is you have concern about the results
+            (see documentation of :py:func:`scipy.optimize.minimize`).
         verbose : bool or None, optional
             Additional informative output to console?  If None, the 
             value is inferred from the ``verbose`` attribute.  Default 
@@ -241,16 +243,12 @@ class MacrospinEquilibrium:
             """placeholder for energy evaluations"""
             return self.eval_energy(_x)
         
-        m0 = sphr2cart(self.M["theta"]*0.999+10e-3, self.M["phi"]*0.999+10e-3)
+        m0 = (self.M["theta"]*0.999+10e-3, self.M["phi"]*0.999+10e-3)
         self.recalc_params()
-        cons = [{'type': 'eq', 'fun': lambda _m: np.dot(_m, _m) - 1.0}]
         scipy_kwargs = dict(scipy_kwargs)  # Make a shallow copy so you don't modify the original
-        if "constraints" in scipy_kwargs.keys():
-            scipy_kwargs["constraints"] += cons
-        else:
-            scipy_kwargs["constraints"] = cons
 
-        self.res = minimize(fun, m0, **scipy_kwargs)
+        self.res = minimize(fun, m0, tol=1e-20, **scipy_kwargs,
+                            bounds=((-np.pi, 2*np.pi), (-2*np.pi, 4*np.pi)))
         if self.res.success:
             # print(f"Minimum successfully found after {self.res.nit} iterations.")
             print(f"Minimum successfully found.") if verbose else None
@@ -258,13 +256,13 @@ class MacrospinEquilibrium:
             print(f"Not converged.\n{self.res.message}") if verbose else None
 
         # save final state
-        self.M["theta"], self.M["phi"], _ = cart2sphr(*self.res.x)
+        self.M["theta"], self.M["phi"] = wrapAngle(cart2sphr(*sphr2cart(*self.res.x))[:2])
         eden = self.eval_energy(self.res.x, True)
         self.eden_zeeman, self.eden_demag, self.eden_anis_uni = eden
     
     def eval_energy(self, m, components=False):
-        """Evaluate the energy density for the magnetization unit 
-        vector `m`.
+        """Evaluate the energy density for the magnetization direction 
+        angles `m = (theta, phi)`.
 
         Returns 
         -------
@@ -273,18 +271,19 @@ class MacrospinEquilibrium:
             a sum of all components (float). Returns a list of 
             components otherwise.
         """
+        m = sphr2cart(*m)
         # Zeeman
         eZ = - self.Ms * self.Bext["Bext"] * float(np.dot(m, self.b))
-
+        
         # demag
         ed = 0.5 * MU0 * self.Ms**2 * float(m @ self.demag @ m)
-
+        
         # uniaxial anisotropies
         if self.anis == {}:
             ea_uni = 0
         else:
             ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
-
+        
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
 
     def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs={}):
