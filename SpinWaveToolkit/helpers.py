@@ -279,7 +279,7 @@ def sphr2cart(theta, phi, r=1.0):
     """
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
-    return np.array([r*st*cp, r*st*sp, r*ct], dtype=np.float64)
+    return np.array([r*st*cp, r*st*sp, r*ct*np.ones_like(cp)], dtype=np.float64)
 
 
 def cart2sphr(x, y, z):

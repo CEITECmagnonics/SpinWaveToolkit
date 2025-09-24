@@ -160,6 +160,8 @@ class MacrospinEquilibrium:
         self.Na_tot = np.zeros((3, 3), dtype=np.float64)
         self.eden_zeeman, self.eden_demag, self.eden_anis_uni = 0.0, 0.0, 0.0
         self.res = None  # full `scipy.optimize.minimize` output
+        self.__check_angle((theta_H, phi_H, theta if theta is not None else 0,
+                            phi if phi is not None else 0))
     
     def recalc_params(self):
         """Recalculate/update the values of dependent variables, e.g.
@@ -178,26 +180,27 @@ class MacrospinEquilibrium:
             String name to use as key in the dictionary of anisotropies.
             If an anisotropy with the same name already exists, it is 
             silently overwritten.
-        Ku : float
+        Ku : float, optional
             (J/m^3) uniaxial anisotropy constant.  Easy plane anisotropy 
-            for Ku < 0 and easy axis for Ku > 0.  Unused if `Na` is 
-            specified.
-        theta : float
+            for Ku < 0 and easy axis for Ku > 0.  Unused if `Na` or 
+            `Bani` is specified.
+        theta : float, optional
             (rad) polar angle of the anisotropy axis in the lab frame.
             Unused if `Na` is specified.
-        phi : float
+        phi : float, optional
             (rad) azimuthal angle of the anisotropy axis in the lab 
             frame.  Unused if `Na` is specified.
         Bani : float, optional
-            (T) uniaxial anisotropy field.  If specified, `Ku` input is 
-            not used, but rather is recalculated from `Bani` as
-            ``Ku = Ms*Bani/2``.  Default is None.
+            (T) uniaxial anisotropy field.  If specified (and non-zero), 
+            `Ku` input is not used, but rather is recalculated from 
+            `Bani` as ``Ku = Ms*Bani/2``.  Default is None.
         Na : (3, 3) array or None, optional
             Uniaxial anisotropy tensor.  Can be used for direct 
             assignment.  However, when used, the other parameters are 
             not recalculated into the anisotropy dict.  Default is None.
 
         """
+        self.__check_angle((theta, phi))
         u = sphr2cart(theta, phi)
         Ku = Ku if (Bani is None or Bani == 0) else Bani*self.Ms/2
         Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2)) if Na is None else Na
@@ -243,7 +246,7 @@ class MacrospinEquilibrium:
             """placeholder for energy evaluations"""
             return self.eval_energy(_x)
         
-        m0 = (self.M["theta"]*0.999+10e-3, self.M["phi"]*0.999+10e-3)
+        m0 = (self.M["theta"]*0.999+1e-3, self.M["phi"]*0.999+1e-3)
         self.recalc_params()
         scipy_kwargs = dict(scipy_kwargs)  # Make a shallow copy so you don't modify the original
 
@@ -262,7 +265,7 @@ class MacrospinEquilibrium:
     
     def eval_energy(self, m, components=False):
         """Evaluate the energy density for the magnetization direction 
-        angles `m = (theta, phi)`.
+        angles ``m = (theta, phi)``.
 
         Returns 
         -------
@@ -286,7 +289,7 @@ class MacrospinEquilibrium:
         
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
 
-    def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs={}):
+    def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs={"method": "Nelder-Mead"}):
         """Calculate a hysteresis curve from a vector of swept field 
         values.
         
@@ -301,11 +304,13 @@ class MacrospinEquilibrium:
             (rad) polar angle of external magnetic field.
         phi_H : float or (N,) array
             (rad) azimuthal angle of external magnetic field.
-        scipy_kwargs : dict
+        scipy_kwargs : dict, optional
             dictionary with settings passed to 
-            `scipy.optimize.minimize`.  If a ``"constraints"`` setting 
-            key is used, its value must be a list of constraints (see
-            documentation of :py:func:`scipy.optimize.minimize`).  
+            `scipy.optimize.minimize`.  Cannot contain ``"tol"`` and
+            ``"bounds"`` keywords, as they are fixly set here.
+            Default is ``{"method": "Nelder-Mead"}``.  Try changing the
+            optimization method is you have concern about the results
+            (see documentation of :py:func:`scipy.optimize.minimize`).
             This is not a sweepable parameter!
 
         
@@ -323,7 +328,7 @@ class MacrospinEquilibrium:
         function provided by `SpinWaveToolkit`.
 
         For sweeping other parameters, the user is encouraged to write 
-        their own script in a similarly to this method.  Currently, we 
+        their own script similarly to this method.  Currently, we 
         do not plan to implement a general sweep.
         """
         n = np.shape(Bext + theta_H + phi_H)[0]
@@ -342,3 +347,20 @@ class MacrospinEquilibrium:
         pb.finish()
 
         return theta, phi
+    
+    def __check_angle(self, angle):
+        """Function for checking the angles are in correct units.
+
+        The motivation for this is that users often forget to convert 
+        to radians and input ridiculously large values.
+
+        Parameters
+        ----------
+        angle : float or array_like
+            (rad) angles to be checked.
+        """
+        angle = np.atleast_1d(angle)
+        if self.verbose and np.any(angle > 2*np.pi):
+            print("Input angle larger than 2pi rad. Make sure"
+                  + " all input angle values are in radians!")
+
