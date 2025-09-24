@@ -13,3 +13,4 @@ Select a class from the list to view its details.
    classes/DoubleLayerNumeric
    classes/SingleLayerSCcoupled
    classes/BulkPolariton
+   classes/ProgressBar

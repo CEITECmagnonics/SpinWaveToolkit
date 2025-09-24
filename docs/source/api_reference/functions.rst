@@ -14,6 +14,10 @@ General functions
 
 .. autofunction:: SpinWaveToolkit.roots
 
+.. autofunction:: SpinWaveToolkit.sphr2cart
+
+.. autofunction:: SpinWaveToolkit.cart2sphr
+
 
 
 BLS related functions

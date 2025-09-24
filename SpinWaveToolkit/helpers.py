@@ -316,6 +316,11 @@ class ProgressBar:
     
     Time counting starts when a new instance of this class is created.
 
+    .. note::
+       
+        In the future, we might switch to ``tqdm`` module instead 
+        without further notice.
+
     Parameters
     ----------
     niter : int
@@ -373,7 +378,7 @@ class ProgressBar:
     def __init__(
             self,
             niter,
-            bar_len=20
+            bar_len=20,
         ):
         self.niter = niter
         self.bar_len = bar_len
@@ -382,6 +387,16 @@ class ProgressBar:
         self.up_every = max(niter // bar_len, 1)
         self._lend = ""  # line end character
 
+    @staticmethod
+    def __form_t(t):
+        """Format time to "[hh:]mm:ss.s"."""
+        hours = int(t // 3600)
+        minutes = int((t % 3600) // 60)
+        seconds = t % 60
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds:04.1f}"
+        return f"{minutes:02d}:{seconds:04.1f}"
+
     def __up(self):
         """Calculate current status and print it to stdout."""
         elapsed = time() - self.t_start
@@ -389,8 +404,9 @@ class ProgressBar:
         etc = elapsed / perc - elapsed
         fill = int(self.bar_len * perc)
         bar = "#" * fill + "-" * (self.bar_len - fill)
+
         sys.stdout.write(
-            f"\r[{bar}] {perc*100:5.1f} % | elapsed: {elapsed:5.1f} s | ETC: {etc:5.1f} s"
+            f"\r[{bar}] {perc*100:5.1f} % | {self.__form_t(elapsed)}<{self.__form_t(etc)}"
             + self._lend
         )
         sys.stdout.flush()
