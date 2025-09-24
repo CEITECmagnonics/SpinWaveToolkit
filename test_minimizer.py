@@ -87,8 +87,8 @@ def test_hysteresis_box():
     maceq = swt.MacrospinEquilibrium(
         Ms=800e3, Bext=150e-3, theta_H=0, phi_H=0, # demag=np.diag([1, 1, 1])/3
     )
-    maceq.add_uniaxial_anisotropy("ua0", 0, 90+1e-3, 0, 15e-3)
-    nb, na = 50, 5  # number of fields and angles
+    maceq.add_uniaxial_anisotropy("ua0", 0, np.deg2rad(90+1e-3), 0, 15e-3)
+    nb, na = 80, 5  # number of fields and angles
     bexts = np.linspace(-0.05, 0.05, nb)
     bexts = np.concatenate((bexts[nb//2+1:], -bexts, bexts))
     nb = len(bexts)
@@ -100,6 +100,7 @@ def test_hysteresis_box():
     bthetas = np.deg2rad(90)*np.ones(na)+1e-3
     bphis_deg = np.linspace(0, 90, na)+1e-3
     bphis = np.deg2rad(bphis_deg)
+    bs = swt.sphr2cart(bthetas, bphis)  # unit vectors of field
     
     thetas, phis = np.zeros((na, nb)), np.zeros((na, nb))
     for i in range(na):
@@ -108,20 +109,27 @@ def test_hysteresis_box():
     ms = swt.sphr2cart(thetas, phis)
 
     cmap = cm.lapaz
-    fig, ax = plt.subplots(1, 3, figsize=(6, 3), constrained_layout=True, dpi=200)
+    # fig, ax = plt.subplots(1, 4, figsize=(9, 3), constrained_layout=True, dpi=200)
+    fig, ax = plt.subplots(2, 2, figsize=(7, 5), constrained_layout=True, dpi=200)
+    ax = ax.flatten()
     for i in range(na):
-        # ax[0].plot(bexts, ms[0, i], "-", c=cmap(i/na), label=f"{bthetas_deg[i]:.0f} °")
-        ax[0].plot(bexts, ms[0, i], "-", c=cmap(i/na), label=f"{bphis_deg[i]:.0f} °")
-        ax[1].plot(bexts, ms[1, i], "-", c=cmap(i/na))
-        ax[2].plot(bexts, ms[2, i], "-", c=cmap(i/na))
-    ax[0].set_xlabel("mag. field (T)")
-    ax[1].set_xlabel("mag. field (T)")
-    ax[2].set_xlabel("mag. field (T)")
+        # ax[0].plot(bexts, ms[0, i], "-", c=cmap(i/na), label=f"{bthetas_deg[i]:.0f}°")
+        ax[0].plot(bexts*1e3, ms[0, i], "-", c=cmap(i/na), label=f"{bphis_deg[i]:.0f}°")
+        ax[1].plot(bexts*1e3, ms[1, i], "-", c=cmap(i/na))
+        ax[2].plot(bexts*1e3, ms[2, i], "-", c=cmap(i/na))
+        ax[3].plot(bexts*1e3, np.dot(bs[:, i], ms[:, i]), "-", c=cmap(i/na))
+    ax[0].set_xlabel("mag. field (mT)")
+    ax[1].set_xlabel("mag. field (mT)")
+    ax[2].set_xlabel("mag. field (mT)")
+    ax[3].set_xlabel("mag. field (mT)")
     ax[0].set_ylabel(r"$m_x$ ()")
     ax[1].set_ylabel(r"$m_y$ ()")
     ax[2].set_ylabel(r"$m_z$ ()")
+    ax[3].set_ylabel(r"$m\cdot b$ ()")
     # fig.legend(loc="outside right upper", title=r"$\theta_B$ (OOP angle)")
-    fig.legend(loc="outside right upper", title=r"$\phi_B$ (IP angle)")
+    # fig.legend(loc="outside right upper", title=r"$\phi_B$ (IP angle)")
+    fig.legend(loc="outside upper center", title=r"$\phi_B$ (IP angle)", 
+               ncol=na, columnspacing=1.)
     plt.show()
 
 
