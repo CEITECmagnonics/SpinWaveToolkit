@@ -203,7 +203,9 @@ class MacrospinEquilibrium:
         self.__check_angle((theta, phi))
         u = sphr2cart(theta, phi)
         Ku = Ku if (Bani is None or Bani == 0) else Bani*self.Ms/2
-        Na = np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2)) if Na is None else Na
+        # The minus is here (below), bcs Na has to have opposite sign than Ku, 
+        # see Skomski (2008) Simple models of magnetism, sec. 3.1.2, pp. 77-78.
+        Na = -np.outer(u, u) * (2 * Ku / (MU0 * self.Ms**2)) if Na is None else Na
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
         self.recalc_params()
 
