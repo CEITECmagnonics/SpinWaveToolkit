@@ -2,6 +2,8 @@
 Place for all helping functions and constants in this module.
 """
 
+from time import time
+import sys
 import numpy as np
 
 __all__ = [
@@ -14,6 +16,9 @@ __all__ = [
     "wavelength2wavenumber",
     "wrapAngle",
     "roots",
+    "sphr2cart",
+    "cart2sphr",
+    "ProgressBar"
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -64,21 +69,26 @@ def wavelength2wavenumber(wavelength):
     return 2 * np.pi / np.array(wavelength)
 
 
-def wrapAngle(angle):
-    """Wrap angle in radians to range ``[0, 2*np.pi)``.
+def wrapAngle(angle, amin=0, amax=2*np.pi):
+    """Wrap angle in radians to range ``[amin, amax)``, by default
+    ``[0, 2*np.pi)``.
 
     Parameters
     ----------
     angle : float or array_like
         (rad) angle to wrap.
+    amin : float, optional
+        (rad) minimum value of the interval (inclusive).
+    amax : float, optional
+        (rad) maximum value of the interval (exclusive).
 
     Returns
     -------
     wrapped_angle : float or ndarray
-        (rad) angle wrapped to ``[0, 2*np.pi)``.
+        (rad) angle wrapped to ``[amin, amax)``.
     """
-    # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
-    return np.mod(angle, 2 * np.pi)
+    angle = np.asarray(angle)
+    return (angle - amin) % (amax - amin) + amin
 
 
 def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
@@ -246,3 +256,170 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
             xs.append(root)
     # return xs
     return np.round(xs, -np.log10(eps).astype(int))
+
+
+def sphr2cart(theta, phi, r=1.0):
+    """Convert spherical coordinates to cartesian.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    theta : float
+        (rad) polar angle (from surface normal).
+    phi : float
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float, optional
+        (length unit) radial distance. Default is 1.
+
+    Returns
+    -------
+    xyz : ndarray
+        (length unit) vector of shape ``(3, ...)`` as for (x, y, z).
+    """
+    st, ct = np.sin(theta), np.cos(theta)
+    cp, sp = np.cos(phi), np.sin(phi)
+    return np.array([r*st*cp, r*st*sp, r*ct*np.ones_like(cp)], dtype=np.float64)
+
+
+def cart2sphr(x, y, z):
+    """Convert cartesian coordinates to spherical.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    x, y, z : float or array_like
+        (length unit) cartesian coordinates.
+
+    Returns
+    -------
+    theta : float or ndarray
+        (rad) polar angle (from surface normal).
+    phi : float or ndarray
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float or ndarray
+        (length unit) radial distance.
+    """
+    x = np.array(x, dtype=np.float64)
+    y = np.array(y, dtype=np.float64)
+    z = np.array(z, dtype=np.float64)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+    return theta, phi, r
+
+
+class ProgressBar:
+    """
+    Prints a progress bar to console. 
+    
+    Time counting starts when a new instance of this class is created.
+
+    .. note::
+       
+        In the future, we might switch to ``tqdm`` module instead 
+        without further notice.
+
+    Parameters
+    ----------
+    niter : int
+        Total number of iterations.
+    bar_len : int, optional
+        Length of the progress bar (in characters).  Default is 20.
+    
+    Attributes
+    ----------
+    niter : int
+        Total number of iterations.
+    bar_len : int
+        Length of the progress bar (in characters).
+    t_start : float
+        (s) starting time.  Default is the time of instantiation of the 
+        object returned by ``time.time()``.
+    i : int
+        Current iteration.
+    up_every : int
+        Divisor of `i` that signals updating the progress bar.
+
+    Methods
+    -------
+    next
+    finish
+
+    Examples
+    --------
+
+    .. code-block:: python
+       
+        from time import sleep
+
+        niter = 55
+        pb = ProgressBar(niter)
+        for i in range(niter):
+            sleep(0.1)  # replace this by some calculation step
+            pb.next()
+        pb.finish()
+
+    Notes
+    -----
+    The output is usually rewriting itself until 100 % is reached.  This
+    is true for outputs in terminals (bash, powershell, command prompt, 
+    ...).  However, for the python's default IDE, the IDLE, this can 
+    print pretty ugly.  To fix this, change the attribute 
+    ``ProgressBar._lend`` to ``"\\n"`` when using IDLE to run the 
+    scripts.
+
+    See also
+    --------
+    MacrospinEquilibrium
+
+    """
+    def __init__(
+            self,
+            niter,
+            bar_len=20,
+        ):
+        self.niter = niter
+        self.bar_len = bar_len
+        self.t_start = time()
+        self.i = 0
+        self.up_every = max(niter // bar_len, 1)
+        self._lend = ""  # line end character
+
+    @staticmethod
+    def __form_t(t):
+        """Format time to "[hh:]mm:ss.s"."""
+        hours = int(t // 3600)
+        minutes = int((t % 3600) // 60)
+        seconds = t % 60
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds:04.1f}"
+        return f"{minutes:02d}:{seconds:04.1f}"
+
+    def __up(self):
+        """Calculate current status and print it to stdout."""
+        elapsed = time() - self.t_start
+        perc = (self.i + 1) / self.niter
+        etc = elapsed / perc - elapsed
+        fill = int(self.bar_len * perc)
+        bar = "#" * fill + "-" * (self.bar_len - fill)
+
+        sys.stdout.write(
+            f"\r[{bar}] {perc*100:5.1f} % | {self.__form_t(elapsed)}<{self.__form_t(etc)}"
+            + self._lend
+        )
+        sys.stdout.flush()
+
+    def next(self, step=1):
+        """Advance by the amount of `step` and eventually print output."""
+        self.i += step
+        if self.i % self.up_every == 0 or self.i == self.niter - 1:
+            self.__up()
+    
+    def finish(self):
+        """End the progress bar process."""
+        self.i = self.niter - 1
+        self.__up()
+        print()  # newline after progress bar
+

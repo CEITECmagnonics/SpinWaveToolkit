@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, roots
+from SpinWaveToolkit.helpers import MU0, roots, sphr2cart
 
 __all__ = ["SingleLayer"]
 
@@ -24,6 +24,7 @@ class SingleLayer:
     A.G. Gurevich and G.A. Melkov. Magnetization Oscillations and Waves.
     CRC Press, 1996.
 
+
     Parameters
     ----------
     Bext : float
@@ -34,10 +35,10 @@ class SingleLayer:
     d : float
         (m) layer thickness (in z direction).
     kxi : float or ndarray, optional
-        (rad/m) k-vector (wavenumber), usually a vector.
+        (rad/m) in-plane k-vector (wavenumber), usually a vector.
     theta : float, optional
-        (rad) out of plane angle of static M, pi/2 is totally
-        in-plane magnetization.
+        (rad) out of plane angle of static M.  Measured from film 
+        normal, i.e. pi/2 is totally in-plane magnetization.
     phi : float or ndarray, optional
         (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
@@ -51,6 +52,18 @@ class SingleLayer:
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned. Can be calculated as ``dp=Ks/Aex``,
         see https://doi.org/10.1103/PhysRev.131.594.
+    theta_H : float or None, optional
+        (rad) polar angle of external field wrt. film normal.  If None,
+        field is taken as collinear with M.  Default is None.
+    phi_H : float, optional
+        (rad) azimuthal angle of external field wrt. M.  Default is 0.
+    Nd : (3,3) array or None, optional
+        Shape demag tensor in lab frame (x,y in plane, z = film normal). 
+        If None, taken as for an infinite thin film 
+        ``np.diag([0,0,1])``.  Default is None.
+    Na : (3,3) array or None, optional
+        Anisotropy tensor in lab frame.  If None, ``np.zeros((3, 3))``
+        is used.  Default is None.
 
     Attributes
     ----------
@@ -129,19 +142,28 @@ class SingleLayer:
         material,
         d,
         kxi=np.linspace(1e-12, 25e6, 200),
-        theta=np.pi / 2,
-        phi=np.pi / 2,
+        theta=np.pi/2,
+        phi=np.pi/2,
         weff=3e-6,
         boundary_cond=1,
         dp=0,
+        theta_H=None,
+        phi_H=0,
+        Nd=None,
+        Na=None,
     ):
         self._Bext = Bext
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
+        self._theta = theta
+        self._theta_H = self.theta if (theta_H is None) else theta_H
+        self._phi_H = phi_H
+        # Demag tensors in laboratory frame (z = film normal)
+        self._Nd = np.diag([0.0, 0.0, 1.0]) if Nd is None else np.array(Nd)
+        self._Na = np.zeros((3, 3)) if Na is None else np.array(Na)
 
         self.kxi = np.array(kxi)
-        self.theta = theta
         self.phi = phi
         self.d = d
         self.weff = weff
@@ -154,6 +176,8 @@ class SingleLayer:
         self.w0 = self.gamma * self.Bext
         self.A = self.Aex * 2 / (self.Ms**2 * MU0)
 
+        self.__update_w0()
+
     @property
     def Bext(self):
         """External field value (T)."""
@@ -162,7 +186,7 @@ class SingleLayer:
     @Bext.setter
     def Bext(self, val):
         self._Bext = val
-        self.w0 = self.gamma * val
+        self.__update_w0()
 
     @property
     def Ms(self):
@@ -174,6 +198,7 @@ class SingleLayer:
         self._Ms = val
         self.wM = val * self.gamma * MU0
         self.A = self.Aex * 2 / (val**2 * MU0)
+        self.__update_w0()
 
     @property
     def gamma(self):
@@ -184,7 +209,7 @@ class SingleLayer:
     def gamma(self, val):
         self._gamma = val
         self.wM = self.Ms * val * MU0
-        self.w0 = val * self.Bext
+        self.__update_w0()
 
     @property
     def Aex(self):
@@ -195,6 +220,79 @@ class SingleLayer:
     def Aex(self, val):
         self._Aex = val
         self.A = val * 2 / (self.Ms**2 * MU0)
+
+    @property
+    def theta(self):
+        """Out-of-plane angle of static M (rad)."""
+        return self._theta
+
+    @theta.setter
+    def theta(self, val):
+        self._theta = val
+        self.__update_w0()
+
+    @property
+    def theta_H(self):
+        """Polar angle of external field wrt. film normal (rad)."""
+        return self._theta_H
+
+    @theta_H.setter
+    def theta_H(self, val):
+        self._theta_H = val
+        self.__update_w0()
+
+    @property
+    def phi_H(self):
+        """Azimuthal angle of external field wrt. M (rad)."""
+        return self._phi_H
+
+    @phi_H.setter
+    def phi_H(self, val):
+        self._phi_H = val
+        self.__update_w0()
+    
+    @property
+    def Nd(self):
+        """Shape demag tensor in lab frame."""
+        return self._Nd
+
+    @Nd.setter
+    def Nd(self, val):
+        self._Nd = val
+        self.__update_w0()
+    
+    @property
+    def Na(self):
+        """Anisotropy tensor in lab frame."""
+        return self._Na
+
+    @Na.setter
+    def Na(self, val):
+        self._Na = val
+        self.__update_w0()
+
+    def __tensor_in_Mframe(self, Tlab):
+        """Transform tensor `Tlab` from lab frame to M frame."""
+        m = sphr2cart(self.theta, 0.0)  # M azimuth irrelevant for k–M angle definition
+        zlab = np.array([0.0, 0.0, 1.0])
+        x_try = zlab - (zlab @ m) * m
+        if np.linalg.norm(x_try) < 1e-14:  # M ∥ z
+            x_try = np.cross(m, np.array([1.0, 0.0, 0.0]))
+            if np.linalg.norm(x_try) < 1e-14:
+                x_try = np.cross(m, np.array([0.0, 1.0, 0.0]))
+        x = x_try / np.linalg.norm(x_try)
+        y = np.cross(m, x)
+        rot = np.column_stack([x, y, m])  # LAB basis columns
+        return rot.T @ Tlab @ rot
+
+    def __update_w0(self):
+        """Update the w0 parameter when any part changes."""
+        mhat = sphr2cart(self.theta, 0.0)
+        hhat = sphr2cart(self.theta_H, self.phi_H)
+        B_eff = self.Bext * float(mhat @ hhat)
+        B_eff += -MU0 * self.Ms * float(mhat @ self.Nd @ mhat)
+        B_eff += -MU0 * self.Ms * float(mhat @ self.Na @ mhat)
+        self.w0 = self.gamma * B_eff
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
@@ -525,7 +623,24 @@ class SingleLayer:
             * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
             / (self.w0 + self.A * self.wM * np.power(k, 2))
         )
-        return Fnn
+        # anisotropy correction in M-frame [Eq. (17b) in KS 1990]
+        NaM = self.__tensor_in_Mframe(self.Na)
+        Nxx, Nyy, Nzz = NaM[0, 0], NaM[1, 1], NaM[2, 2]
+        Nxz = NaM[0, 2]  # = Nzx
+
+        Qn = self.w0 + self.A*self.wM*(k**2)
+        sT, cT = np.sin(self.theta), np.cos(self.theta)
+
+        Fnna = (
+            Nxx + Nyy
+            + (self.wM/Qn) * (Nxx*Nyy + Nzz*(sT**2) - Nxz**2)
+            + (self.wM/Qn) * Pnn * (
+                Nxx * (np.cos(phi)**2 - sT**2 * (1.0 + np.cos(phi)**2))
+                + Nyy * (np.sin(phi)**2)
+                - Nxz * (cT * np.sin(2.0*phi))
+                )
+        )
+        return Fnn + Fnna
 
     def GetDispersion(self, n=0, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
@@ -550,7 +665,6 @@ class SingleLayer:
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
         )
         return f
-
     def GetGroupVelocity(self, n=0, nT=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.

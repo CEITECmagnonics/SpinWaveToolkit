@@ -4,8 +4,6 @@ Functions
 General functions
 -----------------
 
-.. autofunction:: SpinWaveToolkit.distBE
-
 .. autofunction:: SpinWaveToolkit.wavenumber2wavelength
 
 .. autofunction:: SpinWaveToolkit.wavelength2wavenumber
@@ -13,6 +11,12 @@ General functions
 .. autofunction:: SpinWaveToolkit.wrapAngle
 
 .. autofunction:: SpinWaveToolkit.roots
+
+.. autofunction:: SpinWaveToolkit.distBE
+
+.. autofunction:: SpinWaveToolkit.sphr2cart
+
+.. autofunction:: SpinWaveToolkit.cart2sphr
 
 
 

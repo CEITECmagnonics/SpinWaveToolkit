@@ -1,7 +1,13 @@
 # Rules and documentation logic for contributors
 
+> [!tip]
+> To navigate through this file, use the Table of Contents in the upper right corner of the rendered window block of this file (<img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/list-ul.svg#L1" width="10"> icon).
+
 > [!NOTE]
 > Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch is not allowed anymore (via branch protection rules). Only changes based on Branch & Pull Request workflow are allowed.
+
+> [!caution]
+> List of things to do before merging to `master` branch is in [#checks-before-each-pr-of-a-new-release] section below.
 
 We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open a new Issue to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues. Please check if any relevant issue is already posted and consider raising your concern there rather than creating a new issue.
 
@@ -81,6 +87,14 @@ After this you might want to check the changes done by [black] (easily done in G
 
 ### Notes on [pytest]
 Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue][Issues] so someone else can try to implement it.
+
+
+### Checks before each PR of a new release
+Things to check before merging to `master`:
+- Correct SWT version in [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py), [`build_deploy_docs.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs.yml), and [`version.json`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/versions.json) (for this see [Version switcher docs](https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)). 
+  *(In [`conf.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/conf.py) it is automatically read from [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py) or [`build_deploy_docs.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs.yml) or [`build_deploy_docs_dev.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs_dev.yml))*
+- All functions, modules, classes, and constants of SWT are documented in the [docs](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/new-release/docs/source) and in [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py) docstring (where applicable).
+
 
 
 
