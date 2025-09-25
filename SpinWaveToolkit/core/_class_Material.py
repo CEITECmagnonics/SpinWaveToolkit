@@ -66,7 +66,7 @@ class Material:
         with a given surface anisotropy. The result is in rad/m.
         ``p=-2*np.pi*Ku/Aex``
 
-        ### Is this correct?
+            ### Is this correct?
 
         https://doi.org/10.1103/PhysRevB.83.174417
         """

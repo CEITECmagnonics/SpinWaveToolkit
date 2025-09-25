@@ -45,14 +45,14 @@ class SingleLayerNumeric:
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
         pinned BC.  Default is 1.
-        ### The only working BCs are 1 right now, some functions
+            ### The only working BCs are 1 right now, some functions
             implement 2 and 4, but it is not complete!
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned.
     KuOOP : float, optional
         (J/m^3) OOP anisotropy strength used in the Tacchi model.
-        ### Should this be calculated from the surface anisotropy
+            ### Should this be calculated from the surface anisotropy
             strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)

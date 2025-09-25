@@ -1,5 +1,5 @@
 ``SpinWaveToolkit.ObjectiveLens``
-============================
+=================================
 
 .. autoclass:: SpinWaveToolkit.ObjectiveLens
    :members:

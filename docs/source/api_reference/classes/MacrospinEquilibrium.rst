@@ -1,5 +1,5 @@
-``SpinWaveToolkit.BulkPolariton``
-=================================
+``SpinWaveToolkit.MacrospinEquilibrium``
+========================================
 
 .. autoclass:: SpinWaveToolkit.MacrospinEquilibrium
    :members:

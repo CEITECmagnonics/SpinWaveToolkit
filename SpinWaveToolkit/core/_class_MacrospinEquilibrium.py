@@ -16,8 +16,8 @@ class MacrospinEquilibrium:
 
     Can be used to find static equilibrium position before calculating
     the spin-wave dispersion relation in other classes.  See 
-    :doc:`examples` for more.  # ### update exact example (e.g. a layer 
-    with PMA)
+    :doc:`/examples` for more.  
+    .. # ### update exact example (e.g. a layer with PMA)
 
     Usually searches for a local equilibrium based on the initial 
     position.  (The equilibrium is a minimum in the energy density 
