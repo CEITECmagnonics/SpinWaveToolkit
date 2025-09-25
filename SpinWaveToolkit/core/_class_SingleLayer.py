@@ -17,6 +17,9 @@ class SingleLayer:
     The model uses the famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
+    The laboratory coordinate frame of reference is 
+    *z || to film normal* and *x || to in-plane wavevector*.
+
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
@@ -56,9 +59,10 @@ class SingleLayer:
         (rad) polar angle of external field wrt. film normal.  If None,
         field is taken as collinear with M.  Default is None.
     phi_H : float, optional
-        (rad) azimuthal angle of external field wrt. M.  Default is 0.
+        (rad) azimuthal angle of external field wrt. kxi.  If None,
+        field is taken as collinear with M.  Default is None.
     Nd : (3,3) array or None, optional
-        Shape demag tensor in lab frame (x,y in plane, z = film normal). 
+        Shape demag tensor in lab frame. 
         If None, taken as for an infinite thin film 
         ``np.diag([0,0,1])``.  Default is None.
     Na : (3,3) array or None, optional
@@ -148,7 +152,7 @@ class SingleLayer:
         boundary_cond=1,
         dp=0,
         theta_H=None,
-        phi_H=0,
+        phi_H=None,
         Nd=None,
         Na=None,
     ):
@@ -158,7 +162,7 @@ class SingleLayer:
         self._Aex = material.Aex
         self._theta = theta
         self._theta_H = self.theta if (theta_H is None) else theta_H
-        self._phi_H = phi_H
+        self._phi_H = self.phi if (phi_H is None) else phi_H
         # Demag tensors in laboratory frame (z = film normal)
         self._Nd = np.diag([0.0, 0.0, 1.0]) if Nd is None else np.array(Nd)
         self._Na = np.zeros((3, 3)) if Na is None else np.array(Na)
@@ -273,7 +277,9 @@ class SingleLayer:
 
     def __tensor_in_Mframe(self, Tlab):
         """Transform tensor `Tlab` from lab frame to M frame."""
-        m = sphr2cart(self.theta, 0.0)  # M azimuth irrelevant for k–M angle definition
+        # ### is this correct? I think we need to include phi as k || x, but M 
+        # is not. Therefore I changed 0 to self.phi on the following line.
+        m = sphr2cart(self.theta, self.phi)  # M azimuth irrelevant for k–M angle definition (???)
         zlab = np.array([0.0, 0.0, 1.0])
         x_try = zlab - (zlab @ m) * m
         if np.linalg.norm(x_try) < 1e-14:  # M ∥ z
@@ -287,11 +293,12 @@ class SingleLayer:
 
     def __update_w0(self):
         """Update the w0 parameter when any part changes."""
-        mhat = sphr2cart(self.theta, 0.0)
+        mhat = sphr2cart(self.theta, self.phi)
         hhat = sphr2cart(self.theta_H, self.phi_H)
         B_eff = self.Bext * float(mhat @ hhat)
         B_eff += -MU0 * self.Ms * float(mhat @ self.Nd @ mhat)
         B_eff += -MU0 * self.Ms * float(mhat @ self.Na @ mhat)
+        # ### check that the sign of Na from MacEq is correct.
         self.w0 = self.gamma * B_eff
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
@@ -1020,3 +1027,24 @@ class SingleLayer:
             / (L * self.GetCouplingParam())
             * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )
+    
+    def set_DE(self):
+        """Changes angles theta and phi to match the Damon Eshbach 
+        geometry, i.e. M || y, Bext || y.
+        """
+        self.theta, self.phi = np.pi/2, np.pi/2
+        self.theta_H, self.phi_H = np.pi/2, np.pi/2
+    
+    def set_BV(self):
+        """Changes angles theta and phi to match the backward volume 
+        geometry, i.e. M || x, Bext || x.
+        """
+        self.theta, self.phi = np.pi/2, 0
+        self.theta_H, self.phi_H = np.pi/2, 0
+    
+    def set_FV(self):
+        """Changes angles theta and phi to match the forward volume 
+        geometry, i.e. M || z, Bext || z.
+        """
+        self.theta = 0
+        self.theta_H, self.phi_H = 0, 0
