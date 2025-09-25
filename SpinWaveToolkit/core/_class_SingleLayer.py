@@ -43,7 +43,7 @@ class SingleLayer:
         (rad) out of plane angle of static M.  Measured from film 
         normal, i.e. pi/2 is totally in-plane magnetization.
     phi : float or ndarray, optional
-        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
+        (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
@@ -107,6 +107,9 @@ class SingleLayer:
     GetCouplingParam
     GetThresholdField
     GetThresholdFieldNonAdiabatic
+    set_DE
+    set_BV
+    set_FV
 
     Private methods
     ---------------

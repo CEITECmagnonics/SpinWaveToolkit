@@ -17,18 +17,21 @@ class SingleLayerNumeric:
     The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
 
+    The laboratory coordinate frame of reference is 
+    *z || to film normal* and *x || to in-plane wavevector*.
+
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction)
+        (m ) layer thickness (in z direction)
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
@@ -37,7 +40,7 @@ class SingleLayerNumeric:
         might give wrong results, as the model currently does not 
         describe these situations.
     phi : float or ndarray, optional
-        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
+        (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
         (m) effective width of the waveguide (not used for zeroth
         order width modes).
@@ -75,7 +78,7 @@ class SingleLayerNumeric:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
         ``w0 = MU0*gamma*Hext``
@@ -98,6 +101,8 @@ class SingleLayerNumeric:
     GetDensityOfStates
     GetBlochFunction
     GetExchangeLen
+    set_DE
+    set_BV
 
     Private methods
     ---------------
