@@ -5,6 +5,8 @@ Core (private) file for the `SingleLayer` class.
 import numpy as np
 from SpinWaveToolkit.helpers import MU0, roots, sphr2cart
 
+__all__ = ["SingleLayer"]
+
 
 class SingleLayer:
     """
@@ -135,21 +137,21 @@ class SingleLayer:
     """
 
     def __init__(
-            self,
-            Bext,
-            material,
-            d,
-            kxi=np.linspace(1e-12, 25e6, 200),
-            theta=np.pi/2,
-            phi=np.pi/2,
-            weff=3e-6,
-            boundary_cond=1,
-            dp=0,
-            theta_H=None,
-            phi_H=0,
-            Nd=None,
-            Na=None,
-        ):
+        self,
+        Bext,
+        material,
+        d,
+        kxi=np.linspace(1e-12, 25e6, 200),
+        theta=np.pi/2,
+        phi=np.pi/2,
+        weff=3e-6,
+        boundary_cond=1,
+        dp=0,
+        theta_H=None,
+        phi_H=0,
+        Nd=None,
+        Na=None,
+    ):
         self._Bext = Bext
         self._Ms = material.Ms
         self._gamma = material.gamma

@@ -131,16 +131,16 @@ class MacrospinEquilibrium:
     """
 
     def __init__(
-            self,
-            Ms,
-            Bext, 
-            theta_H, 
-            phi_H,
-            theta=None,
-            phi=None,
-            demag=None,
-            verbose=True,
-        ):
+        self,
+        Ms,
+        Bext, 
+        theta_H, 
+        phi_H,
+        theta=None,
+        phi=None,
+        demag=None,
+        verbose=True,
+    ):
         self.Ms = Ms
 
         self.M = {
