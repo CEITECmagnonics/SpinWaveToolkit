@@ -724,3 +724,15 @@ class SingleLayerNumeric:
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
         return np.sqrt(self.A)
+    
+    def set_DE(self):
+        """Changes angles theta and phi to match the Damon Eshbach 
+        geometry, i.e. M || y, Bext || y.
+        """
+        self.theta, self.phi = np.pi/2, np.pi/2
+    
+    def set_BV(self):
+        """Changes angles theta and phi to match the backward volume 
+        geometry, i.e. M || x, Bext || x.
+        """
+        self.theta, self.phi = np.pi/2, 0
