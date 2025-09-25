@@ -33,7 +33,9 @@ class SingleLayerNumeric:
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally
-        in-plane magnetization.
+        in-plane magnetization.  Other values than pi/2 multiples 
+        might give wrong results, as the model currently does not 
+        describe these situations.
     phi : float or ndarray, optional
         (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
     weff : float, optional
@@ -154,6 +156,8 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
+        if (theta+1e-4) % np.pi/2 > 1e-3:
+            print("WARNING: theta is not a multiple of pi/2. The results might be misleading!")
         self.theta = theta
         self.phi = phi
         self.d = d

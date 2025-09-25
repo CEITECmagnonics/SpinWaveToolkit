@@ -34,7 +34,10 @@ class DoubleLayerNumeric:
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle of Bext, pi/2 is totally in-plane
-        magnetization.
+        magnetization. Beware of (partially) OOP calculations for 
+        spin-wave dispersion relation, as they are not implemented here.
+        For energy calculations, theta other than pi/2 is supported in 
+        experimental code.
     phi : float or ndarray, optional
         (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
     Ku : float, optional
@@ -162,6 +165,8 @@ class DoubleLayerNumeric:
         self._Ku2 = Ku2
 
         self.kxi = np.array(kxi)
+        if abs(theta - np.pi/2) > 1e-4:
+            print("WARNING: theta other than pi/2 might give misleading results.")
         self.theta = theta
         self.phi = phi
         self.d = d
@@ -582,7 +587,14 @@ class DoubleLayerNumeric:
         -------
         E : float
             (J) energy density of the system.
+
+        Notes
+        -----
+        This method is experimental. There are some unresolved 
+        functionalities, such as surface anisotropy terms and uniaxial 
+        anisotropy axis direction.
         """
+        # ### WTF is this mess? we should make these as params, but are they valid?
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
         phi2 = -np.pi / 2
