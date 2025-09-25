@@ -33,8 +33,8 @@ def getBLSsignal(
     Parameters
     ----------
     SweepBloch : ndarray
-        Sweep vector of the Bloch functions. Usually frequency of spin
-        waves.
+        Sweep vector of the Bloch functions with shape ``(Nf,)``. 
+        Usually frequency of spin waves.
     KxKyBloch : tuple[ndarray]
         (rad/m) tuple containing the 1D grids ``(kx_grid, ky_grid)`` on
         which the Bloch functions are defined.
@@ -84,6 +84,13 @@ def getBLSsignal(
         (V/m) scattered electric field in the Y axis.
         1D array with shape ``(Nf,)`` containing the scattered electric
         field in the Y direction for each frequency in SweepBloch.
+    Px, Py, Pz : ndarray
+        (V/m) induced polarization in the magnetic layer.  Corresponds 
+        to `P` in eq. (3) in Wojewoda et al. PRB 110, 224428 (2024).
+        Each array has shape ``(Nf, 2*Nq-1, 2*Nq-1)``.
+    Qx, Qy : ndarray
+        (rad/m) k-space grids for polarizations `Px`, `Py`, `Pz`.
+        Each array has shape ``(2*Nq-1, 2*Nq-1)``.
     """
     k0 = 2 * np.pi / wavelength
 
@@ -200,9 +207,13 @@ def getBLSsignal(
     )
     # -------------------------------------------------------------
 
+    # Preallocate polarization.
     # Loop over frequencies returned by SpinWaveGreen.
     # Here we assume that the first dimension of Bloch (after the component index)
     # corresponds to the sweep index (and that len(SweepBloch)==Nf).
+    Px = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
+    Py = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
+    Pz = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
     for i, s in enumerate(SweepBloch):
         # --- Interpolate Bloch function components onto the Qx-Qy grid ---
         # We assume Bloch has shape (3, Nf, Nkx, Nky)
@@ -224,38 +235,38 @@ def getBLSsignal(
 
         # --- Convolve the electric field with the (interpolated) Bloch components ---
         # We do not care about
-        Px = convolve2d(
+        Px[i] = convolve2d(
             interp_fftEI[2, :, :], 1j * Bloch_interp_My, mode="same"
         ) + convolve2d(interp_fftEI[1, :, :], -1j * Bloch_interp_Mz, mode="same")
-        Py = convolve2d(
+        Py[i] = convolve2d(
             interp_fftEI[0, :, :], 1j * Bloch_interp_Mz, mode="same"
         ) + convolve2d(interp_fftEI[2, :, :], -1j * Bloch_interp_Mx, mode="same")
-        Pz = convolve2d(
+        Pz[i] = convolve2d(
             interp_fftEI[1, :, :], 1j * Bloch_interp_Mx, mode="same"
         ) + convolve2d(interp_fftEI[0, :, :], -1j * Bloch_interp_My, mode="same")
         # -------------------------------------------------------------
 
         # --- Calculate the p- and s-polarized electric field contributions ---
         # pGF and sGF are assumed to be 3×2 structures (lists of lists or similar).
-        Ep = pGF[0][0] * Px * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[0][
+        Ep = pGF[0][0] * Px[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[0][
             1
-        ] * Px * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[1][0] * Py * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[1][
+        ] * Px[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Ep += pGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[1][
             1
-        ] * Py * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[2][0] * Pz * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[2][
+        ] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Ep += pGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[2][
             1
-        ] * Pz * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
 
-        Es = sGF[0][0] * Px * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[0][
+        Es = sGF[0][0] * Px[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[0][
             1
-        ] * Px * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[1][0] * Py * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[1][
+        ] * Px[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Es += sGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[1][
             1
-        ] * Py * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[2][0] * Pz * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[2][
+        ] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Es += sGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[2][
             1
-        ] * Pz * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
         # -------------------------------------------------------------
 
         # --- Convert to X and Y components in the laboratory frame ---
@@ -311,4 +322,7 @@ def getBLSsignal(
         EyS[i] = dxi * dyi * np.sum(Ey_real)
 
     # Return the computed scattered electric field in x and y direction (1D array over sweep)
-    return ExS, EyS
+    # and the polarization currents in the magnetic layer [three 3D arrays of shape 
+    # (Nf, 2*Nq-1, 2*Nq-1)] with the respective wavevector grids [two 2D arrays of shape
+    # (2*Nq-1, 2*Nq-1)]
+    return ExS, EyS, Px, Py, Pz, Qx, Qy
