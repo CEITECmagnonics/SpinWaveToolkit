@@ -3,6 +3,10 @@ This module provides analytical tools in spin-wave physics.
 
 Classes
 -------
+Material
+    Class for magnetic materials used in spin wave research.
+MacrospinEquilibrium
+    Compute the static macrospin equilibrium direction.
 SingleLayer
     Compute spin-wave characteristics in dependance to k-vector for
     a single layer using an analytical model of Kalinikos and Slavin.
@@ -16,15 +20,17 @@ SingleLayerSCcoupled
     Compute spin-wave characteristics in dependance to k-vector for
     a single ferromagnetic layer dipolarly coupled to a superconductor
     using a semi-analytical model of Zhou et al.
-Material
-    Class for magnetic materials used in spin wave research.
 ObjectiveLens
     Class for calculation of the focal electric fields of given lens.
+ProgressBar
+    Simple progress bar printed in terminal.
     
 Constants
 ---------
 MU0 : float
     (N/A^2) magnetic permeability of free space.
+C : float
+    (m/s) speed of free-space light.
 KB : float
     (J/K) Boltzmann constant.
 HBAR : float
@@ -56,6 +62,10 @@ roots
     given interval `[a, b]`.
 distBE
     Bose-Einstein distribution function.
+sphr2cart
+    Convert spherical coordinates to cartesian.
+cart2sphr
+    Convert cartesian coordinates to spherical.
 fresnel_coefficients
     Compute Fresnel reflection and transmission coefficients.
 htp
