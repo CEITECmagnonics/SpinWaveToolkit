@@ -7,7 +7,7 @@
 > Although we welcome and appreciate help from the outside, for now the direct contributors are restricted to [CEITECmagnonics] members. Others can use the standard Fork & Pull Request Workflow (see e.g. [here](https://gist.github.com/james-priest/74188772ef2a6f8d7132d0b9dc065f9c)). For direct contributors, commiting to the `master` branch is not allowed anymore (via branch protection rules). Only changes based on Branch & Pull Request workflow are allowed.
 
 > [!caution]
-> List of things to do before merging to `master` branch is in [#checks-before-each-pr-of-a-new-release] section below.
+> List of things to do before merging to `master` branch is in [this](#checks-before-each-pr-of-a-new-release) section below.
 
 We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open a new Issue to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues. Please check if any relevant issue is already posted and consider raising your concern there rather than creating a new issue.
 
@@ -35,6 +35,7 @@ The SpinWaveToolkit repository adapts the following structure:
 
 All direct contributors ([CEITECmagnonics] members) are requested to use the following workflow:
 - Have this repository cloned to your local drive (simplest way to do this is using [GitHub Desktop] - ask colleagues for eventual help/introduction).
+- Commit to the appropriate branch. For more info see [this](#branch-logic) section below.
 - Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
 - When working on some critical file (e.g. [_class_SingleLayer.py](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/master/SpinWaveToolkit/core/_class_SingleLayer.py)), it's good to let others know, e.g. via MS Teams, to prevent conflicts.
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module files. Examples and other scripts rely mostly on your feeling for nice code.
@@ -88,6 +89,15 @@ After this you might want to check the changes done by [black] (easily done in G
 ### Notes on [pytest]
 Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue][Issues] so someone else can try to implement it.
 
+### Branch logic
+Here, you should find the answer to your question "What branch should I use?".
+
+There are by default three branches, that will be here hopefully always:
+- `master` - here the newest stable code is published. We do not continue to develop older versions, so one branch like this is enough. **You cannot directly commit to this branch!** Luckily there are protection rules that prevent accidental push to this branch. Only Pull Requests (PRs), usually from the `new-release` branch, are allowed, and only at a point when the code is stable and ready for a new release. See [below](#checks-before-each-pr-of-a-new-release) for a list of things to check before merging to `master`.
+- `gh-pages` - branch that is managed purely by our GH Actions, i.e. **DO NOT TOUCH IT!** It is the only backup Unfortunately, we cannot apply protection rules for this branch **to be finished**
+- `new-release`
+
+**to be finished**
 
 ### Checks before each PR of a new release
 Things to check before merging to `master`:

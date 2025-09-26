@@ -42,7 +42,7 @@ class SingleLayerNumeric:
     phi : float or ndarray, optional
         (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
+        (m ) effective width of the waveguide (not used for zeroth
         order width modes).
     boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
@@ -629,7 +629,7 @@ class SingleLayerNumeric:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -665,7 +665,7 @@ class SingleLayerNumeric:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 

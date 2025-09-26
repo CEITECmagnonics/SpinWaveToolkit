@@ -26,7 +26,7 @@ class BulkPolariton:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
@@ -49,7 +49,7 @@ class BulkPolariton:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
         ``w0 = MU0*gamma*Hext``

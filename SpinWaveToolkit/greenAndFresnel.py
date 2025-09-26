@@ -45,7 +45,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     Parameters
     ----------
     lambda_ : float
-        (m) wavelength of the calculated light.
+        (m ) wavelength of the calculated light.
     DF : array_like
         () array of dielectric functions (complex) for each layer,
         ordered from top (superstrate) downward.
@@ -53,7 +53,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         () array of relative permeabilities for each layer (typically
         ones).
     d : array_like
-        (m) array of thicknesses for the layers between the superstrate
+        (m ) array of thicknesses for the layers between the superstrate
         and substrate.  Length should be ``len(DF) - 2``.
     source_layer_index : int
         0-indexed index of the layer where the source (induced
@@ -409,7 +409,7 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
     DFMagLayer : float
         () dielectric function (permitivity) of the magnetic layer.
     wavelength : float
-        (m) wavelength of the light.
+        (m ) wavelength of the light.
     tp, ts : list or array_like
         Fresnel coefficients for p- and s-polarization, respectively.
         Each is expected to have two elements (e.g. ``tp[0]`` and 

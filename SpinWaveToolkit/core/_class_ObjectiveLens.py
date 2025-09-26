@@ -22,13 +22,13 @@ class ObjectiveLens:
     Parameters
     ----------
     wavelength : float
-        (m) wavelength of the light.
+        (m ) wavelength of the light.
     NA : float
         Numerical aperture of the objective lens.
     f0 : float
         Filling factor.
     f : float
-        (m) focal length of the objective lens.
+        (m ) focal length of the objective lens.
 
     Attributes
     ----------
@@ -74,10 +74,10 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (``z = 0`` corresponds to the focal
+            (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m) maximum radial coordinate for evaluation.
+            (m ) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -174,10 +174,10 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (``z = 0`` corresponds to the focal
+            (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m) maximum radial coordinate for evaluation.
+            (m ) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 
@@ -260,10 +260,10 @@ class ObjectiveLens:
         Parameters
         ----------
         z : float
-            (m) defocus of the beam (``z = 0`` corresponds to the focal
+            (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m) maximum radial coordinate for evaluation.
+            (m ) maximum radial coordinate for evaluation.
         N : int
             Number of points in each direction for the output grid.
 

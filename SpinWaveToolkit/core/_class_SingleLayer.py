@@ -31,12 +31,12 @@ class SingleLayer:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction).
+        (m ) layer thickness (in z direction).
     kxi : float or ndarray, optional
         (rad/m) in-plane k-vector (wavenumber), usually a vector.
     theta : float, optional
@@ -45,7 +45,7 @@ class SingleLayer:
     phi : float or ndarray, optional
         (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
+        (m ) effective width of the waveguide (not used for zeroth
         order width modes).
     boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
@@ -66,8 +66,8 @@ class SingleLayer:
         If None, taken as for an infinite thin film 
         ``np.diag([0,0,1])``.  Default is None.
     Na : (3,3) array or None, optional
-        Anisotropy tensor in lab frame.  If None, ``np.zeros((3, 3))``
-        is used.  Default is None.
+        () anisotropy tensor in lab frame.  If None, 
+        ``np.zeros((3, 3))`` is used.  Default is None.
 
     Attributes
     ----------
@@ -81,7 +81,7 @@ class SingleLayer:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation.
         `w0 = MU0*gamma*Hext`
@@ -165,7 +165,7 @@ class SingleLayer:
         self._Aex = material.Aex
         self._theta = theta
         self._theta_H = self.theta if (theta_H is None) else theta_H
-        self._phi_H = self.phi if (phi_H is None) else phi_H
+        self._phi_H = phi if (phi_H is None) else phi_H
         # Demag tensors in laboratory frame (z = film normal)
         self._Nd = np.diag([0.0, 0.0, 1.0]) if Nd is None else np.array(Nd)
         self._Na = np.zeros((3, 3)) if Na is None else np.array(Na)
@@ -714,7 +714,7 @@ class SingleLayer:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -745,7 +745,7 @@ class SingleLayer:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n, nT=nT) * self.GetGroupVelocity(n=n, nT=nT)
 
@@ -991,12 +991,13 @@ class SingleLayer:
     def GetThresholdField(self):
         """Calculate threshold field for parallel pumping.
 
-        mu_0 * h_th = w_r / Vk (relaxation frequency / coupling parameter)
+        mu_0 * h_th = w_r / Vk 
+        (relaxation frequency / coupling parameter)
 
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping.
+            (T ) threshold field for parallel pumping.
         """
 
         return (
@@ -1020,8 +1021,8 @@ class SingleLayer:
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping including radiative
-            losses.
+            (T ) threshold field for parallel pumping including 
+            radiative losses.
         """
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))

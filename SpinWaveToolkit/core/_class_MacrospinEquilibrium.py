@@ -47,7 +47,7 @@ class MacrospinEquilibrium:
     Ms : float
         (A/m) saturation magnetization of the magnetic material.
     Bext : float
-        (T) magnitude of external field.
+        (T ) magnitude of external field.
     theta_H, phi_H : float
         (rad) polar and azimuthal angles of the external field 
         direction.
@@ -68,7 +68,7 @@ class MacrospinEquilibrium:
     Ms : float
         (A/m) saturation magnetization of the magnetic material.
     d : float
-        (m) thickness of the magnetic film.
+        (m ) thickness of the magnetic film.
     Bext : dict
         Dictionary containing the spherical coordinates of the external 
         magnetic field.  It has keys {"Bext", "theta_H", "phi_H"}.
@@ -89,7 +89,7 @@ class MacrospinEquilibrium:
         - "theta" - polar angle of anisotropy axis (rad)
         - "phi" - azimuthal angle of anisotropy axis (rad)
         - "Na" - corresponding tensor calculated from the three 
-            parameters above.
+          parameters above.
     
     Na_tot : (3, 3) array
         Sum of all anisotropy tensors.  Depends on `anis`.
@@ -191,11 +191,11 @@ class MacrospinEquilibrium:
             (rad) azimuthal angle of the anisotropy axis in the lab 
             frame.  Unused if `Na` is specified.
         Bani : float, optional
-            (T) uniaxial anisotropy field.  If specified (and non-zero), 
+            (T ) uniaxial anisotropy field.  If specified (and non-zero), 
             `Ku` input is not used, but rather is recalculated from 
             `Bani` as ``Ku = Ms*Bani/2``.  Default is None.
         Na : (3, 3) array or None, optional
-            Uniaxial anisotropy tensor.  Can be used for direct 
+            () uniaxial anisotropy tensor.  Can be used for direct 
             assignment.  However, when used, the other parameters are 
             not recalculated into the anisotropy dict.  Default is None.
 
@@ -222,8 +222,8 @@ class MacrospinEquilibrium:
         ----------
         scipy_kwargs : dict, optional
             dictionary with settings passed to 
-            `scipy.optimize.minimize`.  Cannot contain ``"tol"`` and
-            ``"bounds"`` keywords, as they are fixly set here.
+            :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol`` 
+            and ``bounds`` keywords, as they are fixly set here.
             Default is ``{"method": "Nelder-Mead"}``.  Try changing the
             optimization method is you have concern about the results
             (see documentation of :py:func:`scipy.optimize.minimize`).
@@ -233,13 +233,13 @@ class MacrospinEquilibrium:
             is None.
         
             
-        .. note::
-           
-           The used minimize function usually finds a local minimum 
-           based on the initial conditions. This can be used for 
-           calculating hysteresis loops and field sweeps. For global 
-           minimum finding, a brute force method could be used, but it 
-           is not implemented here.
+        Notes
+        -----
+        The used minimize function usually finds a local minimum 
+        based on the initial conditions. This can be used for 
+        calculating hysteresis loops and field sweeps. For global 
+        minimum finding, a brute force method could be used, but it 
+        is not implemented here.
         
         """
         if verbose is None:
@@ -302,15 +302,15 @@ class MacrospinEquilibrium:
         Parameters
         ----------
         Bext : float or (N,) array
-            (T) amplitude of external magnetic field (can be negative).
+            (T ) amplitude of external magnetic field (can be negative).
         theta_H : float or (N,) array
             (rad) polar angle of external magnetic field.
         phi_H : float or (N,) array
             (rad) azimuthal angle of external magnetic field.
         scipy_kwargs : dict, optional
             dictionary with settings passed to 
-            `scipy.optimize.minimize`.  Cannot contain ``"tol"`` and
-            ``"bounds"`` keywords, as they are fixly set here.
+            :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol`` 
+            and ``bounds`` keywords, as they are fixly set here.
             Default is ``{"method": "Nelder-Mead"}``.  Try changing the
             optimization method is you have concern about the results
             (see documentation of :py:func:`scipy.optimize.minimize`).

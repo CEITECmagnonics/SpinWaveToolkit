@@ -33,16 +33,16 @@ class SingleLayerSCcoupled:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) magnetic layer thickness (in z direction).
+        (m ) magnetic layer thickness (in z direction).
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     lam : float, optional
-        (m) penetration depth of the superconducting layer.
+        (m ) penetration depth of the superconducting layer.
 
     Attributes
     ----------
@@ -56,7 +56,7 @@ class SingleLayerSCcoupled:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
 
     Methods
     -------
@@ -126,10 +126,10 @@ class SingleLayerSCcoupled:
         Parameters
         ----------
         d_sc : float, optional
-            (m) thickness of the superconductor layer.  Default is
+            (m ) thickness of the superconductor layer.  Default is
             np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Default is 0.
+            (m ) thickness of the insulating spacer layer.  Default is 0.
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
@@ -174,10 +174,10 @@ class SingleLayerSCcoupled:
         a_ky : float
             () spin-wave ellipticity coefficient.
         d_sc : float, optional
-            (m) thickness of the superconductor layer.  Default is
+            (m ) thickness of the superconductor layer.  Default is
             np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Default is 0.
+            (m ) thickness of the insulating spacer layer.  Default is 0.
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
@@ -216,10 +216,10 @@ class SingleLayerSCcoupled:
         a_ky : float
             () spin-wave ellipticity coefficient.
         d_sc : float, optional
-            (m) thickness of the superconductor layer.  Default is
+            (m ) thickness of the superconductor layer.  Default is
             np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Default is 0.
+            (m ) thickness of the insulating spacer layer.  Default is 0.
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
@@ -266,7 +266,7 @@ class SingleLayerSCcoupled:
         Returns
         -------
         H_ky : float or ndarray
-            (T) exchange-modified effective field.
+            (T ) exchange-modified effective field.
         """
         k = np.abs(self.kxi if k_y is None else k_y)
         if k_mask is not None:
@@ -284,10 +284,10 @@ class SingleLayerSCcoupled:
             or first guess.  If ndarray, must have the same shape as
             `k_y`, or `k_y` must be a float.  Default is 1.
         d_sc : float, optional
-            (m) thickness of the superconductor layer.  Default is
+            (m ) thickness of the superconductor layer.  Default is
             np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Default is 0.
+            (m ) thickness of the insulating spacer layer.  Default is 0.
         k_y : None or ndarray, optional
             (rad/m) spin-wave wavevector (can be negative).  If None,
             `self.kxi` is used.  Default is None.
@@ -323,10 +323,10 @@ class SingleLayerSCcoupled:
         tol : float, optional
             () `a_ky` tolerance.  Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconductor layer.  Default is
+            (m ) thickness of the superconductor layer.  Default is
             np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Default is 0.
+            (m ) thickness of the insulating spacer layer.  Default is 0.
 
         Returns
         -------
@@ -362,9 +362,9 @@ class SingleLayerSCcoupled:
         Parameters
         ----------
         d_sc : float, optional
-            (m) thickness of the SC layer.  Default is np.inf.
+            (m ) thickness of the SC layer.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the IS layer.  Default is 0.
+            (m ) thickness of the IS layer.  Default is 0.
         tol : float, optional
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
@@ -408,10 +408,10 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
 
         Returns
@@ -464,10 +464,10 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
 
         Returns
@@ -504,16 +504,16 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
 
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         Bext_ori = self.Bext
         step = 1e-5
@@ -558,16 +558,16 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
 
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(
             model=model, tol=tol, d_sc=d_sc, d_is=d_is
@@ -599,10 +599,10 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
 
         Returns
@@ -638,10 +638,10 @@ class SingleLayerSCcoupled:
             () tolerance of the spin-wave ellipticity `a_ky`.
             Default is 1e-5.
         d_sc : float, optional
-            (m) thickness of the superconducting layer.  Used only in
+            (m ) thickness of the superconducting layer.  Used only in
             the approximate models.  Default is np.inf.
         d_is : float, optional
-            (m) thickness of the insulating spacer layer.  Used only in
+            (m ) thickness of the insulating spacer layer.  Used only in
             the approximate models.  Default is 0.
         Nf : int, optional
             Number of frequency levels for the Bloch function.

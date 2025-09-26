@@ -39,7 +39,7 @@ def wavenumber2wavelength(wavenumber):
     Returns
     -------
     wavelength : float or ndarray
-        (m) corresponding wavelength.
+        (m ) corresponding wavelength.
 
     See also
     --------
@@ -55,7 +55,7 @@ def wavelength2wavenumber(wavelength):
     Parameters
     ----------
     wavelength : float or array_like
-        (m) wavelength of the wave.
+        (m ) wavelength of the wave.
 
     Returns
     -------
@@ -100,9 +100,9 @@ def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
     w : float
         (rad Hz) angular frequency.
     temp : float
-        (K) temperature.
+        (K ) temperature.
     mu : float
-        (J) chemical potential.
+        (J ) chemical potential.
 
     Returns
     -------
@@ -335,7 +335,7 @@ class ProgressBar:
     bar_len : int
         Length of the progress bar (in characters).
     t_start : float
-        (s) starting time.  Default is the time of instantiation of the 
+        (s ) starting time.  Default is the time of instantiation of the 
         object returned by ``time.time()``.
     i : int
         Current iteration.

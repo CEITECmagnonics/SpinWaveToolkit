@@ -42,7 +42,7 @@ def getBLSsignal(
         Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch function
         components ``(Mx, My, Mz)`` for each frequency and KxKy grid point.
     Exy : ndarray
-        (m) XY grid for the electric field.
+        (m ) XY grid for the electric field.
         2D array with shape ``(Ny, Nx)`` containing the X and Y
         coordinates of the electric field.
     E : ndarray
@@ -55,7 +55,7 @@ def getBLSsignal(
         () vector of the complex permeability functions for each
         material in the stack.
     d : ndarray
-        (m) thickness of all layers in the stack excluding the
+        (m ) thickness of all layers in the stack excluding the
         superstrate and substrate.  Usually just the thickness of the
         magnetic layer.
     NA : float
@@ -67,12 +67,12 @@ def getBLSsignal(
     output_layer_index : int, optional
         Index of the output layer in the stack.  Default is 0.
     wavelength : float, optional
-        (m) wavelength of the light.  Default is 532e-9.
+        (m ) wavelength of the light.  Default is 532e-9.
     collectionSpot : float, optional
-        (m) collection spot size - used here as the beam waist.  Default
+        (m ) collection spot size - used here as the beam waist.  Default
         is 1e-6.
     focalLength : float, optional
-        (m) focal length of the lens.  Default is 1e-3.
+        (m ) focal length of the lens.  Default is 1e-3.
 
     Returns
     -------

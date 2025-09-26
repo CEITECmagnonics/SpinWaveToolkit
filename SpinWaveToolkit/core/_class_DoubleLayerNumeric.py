@@ -24,12 +24,12 @@ class DoubleLayerNumeric:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction).
+        (m ) layer thickness (in z direction).
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
@@ -49,9 +49,9 @@ class DoubleLayerNumeric:
     Jbq : float, optional
         (J/m^2) biquadratic RKKY coupling parameter.
     s : float, optional
-        (m) spacing layer thickness.
+        (m ) spacing layer thickness.
     d2 : float or None
-        (m) thickness of the second magnetic layer, if None,
+        (m ) thickness of the second magnetic layer, if None,
         same as `d`.
     material2 : Material or None
         instance of `Material` describing the second magnetic
@@ -78,7 +78,7 @@ class DoubleLayerNumeric:
     gamma : float
         (rad*Hz/T) gyromagnetic ratio (positive convention).
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
         (rad*Hz) parameter in Slavin-Kalinikos equation,
         ``w0 = MU0*gamma*Hext``.
@@ -505,7 +505,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         E : float
-            (J) energy density of the system.
+            (J ) energy density of the system.
         """
         phiAnis1 = self.phiAnis1  # EA along x direction
         phiAnis2 = self.phiAnis2  # EA along x direction
@@ -586,7 +586,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         E : float
-            (J) energy density of the system.
+            (J ) energy density of the system.
 
         Notes
         -----
@@ -695,7 +695,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         Bext_ori = self.Bext
         step = 1e-5
@@ -730,7 +730,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
@@ -772,7 +772,7 @@ class DoubleLayerNumeric:
         Nf : int, optional
             Number of frequency points for the Bloch function.
         lifetime : float, optional
-            (s) fixed lifetime to bypass its dispersion calculation.
+            (s ) fixed lifetime to bypass its dispersion calculation.
 
         Returns
         -------

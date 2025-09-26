@@ -28,7 +28,7 @@ class Material:
     gamma : float, optional
         (rad*Hz/T) gyromagnetic ratio.  Default ``28.1e9*2*np.pi``.
     mu0dH0 : float, optional
-        (T) inhomogeneous broadening.  Default is 0.
+        (T ) inhomogeneous broadening.  Default is 0.
     Ku : float, optional
         (J/m^2) surface anisotropy strength.  Default is 0.
         (Currently unused in any dispersion calculations.)
