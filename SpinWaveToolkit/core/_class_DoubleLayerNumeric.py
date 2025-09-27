@@ -34,9 +34,9 @@ class DoubleLayerNumeric:
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle of Bext, pi/2 is totally in-plane
-        magnetization. Beware of (partially) OOP calculations for 
+        magnetization. Beware of (partially) OOP calculations for
         spin-wave dispersion relation, as they are not implemented here.
-        For energy calculations, theta other than pi/2 is supported in 
+        For energy calculations, theta other than pi/2 is supported in
         experimental code.
     phi : float or ndarray, optional
         (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
@@ -165,7 +165,7 @@ class DoubleLayerNumeric:
         self._Ku2 = Ku2
 
         self.kxi = np.array(kxi)
-        if abs(theta - np.pi/2) > 1e-4:
+        if abs(theta - np.pi / 2) > 1e-4:
             print("WARNING: theta other than pi/2 might give misleading results.")
         self.theta = theta
         self.phi = phi
@@ -296,7 +296,7 @@ class DoubleLayerNumeric:
         -------
         wV : ndarray
             (rad*Hz) frequencies of the acoustic and optic spin-wave
-            modes.  Has a shape of ``(2, N)``, where 
+            modes.  Has a shape of ``(2, N)``, where
             ``N = kxi.shape[0]``.
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
@@ -590,8 +590,8 @@ class DoubleLayerNumeric:
 
         Notes
         -----
-        This method is experimental. There are some unresolved 
-        functionalities, such as surface anisotropy terms and uniaxial 
+        This method is experimental. There are some unresolved
+        functionalities, such as surface anisotropy terms and uniaxial
         anisotropy axis direction.
         """
         # ### WTF is this mess? we should make these as params, but are they valid?

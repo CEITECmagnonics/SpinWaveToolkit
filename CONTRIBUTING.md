@@ -99,7 +99,7 @@ There are by default three branches, that will be here hopefully always:
 
 For larger fixes and implementing new functionalities, it is best if you create a new branch based on the `new-release` and give it some descriptive name, e.g. `new-model-triple-layer`. Then you make your changes in this branch. When you feel everything works well and you did enough tests, make a PR of your branch to `new-release` and request some reviews. It would be nice if you mention also [Issues] that are solved by your PR in the PR description. If the responsible people find your PR all right, it will be merged to the `new-release` branch and your contribution will be part of the next release.
 
-The process is similar for external contributors (i.e. people outside of the [CEITECmagnonics] organization). In this case, fork the `new-release` branch, make your changes, and make a PR back to `new-release`. You should be as detailed as possible in the PR description, clearly stating what is your contribution and why should we accept it (including the solved [Issues]).
+The process is similar for external contributors (i.e. people outside of the [CEITECmagnonics] organization). In this case, fork the `new-release` branch, make your changes, and make a PR back to `new-release`. You should be as detailed as possible in the PR description, clearly stating what is your contribution and why we should accept it (including the solved [Issues]).
 
 
 ### Checks before each PR of a new release

@@ -17,7 +17,7 @@ class SingleLayerNumeric:
     The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
 
-    The laboratory coordinate frame of reference is 
+    The laboratory coordinate frame of reference is
     *z || to film normal* and *x || to in-plane wavevector*.
 
     Most parameters can be specified as vectors (1d numpy arrays)
@@ -36,8 +36,8 @@ class SingleLayerNumeric:
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally
-        in-plane magnetization.  Other values than pi/2 multiples 
-        might give wrong results, as the model currently does not 
+        in-plane magnetization.  Other values than pi/2 multiples
+        might give wrong results, as the model currently does not
         describe these situations.
     phi : float or ndarray, optional
         (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
@@ -123,7 +123,7 @@ class SingleLayerNumeric:
     thick NiFe (Permalloy) layer.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayerNumeric(Bext=20e-3, kxi=kxi, theta=np.pi/2,
@@ -161,8 +161,10 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
-        if (theta+1e-4) % np.pi/2 > 1e-3:
-            print("WARNING: theta is not a multiple of pi/2. The results might be misleading!")
+        if (theta + 1e-4) % np.pi / 2 > 1e-3:
+            print(
+                "WARNING: theta is not a multiple of pi/2. The results might be misleading!"
+            )
         self.theta = theta
         self.phi = phi
         self.d = d
@@ -239,19 +241,19 @@ class SingleLayerNumeric:
     @N.setter
     def N(self, val):
         self._N = val
-    
+
     def __ang_coeff(self):
         th = self.theta
         ph = self.phi
-        s = np.sin; c = np.cos
-        A = - s(th)**2
-        E = s(ph)**2 + c(th)**2 * c(ph)**2
+        s = np.sin
+        c = np.cos
+        A = -s(th) ** 2
+        E = s(ph) ** 2 + c(th) ** 2 * c(ph) ** 2
         D = -2.0 * s(th) * s(ph)
         # B and C not used in the mapping below; included for completeness:
-        B = - np.sin(2.0*th) * np.cos(ph)
-        C =  0.5 * np.sin(2.0*th) * np.cos(ph)
+        B = -np.sin(2.0 * th) * np.cos(ph)
+        C = 0.5 * np.sin(2.0 * th) * np.cos(ph)
         return A, B, C, D, E
-
 
     def __CnncTacchi(self, n, nc, k, phi):
         A, B, C, D, E = self.__ang_coeff()
@@ -269,11 +271,14 @@ class SingleLayerNumeric:
         return self.w0 + self.wM * self.A * (k**2 + (n * np.pi / self.d) ** 2)
 
     def __ankTacchi(self, n, k):
-        return self.__OmegankTacchi(n, k) + 0.5*self.wM*np.sin(self.theta)**2 - 0.5*self.wU
+        return (
+            self.__OmegankTacchi(n, k)
+            + 0.5 * self.wM * np.sin(self.theta) ** 2
+            - 0.5 * self.wU
+        )
 
     def __bTacchi(self):
-        return 0.5*self.wM*np.sin(self.theta)**2 - 0.5*self.wU
-
+        return 0.5 * self.wM * np.sin(self.theta) ** 2 - 0.5 * self.wU
 
     def __PnncTacchi(self, n, nc, kxi):
         """Gives dimensionless propagation vector.
@@ -550,7 +555,7 @@ class SingleLayerNumeric:
 
         The model formulates a system matrix and then numerically solves
         its eigenvalues and eigenvectors. The eigenvalues represent the
-        dispersion relation (as the matrix is `2*N x 2*N` it has `2*N` 
+        dispersion relation (as the matrix is `2*N x 2*N` it has `2*N`
         eigenvalues).
         The eigen values represent `N` lowest spin-wave modes
         (`N` with negative and positive frequency).  The eigenvectors
@@ -729,15 +734,15 @@ class SingleLayerNumeric:
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
         return np.sqrt(self.A)
-    
+
     def set_DE(self):
-        """Changes angles theta and phi to match the Damon Eshbach 
+        """Changes angles theta and phi to match the Damon Eshbach
         geometry, i.e. M || y, Bext || y.
         """
-        self.theta, self.phi = np.pi/2, np.pi/2
-    
+        self.theta, self.phi = np.pi / 2, np.pi / 2
+
     def set_BV(self):
-        """Changes angles theta and phi to match the backward volume 
+        """Changes angles theta and phi to match the backward volume
         geometry, i.e. M || x, Bext || x.
         """
-        self.theta, self.phi = np.pi/2, 0
+        self.theta, self.phi = np.pi / 2, 0

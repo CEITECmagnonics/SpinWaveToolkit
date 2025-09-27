@@ -68,7 +68,7 @@ class BulkPolariton:
     other important quantities, for a magnon-polariton in a bulk YIG.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 1e3, 101)
 
         YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG,

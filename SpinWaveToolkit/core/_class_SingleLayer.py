@@ -17,7 +17,7 @@ class SingleLayer:
     The model uses the famous Slavin-Kalinikos equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
-    The laboratory coordinate frame of reference is 
+    The laboratory coordinate frame of reference is
     *z || to film normal* and *x || to in-plane wavevector*.
 
     Most parameters can be specified as vectors (1d numpy arrays)
@@ -40,7 +40,7 @@ class SingleLayer:
     kxi : float or ndarray, optional
         (rad/m) in-plane k-vector (wavenumber), usually a vector.
     theta : float, optional
-        (rad) out of plane angle of static M.  Measured from film 
+        (rad) out of plane angle of static M.  Measured from film
         normal, i.e. pi/2 is totally in-plane magnetization.
     phi : float or ndarray, optional
         (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
@@ -62,11 +62,11 @@ class SingleLayer:
         (rad) azimuthal angle of external field wrt. kxi.  If None,
         field is taken as collinear with M.  Default is None.
     Nd : (3,3) array or None, optional
-        Shape demag tensor in lab frame. 
-        If None, taken as for an infinite thin film 
+        Shape demag tensor in lab frame.
+        If None, taken as for an infinite thin film
         ``np.diag([0,0,1])``.  Default is None.
     Na : (3,3) array or None, optional
-        () anisotropy tensor in lab frame.  If None, 
+        () anisotropy tensor in lab frame.  If None,
         ``np.zeros((3, 3))`` is used.  Default is None.
 
     Attributes
@@ -126,7 +126,7 @@ class SingleLayer:
     thick NiFe (Permalloy) layer.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
@@ -149,8 +149,8 @@ class SingleLayer:
         material,
         d,
         kxi=np.linspace(1e-12, 25e6, 200),
-        theta=np.pi/2,
-        phi=np.pi/2,
+        theta=np.pi / 2,
+        phi=np.pi / 2,
         weff=3e-6,
         boundary_cond=1,
         dp=0,
@@ -257,7 +257,7 @@ class SingleLayer:
     def phi_H(self, val):
         self._phi_H = val
         self.__update_w0()
-    
+
     @property
     def Nd(self):
         """Shape demag tensor in lab frame."""
@@ -267,7 +267,7 @@ class SingleLayer:
     def Nd(self, val):
         self._Nd = val
         self.__update_w0()
-    
+
     @property
     def Na(self):
         """Anisotropy tensor in lab frame."""
@@ -280,9 +280,11 @@ class SingleLayer:
 
     def __tensor_in_Mframe(self, Tlab):
         """Transform tensor `Tlab` from lab frame to M frame."""
-        # ### is this correct? I think we need to include phi as k || x, but M 
+        # ### is this correct? I think we need to include phi as k || x, but M
         # is not. Therefore I changed 0 to self.phi on the following line.
-        m = sphr2cart(self.theta, self.phi)  # M azimuth irrelevant for k–M angle definition (???)
+        m = sphr2cart(
+            self.theta, self.phi
+        )  # M azimuth irrelevant for k–M angle definition (???)
         zlab = np.array([0.0, 0.0, 1.0])
         x_try = zlab - (zlab @ m) * m
         if np.linalg.norm(x_try) < 1e-14:  # M ∥ z
@@ -638,17 +640,20 @@ class SingleLayer:
         Nxx, Nyy, Nzz = NaM[0, 0], NaM[1, 1], NaM[2, 2]
         Nxz = NaM[0, 2]  # = Nzx
 
-        Qn = self.w0 + self.A*self.wM*(k**2)
+        Qn = self.w0 + self.A * self.wM * (k**2)
         sT, cT = np.sin(self.theta), np.cos(self.theta)
 
         Fnna = (
-            Nxx + Nyy
-            + (self.wM/Qn) * (Nxx*Nyy + Nzz*(sT**2) - Nxz**2)
-            + (self.wM/Qn) * Pnn * (
-                Nxx * (np.cos(phi)**2 - sT**2 * (1.0 + np.cos(phi)**2))
-                + Nyy * (np.sin(phi)**2)
-                - Nxz * (cT * np.sin(2.0*phi))
-                )
+            Nxx
+            + Nyy
+            + (self.wM / Qn) * (Nxx * Nyy + Nzz * (sT**2) - Nxz**2)
+            + (self.wM / Qn)
+            * Pnn
+            * (
+                Nxx * (np.cos(phi) ** 2 - sT**2 * (1.0 + np.cos(phi) ** 2))
+                + Nyy * (np.sin(phi) ** 2)
+                - Nxz * (cT * np.sin(2.0 * phi))
+            )
         )
         return Fnn + Fnna
 
@@ -675,6 +680,7 @@ class SingleLayer:
             * (self.w0 + self.A * self.wM * np.power(k, 2) + self.wM * Fnn)
         )
         return f
+
     def GetGroupVelocity(self, n=0, nT=0):
         """Gives (tangential) group velocities for defined k.
         The group velocity is computed as vg = dw/dk.
@@ -991,7 +997,7 @@ class SingleLayer:
     def GetThresholdField(self):
         """Calculate threshold field for parallel pumping.
 
-        mu_0 * h_th = w_r / Vk 
+        mu_0 * h_th = w_r / Vk
         (relaxation frequency / coupling parameter)
 
         Returns
@@ -1021,7 +1027,7 @@ class SingleLayer:
         Returns
         -------
         mu_0 * h_th : float
-            (T ) threshold field for parallel pumping including 
+            (T ) threshold field for parallel pumping including
             radiative losses.
         """
 
@@ -1031,23 +1037,23 @@ class SingleLayer:
             / (L * self.GetCouplingParam())
             * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )
-    
+
     def set_DE(self):
-        """Changes angles theta and phi to match the Damon Eshbach 
+        """Changes angles theta and phi to match the Damon Eshbach
         geometry, i.e. M || y, Bext || y.
         """
-        self.theta, self.phi = np.pi/2, np.pi/2
-        self.theta_H, self.phi_H = np.pi/2, np.pi/2
-    
+        self.theta, self.phi = np.pi / 2, np.pi / 2
+        self.theta_H, self.phi_H = np.pi / 2, np.pi / 2
+
     def set_BV(self):
-        """Changes angles theta and phi to match the backward volume 
+        """Changes angles theta and phi to match the backward volume
         geometry, i.e. M || x, Bext || x.
         """
-        self.theta, self.phi = np.pi/2, 0
-        self.theta_H, self.phi_H = np.pi/2, 0
-    
+        self.theta, self.phi = np.pi / 2, 0
+        self.theta_H, self.phi_H = np.pi / 2, 0
+
     def set_FV(self):
-        """Changes angles theta and phi to match the forward volume 
+        """Changes angles theta and phi to match the forward volume
         geometry, i.e. M || z, Bext || z.
         """
         self.theta = 0

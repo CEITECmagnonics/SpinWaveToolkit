@@ -412,7 +412,7 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
         (m ) wavelength of the light.
     tp, ts : list or array_like
         Fresnel coefficients for p- and s-polarization, respectively.
-        Each is expected to have two elements (e.g. ``tp[0]`` and 
+        Each is expected to have two elements (e.g. ``tp[0]`` and
         ``tp[1]``).
 
     Returns

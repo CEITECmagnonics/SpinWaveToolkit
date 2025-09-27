@@ -86,7 +86,7 @@ class SingleLayerSCcoupled:
     superconductor (Nb, lam ~ 100 nm).
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayer(Bext=20e-3, material=Swt.NiFe, d=30e-9,

@@ -18,7 +18,7 @@ __all__ = [
     "roots",
     "sphr2cart",
     "cart2sphr",
-    "ProgressBar"
+    "ProgressBar",
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -69,7 +69,7 @@ def wavelength2wavenumber(wavelength):
     return 2 * np.pi / np.array(wavelength)
 
 
-def wrapAngle(angle, amin=0, amax=2*np.pi):
+def wrapAngle(angle, amin=0, amax=2 * np.pi):
     """Wrap angle in radians to range ``[amin, amax)``, by default
     ``[0, 2*np.pi)``.
 
@@ -279,7 +279,9 @@ def sphr2cart(theta, phi, r=1.0):
     """
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
-    return np.array([r*st*cp, r*st*sp, r*ct*np.ones_like(cp)], dtype=np.float64)
+    return np.array(
+        [r * st * cp, r * st * sp, r * ct * np.ones_like(cp)], dtype=np.float64
+    )
 
 
 def cart2sphr(x, y, z):
@@ -312,13 +314,13 @@ def cart2sphr(x, y, z):
 
 class ProgressBar:
     """
-    Prints a progress bar to console. 
-    
+    Prints a progress bar to console.
+
     Time counting starts when a new instance of this class is created.
 
     .. note::
-       
-        In the future, we might switch to ``tqdm`` module instead 
+
+        In the future, we might switch to ``tqdm`` module instead
         without further notice.
 
     Parameters
@@ -327,7 +329,7 @@ class ProgressBar:
         Total number of iterations.
     bar_len : int, optional
         Length of the progress bar (in characters).  Default is 20.
-    
+
     Attributes
     ----------
     niter : int
@@ -335,7 +337,7 @@ class ProgressBar:
     bar_len : int
         Length of the progress bar (in characters).
     t_start : float
-        (s ) starting time.  Default is the time of instantiation of the 
+        (s ) starting time.  Default is the time of instantiation of the
         object returned by ``time.time()``.
     i : int
         Current iteration.
@@ -351,7 +353,7 @@ class ProgressBar:
     --------
 
     .. code-block:: python
-       
+
         from time import sleep
 
         niter = 55
@@ -364,10 +366,10 @@ class ProgressBar:
     Notes
     -----
     The output is usually rewriting itself until 100 % is reached.  This
-    is true for outputs in terminals (bash, powershell, command prompt, 
-    ...).  However, for the python's default IDE, the IDLE, this can 
-    print pretty ugly.  To fix this, change the attribute 
-    ``ProgressBar._lend`` to ``"\\n"`` when using IDLE to run the 
+    is true for outputs in terminals (bash, powershell, command prompt,
+    ...).  However, for the python's default IDE, the IDLE, this can
+    print pretty ugly.  To fix this, change the attribute
+    ``ProgressBar._lend`` to ``"\\n"`` when using IDLE to run the
     scripts.
 
     See also
@@ -375,11 +377,12 @@ class ProgressBar:
     MacrospinEquilibrium
 
     """
+
     def __init__(
-            self,
-            niter,
-            bar_len=20,
-        ):
+        self,
+        niter,
+        bar_len=20,
+    ):
         self.niter = niter
         self.bar_len = bar_len
         self.t_start = time()
@@ -416,10 +419,9 @@ class ProgressBar:
         self.i += step
         if self.i % self.up_every == 0 or self.i == self.niter - 1:
             self.__up()
-    
+
     def finish(self):
         """End the progress bar process."""
         self.i = self.niter - 1
         self.__up()
         print()  # newline after progress bar
-

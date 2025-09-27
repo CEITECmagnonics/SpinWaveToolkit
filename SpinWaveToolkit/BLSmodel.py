@@ -33,7 +33,7 @@ def getBLSsignal(
     Parameters
     ----------
     SweepBloch : ndarray
-        Sweep vector of the Bloch functions with shape ``(Nf,)``. 
+        Sweep vector of the Bloch functions with shape ``(Nf,)``.
         Usually frequency of spin waves.
     KxKyBloch : tuple[ndarray]
         (rad/m) tuple containing the 1D grids ``(kx_grid, ky_grid)`` on
@@ -85,7 +85,7 @@ def getBLSsignal(
         1D array with shape ``(Nf,)`` containing the scattered electric
         field in the Y direction for each frequency in SweepBloch.
     Px, Py, Pz : ndarray
-        (V/m) induced polarization in the magnetic layer.  Corresponds 
+        (V/m) induced polarization in the magnetic layer.  Corresponds
         to `P` in eq. (3) in Wojewoda et al. PRB 110, 224428 (2024).
         Each array has shape ``(Nf, 2*Nq-1, 2*Nq-1)``.
     Qx, Qy : ndarray
@@ -211,9 +211,9 @@ def getBLSsignal(
     # Loop over frequencies returned by SpinWaveGreen.
     # Here we assume that the first dimension of Bloch (after the component index)
     # corresponds to the sweep index (and that len(SweepBloch)==Nf).
-    Px = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
-    Py = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
-    Pz = np.empty((Nf, Nq*2-1, Nq*2-1), dtype=complex)
+    Px = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
+    Py = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
+    Pz = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
     for i, s in enumerate(SweepBloch):
         # --- Interpolate Bloch function components onto the Qx-Qy grid ---
         # We assume Bloch has shape (3, Nf, Nkx, Nky)
@@ -251,22 +251,22 @@ def getBLSsignal(
         Ep = pGF[0][0] * Px[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[0][
             1
         ] * Px[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[1][
+        Ep += pGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[
             1
-        ] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[2][
-            1
-        ] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ][1] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Ep += pGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[
+            2
+        ][1] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
 
         Es = sGF[0][0] * Px[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[0][
             1
         ] * Px[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[1][
+        Es += sGF[1][0] * Py[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[
             1
-        ] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[2][
-            1
-        ] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ][1] * Py[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Es += sGF[2][0] * Pz[i] * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[
+            2
+        ][1] * Pz[i] * np.exp(1j * Kzs * d[source_layer_index - 1])
         # -------------------------------------------------------------
 
         # --- Convert to X and Y components in the laboratory frame ---
@@ -322,7 +322,7 @@ def getBLSsignal(
         EyS[i] = dxi * dyi * np.sum(Ey_real)
 
     # Return the computed scattered electric field in x and y direction (1D array over sweep)
-    # and the polarization currents in the magnetic layer [three 3D arrays of shape 
+    # and the polarization currents in the magnetic layer [three 3D arrays of shape
     # (Nf, 2*Nq-1, 2*Nq-1)] with the respective wavevector grids [two 2D arrays of shape
     # (2*Nq-1, 2*Nq-1)]
     return ExS, EyS, Px, Py, Pz, Qx, Qy
