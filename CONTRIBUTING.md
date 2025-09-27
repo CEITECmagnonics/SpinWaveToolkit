@@ -48,12 +48,12 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 For others, the adhering to the same workflow is recommended. Not doing so might result in not accepting Pull Requests (or more precisely, in requiring modifications before accepting).
 
 > [!TIP]
-> If you don't know how to use [black], [pylint], and [pytest], check this [section](#example-of-use-for-black-and-pylint) below.
+> If you don't know how to use [black], [pylint], and [pytest], check [this section](#example-of-use-for-black-and-pylint) below.
 
 ## Where to get inspiration
 Here is a list of some Python physics modules with nice documentation and development workflow:
 - **magpylib**: [GitHub][magpylib_gh], [ReadTheDocs][magpylib_rtd]
-- **TetraX**: [repository](https://codebase.helmholtz.cloud/micromagnetic-modeling/tetrax/-/tree/main), [ReadTheDocs][tetrax_rtd]
+- **TetraX**: [repository](https://codebase.helmholtz.cloud/micromagnetic-modeling/tetrax/-/tree/main), [documentation](https://www.tetrax.software/)
 - **PyPa sampleproject**: [GitHub](https://github.com/pypa/sampleproject)
 
 
@@ -94,10 +94,13 @@ Here, you should find the answer to your question "What branch should I use?".
 
 There are by default three branches, that will be here hopefully always:
 - `master` - here the newest stable code is published. We do not continue to develop older versions, so one branch like this is enough. **You cannot directly commit to this branch!** Luckily there are protection rules that prevent accidental push to this branch. Only Pull Requests (PRs), usually from the `new-release` branch, are allowed, and only at a point when the code is stable and ready for a new release. See [below](#checks-before-each-pr-of-a-new-release) for a list of things to check before merging to `master`.
-- `gh-pages` - branch that is managed purely by our GH Actions, i.e. **DO NOT TOUCH IT!** It is the only backup Unfortunately, we cannot apply protection rules for this branch **to be finished**
-- `new-release`
+- `gh-pages` - branch that is managed purely by our GH Actions, i.e. **DO NOT TOUCH IT!** It is the only backup of docs for older versions. Unfortunately, we cannot apply protection rules for this branch, as the GH Actions Bot needs direct access.
+- `new-release` - the newest functionalities are gathered here before we push it to `master`. This branch is also used to generate the *dev* documentation. It is the only branch of these three, where direct contributors may commit, but is is not recommended unless you know what you are doing and you do only small fixes.
 
-**to be finished**
+For larger fixes and implementing new functionalities, it is best if you create a new branch based on the `new-release` and give it some descriptive name, e.g. `new-model-triple-layer`. Then you make your changes in this branch. When you feel everything works well and you did enough tests, make a PR of your branch to `new-release` and request some reviews. It would be nice if you mention also [Issues] that are solved by your PR in the PR description. If the responsible people find your PR all right, it will be merged to the `new-release` branch and your contribution will be part of the next release.
+
+The process is similar for external contributors (i.e. people outside of the [CEITECmagnonics] organization). In this case, fork the `new-release` branch, make your changes, and make a PR back to `new-release`. You should be as detailed as possible in the PR description, clearly stating what is your contribution and why should we accept it (including the solved [Issues]).
+
 
 ### Checks before each PR of a new release
 Things to check before merging to `master`:
@@ -118,7 +121,6 @@ Things to check before merging to `master`:
 [black]:https://black.readthedocs.io/en/stable/index.html
 [magpylib_gh]:https://github.com/magpylib/magpylib
 [magpylib_rtd]:https://magpylib.readthedocs.io/en/latest/
-[tetrax_rtd]:https://tetrax.readthedocs.io/en/latest/index.html
 [pylint]:https://pylint.readthedocs.io/en/stable/
 [pytest]:https://docs.pytest.org/en/stable/contents.html
 [sphinx]:https://www.sphinx-doc.org/en/master/
