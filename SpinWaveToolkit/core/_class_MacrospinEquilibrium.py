@@ -3,8 +3,8 @@ Core (private) file for the `MacrospinEquilibrium` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr, ProgressBar
 from scipy.optimize import minimize
+from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr, ProgressBar
 
 __all__ = ["MacrospinEquilibrium"]
 
@@ -173,7 +173,7 @@ class MacrospinEquilibrium:
         """Recalculate/update the values of dependent variables, e.g.
         field unit vector and total anistropy tensor.
         """
-        self.Na_tot = np.sum([self.anis[i]["Na"] for i in self.anis.keys()], 0)
+        self.Na_tot = np.sum([i["Na"] for _, i in self.anis.items()], 0)
         self.b = sphr2cart(self.Bext["theta_H"], self.Bext["phi_H"])
 
     def add_uniaxial_anisotropy(
@@ -217,7 +217,7 @@ class MacrospinEquilibrium:
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
         self.recalc_params()
 
-    def minimize(self, scipy_kwargs={"method": "Nelder-Mead"}, verbose=None):
+    def minimize(self, scipy_kwargs=None, verbose=None):
         """Evaluate the minimization problem.
 
         Uses the `scipy.optimize.minimize` function to find the minimum
@@ -228,11 +228,12 @@ class MacrospinEquilibrium:
 
         Parameters
         ----------
-        scipy_kwargs : dict, optional
-            dictionary with settings passed to
+        scipy_kwargs : dict or None, optional
+            Dictionary with settings passed to
             :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol``
             and ``bounds`` keywords, as they are fixly set here.
-            Default is ``{"method": "Nelder-Mead"}``.  Try changing the
+            If None, ``{"method": "Nelder-Mead"}`` is used.  
+            Defualt is None. Try changing the
             optimization method is you have concern about the results
             (see documentation of :py:func:`scipy.optimize.minimize`).
         verbose : bool or None, optional
@@ -259,9 +260,8 @@ class MacrospinEquilibrium:
 
         m0 = (self.M["theta"] * 0.999 + 1e-3, self.M["phi"] * 0.999 + 1e-3)
         self.recalc_params()
-        scipy_kwargs = dict(
-            scipy_kwargs
-        )  # Make a shallow copy so you don't modify the original
+        if scipy_kwargs is None:
+            scipy_kwargs = {"method": "Nelder-Mead"}
 
         self.res = minimize(
             fun,
@@ -270,11 +270,11 @@ class MacrospinEquilibrium:
             **scipy_kwargs,
             bounds=((-np.pi, 2 * np.pi), (-2 * np.pi, 4 * np.pi)),
         )
-        if self.res.success:
+        if self.res.success and verbose:
             # print(f"Minimum successfully found after {self.res.nit} iterations.")
-            print(f"Minimum successfully found.") if verbose else None
-        else:
-            print(f"Not converged.\n{self.res.message}") if verbose else None
+            print("Minimum successfully found.")
+        elif verbose:
+            print(f"Not converged.\n{self.res.message}")
 
         # save final state
         self.M["theta"], self.M["phi"] = wrapAngle(
@@ -302,14 +302,14 @@ class MacrospinEquilibrium:
         ed = 0.5 * MU0 * self.Ms**2 * float(m @ self.demag @ m)
 
         # uniaxial anisotropies
-        if self.anis == {}:
+        if not self.anis:  # when self.anis is an empty dict
             ea_uni = 0
         else:
             ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
 
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
 
-    def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs={"method": "Nelder-Mead"}):
+    def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs=None):
         """Calculate a hysteresis curve from a vector of swept field
         values.
 
@@ -324,11 +324,12 @@ class MacrospinEquilibrium:
             (rad) polar angle of external magnetic field.
         phi_H : float or (N,) array
             (rad) azimuthal angle of external magnetic field.
-        scipy_kwargs : dict, optional
-            dictionary with settings passed to
+        scipy_kwargs : dict or None, optional
+            Dictionary with settings passed to
             :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol``
             and ``bounds`` keywords, as they are fixly set here.
-            Default is ``{"method": "Nelder-Mead"}``.  Try changing the
+            If None, ``{"method": "Nelder-Mead"}`` is used.  
+            Defualt is None. Try changing the
             optimization method is you have concern about the results
             (see documentation of :py:func:`scipy.optimize.minimize`).
             This is not a sweepable parameter!

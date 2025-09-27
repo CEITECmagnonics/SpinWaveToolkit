@@ -786,8 +786,8 @@ class SingleLayer:
         Pnn = self.__GetPropagationVector(n=n, nc=n)
         Pncnc = self.__GetPropagationVector(n=nc, nc=nc)
         Qnnc = self.__GetPropagationQVector(n=n, nc=nc)
-        wnn = self.GetDispersion(n=n, nc=n)
-        wncnc = self.GetDispersion(n=nc, nc=nc)
+        wnn = self.GetDispersion(n=n)
+        wncnc = self.GetDispersion(n=nc)
         if self.theta == 0:
             wdn = np.sqrt(
                 wnn**2
@@ -1007,7 +1007,7 @@ class SingleLayer:
         """
 
         return (
-            2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam())
+            2 * np.pi / self.GetLifetime(n=0, nT=0) / abs(self.GetCouplingParam())
         )
 
     def GetThresholdFieldNonAdiabatic(self, L=1e-6):
@@ -1033,7 +1033,7 @@ class SingleLayer:
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))
         return (
-            self.GetGroupVelocity(n=0, nc=0, nT=0)
+            self.GetGroupVelocity(n=0, nT=0)
             / (L * self.GetCouplingParam())
             * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )

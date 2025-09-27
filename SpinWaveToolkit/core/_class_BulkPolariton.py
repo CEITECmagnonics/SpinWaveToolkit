@@ -145,6 +145,16 @@ class BulkPolariton:
         self._gamma = val
         self.wM = self.Ms * val * MU0
         self.w0 = val * self.Bext
+    
+    @property
+    def Aex(self):
+        """Exchange stiffness constant (J/m)."""
+        return self._Aex
+
+    @Aex.setter
+    def Aex(self, val):
+        self._Aex = val
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
     def GetDispersion(self):
         """Gives frequencies for defined k (dispersion relation) for

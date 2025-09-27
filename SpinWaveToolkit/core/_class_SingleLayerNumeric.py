@@ -181,7 +181,7 @@ class SingleLayerNumeric:
 
     @property
     def Bext(self):
-        """external field value (T)"""
+        """External field value (T)."""
         return self._Bext
 
     @Bext.setter
@@ -191,7 +191,7 @@ class SingleLayerNumeric:
 
     @property
     def Ms(self):
-        """saturation magnetization (A/m)"""
+        """Saturation magnetization (A/m)."""
         return self._Ms
 
     @Ms.setter
@@ -203,7 +203,7 @@ class SingleLayerNumeric:
 
     @property
     def gamma(self):
-        """gyromagnetic ratio (rad*Hz/T)"""
+        """Gyromagnetic ratio (rad*Hz/T)."""
         return self._gamma
 
     @gamma.setter
@@ -235,7 +235,7 @@ class SingleLayerNumeric:
 
     @property
     def N(self):
-        """number of modes to calculate."""
+        """Number of modes to calculate."""
         return self._N
 
     @N.setter
@@ -243,6 +243,7 @@ class SingleLayerNumeric:
         self._N = val
 
     def __ang_coeff(self):
+        """Compute A, B, C, D, E as in Kalinikos-Slavin 1986."""
         th = self.theta
         ph = self.phi
         s = np.sin
@@ -255,22 +256,27 @@ class SingleLayerNumeric:
         C = 0.5 * np.sin(2.0 * th) * np.cos(ph)
         return A, B, C, D, E
 
-    def __CnncTacchi(self, n, nc, k, phi):
+    def __CnncTacchi(self, n, nc, k):
+        """Calculate the C_{n,nc}."""
         A, B, C, D, E = self.__ang_coeff()
         return 0.5 * self.wM * (A + E) * self.__PnncTacchi(n, nc, k)
 
-    def __pnncTacchi(self, n, nc, k, phi):
+    def __pnncTacchi(self, n, nc, k):
+        """Calculate the p_{n,nc}."""
         A, B, C, D, E = self.__ang_coeff()
         return -0.5 * self.wM * (E - A) * self.__PnncTacchi(n, nc, k)
 
-    def __qnncTacchi(self, n, nc, k, phi):
+    def __qnncTacchi(self, n, nc, k):
+        """Calculate the q_{n,nc}."""
         A, B, C, D, E = self.__ang_coeff()
         return self.wM * D * self.__QnncTacchi(n, nc, k)
 
     def __OmegankTacchi(self, n, k):
+        """Calculate the w_{n,k}."""
         return self.w0 + self.wM * self.A * (k**2 + (n * np.pi / self.d) ** 2)
 
     def __ankTacchi(self, n, k):
+        """Calculate the a_{n,k}."""
         return (
             self.__OmegankTacchi(n, k)
             + 0.5 * self.wM * np.sin(self.theta) ** 2
@@ -278,6 +284,7 @@ class SingleLayerNumeric:
         )
 
     def __bTacchi(self):
+        """Calculate the b."""
         return 0.5 * self.wM * np.sin(self.theta) ** 2 - 0.5 * self.wU
 
     def __PnncTacchi(self, n, nc, kxi):
@@ -504,7 +511,7 @@ class SingleLayerNumeric:
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
 
-    def _Ck(self, k, phi, N=3):
+    def _Ck(self, k, N=3):
         """
         Build Tacchi/Kalinikos `C_k` with `N` thickness modes (size `2N x 2N`).
         Default ``N=3``, which gives 6x6 matrix.
@@ -514,8 +521,8 @@ class SingleLayerNumeric:
 
         # Diagonal 2x2 blocks for each mode n
         for n in range(N):
-            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k, phi)
-            pnn = self.__pnncTacchi(n, n, k, phi)
+            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k)
+            pnn = self.__pnncTacchi(n, n, k)
             i = 2 * n
             C[i, i] = -ann
             C[i, i + 1] = -(b + pnn)
@@ -532,8 +539,8 @@ class SingleLayerNumeric:
                 i, j = 2 * n, 2 * m
                 if (n - m) % 2 == 0:
                     # same parity -> C,p block; keep your (col_mode, row_mode) call order
-                    Cmn = self.__CnncTacchi(m, n, k, phi)
-                    pmn = self.__pnncTacchi(m, n, k, phi)
+                    Cmn = self.__CnncTacchi(m, n, k)
+                    pmn = self.__pnncTacchi(m, n, k)
                     C[i, j] += -Cmn
                     C[i, j + 1] += -pmn
                     C[i + 1, j] += pmn
@@ -541,7 +548,7 @@ class SingleLayerNumeric:
                 else:
                     # opposite parity -> q block
                     qmn = self.__qnncTacchi(
-                        m, n, k, phi
+                        m, n, k
                     )  # note antisymmetry is inside your function
                     C[i, j + 1] += -qmn
                     C[i + 1, j] += -qmn
@@ -578,12 +585,11 @@ class SingleLayerNumeric:
             Has a shape of ``(2*N, N, M)``, where ``M = kxi.shape[0]``.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
-        phi = self.phi
         wV = np.zeros((self.N, np.size(ks, 0)))
         vV = np.zeros((2 * self.N, self.N, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
-                self._Ck(k=k, phi=phi, N=self.N),
+                self._Ck(k=k, N=self.N),
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
