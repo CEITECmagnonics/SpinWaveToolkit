@@ -145,7 +145,7 @@ class BulkPolariton:
         self._gamma = val
         self.wM = self.Ms * val * MU0
         self.w0 = val * self.Bext
-    
+
     @property
     def Aex(self):
         """Exchange stiffness constant (J/m)."""

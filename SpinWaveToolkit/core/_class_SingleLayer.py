@@ -1006,9 +1006,7 @@ class SingleLayer:
             (T ) threshold field for parallel pumping.
         """
 
-        return (
-            2 * np.pi / self.GetLifetime(n=0, nT=0) / abs(self.GetCouplingParam())
-        )
+        return 2 * np.pi / self.GetLifetime(n=0, nT=0) / abs(self.GetCouplingParam())
 
     def GetThresholdFieldNonAdiabatic(self, L=1e-6):
         """Threshold field for parallel pumping including
