@@ -1,5 +1,5 @@
-``SpinWaveToolkit.MacrospinEquilibrium``
-========================================
+:class:`SpinWaveToolkit.MacrospinEquilibrium`
+=============================================
 
 .. autoclass:: SpinWaveToolkit.MacrospinEquilibrium
    :members:

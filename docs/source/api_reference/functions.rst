@@ -1,33 +1,35 @@
 Functions
 =========
 
+.. currentmodule:: SpinWaveToolkit
+
+.. note::
+
+    For BLS-related functions, see documentation of the :mod:`~SpinWaveToolkit.bls` submodule.
+
+
 General functions
 -----------------
 
-.. autofunction:: SpinWaveToolkit.wavenumber2wavelength
+.. autofunction:: wavenumber2wavelength
 
-.. autofunction:: SpinWaveToolkit.wavelength2wavenumber
+.. autofunction:: wavelength2wavenumber
 
-.. autofunction:: SpinWaveToolkit.wrapAngle
+.. autofunction:: wrapAngle
 
-.. autofunction:: SpinWaveToolkit.roots
+.. autofunction:: roots
 
-.. autofunction:: SpinWaveToolkit.distBE
+.. autofunction:: bisect
 
-.. autofunction:: SpinWaveToolkit.sphr2cart
+.. autofunction:: rootsearch
 
-.. autofunction:: SpinWaveToolkit.cart2sphr
+.. autofunction:: distBE
+
+.. autofunction:: sphr2cart
+
+.. autofunction:: cart2sphr
 
 
-
-BLS related functions
----------------------
-
-.. autofunction:: SpinWaveToolkit.fresnel_coefficients
-
-.. autofunction:: SpinWaveToolkit.sph_green_function
-
-.. autofunction:: SpinWaveToolkit.getBLSsignal
 
 
 

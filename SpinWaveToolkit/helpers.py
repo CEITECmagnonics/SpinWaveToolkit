@@ -16,6 +16,8 @@ __all__ = [
     "wavelength2wavenumber",
     "wrapAngle",
     "roots",
+    "bisect",
+    "rootsearch",
     "sphr2cart",
     "cart2sphr",
     "ProgressBar",
@@ -125,7 +127,7 @@ def rootsearch(f, a, b, dx, args=()):
     Parameters
     ----------
     f : callable
-        Function to evaluate, f(x, *args).
+        Function to evaluate, ``f(x, *args)``.
     a, b : float
         (x units) left and right boundaries of the interval to search.
     dx : float
@@ -166,7 +168,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     Parameters
     ----------
     f : callable
-        Function to evaluate, f(x, *args).
+        Function to evaluate, ``f(x, *args)``.
     x1, x2 : float
         (x units) left and right boundaries of the interval to search.
     epsilon : float, optional
@@ -177,7 +179,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     Returns
     -------
     x3 : float or None
-        (x units) the root.  Returns None if `x1 * x2 > 0`.
+        (x units) the root.  Returns None if ``x1 * x2 > 0``.
 
     See also
     --------

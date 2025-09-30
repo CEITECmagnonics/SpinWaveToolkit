@@ -92,7 +92,7 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
 numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
 numpydoc_xref_ignore = {"type", "optional", "default", "or", "of"}
-numpydoc_xref_aliases = {
+numpydoc_xref_aliases = {  # Mappings to fully qualified paths (or correct ReST references) for the aliases/shortcuts used when specifying the types of parameters.
     # python
     "sequence": ":term:`python:sequence`",
     "iterable": ":term:`python:iterable`",
@@ -111,7 +111,7 @@ numpydoc_xref_aliases = {
     "SingleLayerSCcoupled": "SpinWaveToolkit.SingleLayerSCcoupled",
     "DoubleLayerNumeric": "SpinWaveToolkit.DoubleLayerNumeric",
     "BulkPolariton": "SpinWaveToolkit.BulkPolariton",
-    "ObjectiveLens": "SpinWaveToolkit.ObjectiveLens",
+    "ObjectiveLens": "SpinWaveToolkit.bls.ObjectiveLens",
 }
 
 intersphinx_mapping = {

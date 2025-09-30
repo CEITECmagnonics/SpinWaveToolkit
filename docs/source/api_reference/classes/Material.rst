@@ -1,5 +1,5 @@
-``SpinWaveToolkit.Material``
-============================
+:class:`SpinWaveToolkit.Material`
+=================================
 
 .. autoclass:: SpinWaveToolkit.Material
    :members:
@@ -10,7 +10,7 @@
 Table of pre-defined materials
 ------------------------------
 
-All of these are instances of the :doc:`Material` class.
+All of these are instances of the :class:`~SpinWaveToolkit.Material` class.
 
 +---------------------------+---------------+----------------+-------------------+-----------------------+-----------------+----------------+
 | `Material`                | ``Ms`` (kA/m) | ``Aex`` (pJ/m) | ``alpha`` (10^-4) | ``gamma``/2pi (GHz/T) | ``mu0dH0`` (mT) | ``Ku`` (J/m^2) |

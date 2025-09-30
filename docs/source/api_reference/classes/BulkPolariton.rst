@@ -1,5 +1,5 @@
-``SpinWaveToolkit.BulkPolariton``
-=================================
+:class:`SpinWaveToolkit.BulkPolariton`
+======================================
 
 .. autoclass:: SpinWaveToolkit.BulkPolariton
    :members:

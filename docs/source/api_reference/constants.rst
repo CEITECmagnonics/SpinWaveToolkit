@@ -12,4 +12,4 @@ All of these are also accessible from the module level, e.g. ``SpinWaveToolkit.M
 .. autodata:: SpinWaveToolkit.helpers.KB
 
 
-Pre-defined materials (constants of type :doc:`classes/Material`) are defined in :doc:`classes/Material` class documentation.
+Pre-defined materials (constants of type :class:`Material`) are defined in :doc:`classes/Material` class documentation.
