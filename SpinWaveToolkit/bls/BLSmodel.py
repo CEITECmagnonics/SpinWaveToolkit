@@ -182,8 +182,6 @@ def getBLSsignal(
     # Evaluate the Fresnel coefficients at each Q:
     tp = htp(Q)  # htp at once, assumed shape (2, *Q.shape)
     ts = hts(Q)  # hts at once, assumed shape (2, *Q.shape)
-    # ### What should happen in the case of multilayer structure with a magnetic 
-    #     film in the interior, because tp and ts will be (2, 2, *Q.shape) ?
     # Replace NaNs with zeros in the two (assumed) components.
     tp_fixed = np.nan_to_num(tp, nan=0)
     ts_fixed = np.nan_to_num(ts, nan=0)

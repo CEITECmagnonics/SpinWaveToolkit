@@ -279,32 +279,60 @@ class SingleLayer:
         self.__update_w0()
 
     def __tensor_in_Mframe(self, Tlab):
-        """Transform tensor `Tlab` from lab frame to M frame."""
-        # ### is this correct? I think we need to include phi as k || x, but M
-        # is not. Therefore I changed 0 to self.phi on the following line.
-        m = sphr2cart(
-            self.theta, self.phi
-        )  # M azimuth irrelevant for k–M angle definition (???)
-        zlab = np.array([0.0, 0.0, 1.0])
-        x_try = zlab - (zlab @ m) * m
-        if np.linalg.norm(x_try) < 1e-14:  # M ∥ z
-            x_try = np.cross(m, np.array([1.0, 0.0, 0.0]))
+        """
+        Transform tensor `Tlab` from lab frame to M frame.
+        Supports self.theta and self.phi as scalars or vectors.
+        Returns: (3,3) if scalar, (3,3,N) if broadcasted shape is (N,)
+        """
+        theta, phi = np.broadcast_arrays(self.theta, self.phi)
+        m = sphr2cart(theta, phi)  # shape (3,) or (3, N)
+        if m.ndim == 1:  # Scalar case
+            zlab = np.array([0.0, 0.0, 1.0])
+            x_try = zlab - np.dot(zlab, m) * m
             if np.linalg.norm(x_try) < 1e-14:
-                x_try = np.cross(m, np.array([0.0, 1.0, 0.0]))
-        x = x_try / np.linalg.norm(x_try)
-        y = np.cross(m, x)
-        rot = np.column_stack([x, y, m])  # LAB basis columns
-        return rot.T @ Tlab @ rot
+                x_try = np.cross(m, np.array([1.0, 0.0, 0.0]))
+                if np.linalg.norm(x_try) < 1e-14:
+                    x_try = np.cross(m, np.array([0.0, 1.0, 0.0]))
+            x = x_try / np.linalg.norm(x_try)
+            y = np.cross(m, x)
+            rot = np.column_stack([x, y, m])  # (3,3)
+            return rot.T @ Tlab @ rot
+        else:  # Vectorized case
+            # ### needs to be checked if works well
+            zlab = np.array([0.0, 0.0, 1.0])[:, None]  # shape (3,1)
+            x_try = zlab - np.sum(zlab * m, axis=0, keepdims=True) * m
+            mask = np.linalg.norm(x_try, axis=0) < 1e-14
+            if np.any(mask):
+                x_try[:, mask] = np.cross(m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0)
+                mask2 = np.linalg.norm(x_try[:, mask], axis=0) < 1e-14
+                if np.any(mask2):
+                    x_try[:, mask2] = np.cross(m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0)
+            x = x_try / np.linalg.norm(x_try, axis=0)
+            y = np.cross(m, x, axis=0)
+            rot = np.stack([x, y, m], axis=1)  # shape (3,3,N)
+            return np.einsum('jin,jk,kln->iln', rot, Tlab, rot)
 
     def __update_w0(self):
-        """Update the w0 parameter when any part changes."""
-        mhat = sphr2cart(self.theta, self.phi)
-        hhat = sphr2cart(self.theta_H, self.phi_H)
-        B_eff = self.Bext * float(mhat @ hhat)
-        B_eff += -MU0 * self.Ms * float(mhat @ self.Nd @ mhat)
-        B_eff += -MU0 * self.Ms * float(mhat @ self.Na @ mhat)
-        # ### check that the sign of Na from MacEq is correct.
-        self.w0 = self.gamma * B_eff
+        """
+        Update the w0 parameter when any part changes.
+        Supports self.theta, self.phi, self.Bext, self.theta_H, and 
+        self.phi_H as scalars or vectors.
+        """
+        # Broadcast all relevant parameters to a common shape
+        theta, phi, Bext, theta_H, phi_H = np.broadcast_arrays(
+            self.theta, self.phi, self.Bext, self.theta_H, self.phi_H
+        )
+        mhat = sphr2cart(theta, phi)  # shape (3, ...)
+        hhat = sphr2cart(theta_H, phi_H)  # shape (3, ...)
+        # Dot product along the first axis (vector axis)
+        B_eff = Bext * np.sum(mhat * hhat, axis=0)
+
+        # Demag/anisotropy terms
+        # mhat: (3, ...), Nd: (3,3), result: shape (...)
+        B_eff += -MU0 * self.Ms * np.einsum('i...,ij,j...->...', mhat, self.Nd, mhat)
+        B_eff += -MU0 * self.Ms * np.einsum('i...,ij,j...->...', mhat, self.Na, mhat)
+        # ### check that the sign of Na from MacEq is correct. Use TetraX maybe.
+        self.w0 = self.gamma * B_eff  # shape matches broadcasted input
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
