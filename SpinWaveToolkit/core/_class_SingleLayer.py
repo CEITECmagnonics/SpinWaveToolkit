@@ -286,7 +286,7 @@ class SingleLayer:
         """
         theta, phi = np.broadcast_arrays(self.theta, self.phi)
         m = sphr2cart(theta, phi)  # shape (3,) or (3, N)
-        if m.ndim == 1:  # Scalar case
+        if m.ndim == 1:  # scalar case
             zlab = np.array([0.0, 0.0, 1.0])
             x_try = zlab - np.dot(zlab, m) * m
             if np.linalg.norm(x_try) < 1e-14:
@@ -297,24 +297,24 @@ class SingleLayer:
             y = np.cross(m, x)
             rot = np.column_stack([x, y, m])  # (3,3)
             return rot.T @ Tlab @ rot
-        else:  # Vectorized case
-            # ### needs to be checked if works well
-            zlab = np.array([0.0, 0.0, 1.0])[:, None]  # shape (3,1)
-            x_try = zlab - np.sum(zlab * m, axis=0, keepdims=True) * m
-            mask = np.linalg.norm(x_try, axis=0) < 1e-14
-            if np.any(mask):
-                x_try[:, mask] = np.cross(
-                    m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0
+        # else vectorized case
+        # ### needs to be checked if works well
+        zlab = np.array([0.0, 0.0, 1.0])[:, None]  # shape (3,1)
+        x_try = zlab - np.sum(zlab * m, axis=0, keepdims=True) * m
+        mask = np.linalg.norm(x_try, axis=0) < 1e-14
+        if np.any(mask):
+            x_try[:, mask] = np.cross(
+                m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0
+            )
+            mask2 = np.linalg.norm(x_try[:, mask], axis=0) < 1e-14
+            if np.any(mask2):
+                x_try[:, mask2] = np.cross(
+                    m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0
                 )
-                mask2 = np.linalg.norm(x_try[:, mask], axis=0) < 1e-14
-                if np.any(mask2):
-                    x_try[:, mask2] = np.cross(
-                        m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0
-                    )
-            x = x_try / np.linalg.norm(x_try, axis=0)
-            y = np.cross(m, x, axis=0)
-            rot = np.stack([x, y, m], axis=1)  # shape (3,3,N)
-            return np.einsum("jin,jk,kln->iln", rot, Tlab, rot)
+        x = x_try / np.linalg.norm(x_try, axis=0)
+        y = np.cross(m, x, axis=0)
+        rot = np.stack([x, y, m], axis=1)  # shape (3,3,N)
+        return np.einsum("jin,jk,kln->iln", rot, Tlab, rot)
 
     def __update_w0(self):
         """
