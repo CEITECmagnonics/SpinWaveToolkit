@@ -7,7 +7,7 @@ from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from scipy.signal import convolve2d
 from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
-from SpinWaveToolkit.greenAndFresnel import *
+from SpinWaveToolkit.bls.greenAndFresnel import *
 
 
 def getBLSsignal(
@@ -179,23 +179,12 @@ def getBLSsignal(
         source_layer_index=source_layer_index,
         output_layer_index=output_layer_index,
     )
-    # Evaluate on Q; here we assume htp and hts are callable (or arrays) so that:
-    tp = np.zeros((*Q.shape, 2), dtype=complex)
-    ts = np.zeros((*Q.shape, 2), dtype=complex)
-    # Loop over all Q values and evaluate the Fresnel coefficients
-    for ix in range(Q.shape[0]):
-        for iy in range(Q.shape[1]):
-            tp[ix, iy, 0] = htp(Q[ix, iy])[0]  # First component of htp
-            tp[ix, iy, 1] = htp(Q[ix, iy])[1]  # Second component of htp
-            ts[ix, iy, 0] = hts(Q[ix, iy])[0]  # First component of hts
-            ts[ix, iy, 1] = hts(Q[ix, iy])[1]  # Second component of hts
+    # Evaluate the Fresnel coefficients at each Q:
+    tp = htp(Q)  # htp at once, assumed shape (2, *Q.shape)
+    ts = hts(Q)  # hts at once, assumed shape (2, *Q.shape)
     # Replace NaNs with zeros in the two (assumed) components.
-    tp0 = np.nan_to_num(tp[..., 0], nan=0)
-    tp1 = np.nan_to_num(tp[..., 1], nan=0)
-    ts0 = np.nan_to_num(ts[..., 0], nan=0)
-    ts1 = np.nan_to_num(ts[..., 1], nan=0)
-    tp_fixed = [tp0, tp1]
-    ts_fixed = [ts0, ts1]
+    tp_fixed = np.nan_to_num(tp, nan=0)
+    ts_fixed = np.nan_to_num(ts, nan=0)
     # Compute the spherical Green functions
     pGF, sGF = sph_green_function(
         Kx=Qx,

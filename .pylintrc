@@ -409,7 +409,7 @@ max-spelling-suggestions=2
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=10
+max-args=20
 
 # Maximum number of locals for function / method body
 max-locals=25
@@ -421,7 +421,7 @@ max-returns=11
 max-branches=27
 
 # Maximum number of statements in function / method body
-max-statements=100
+max-statements=150
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
@@ -444,6 +444,9 @@ max-bool-expr=5
 # List of regular expressions of class ancestor names to
 # ignore when counting public methods (see R0903).
 exclude-too-few-public-methods=
+
+# Maximum number of positional arguments for function / method.
+max-positional-arguments=20
 
 
 [CLASSES]

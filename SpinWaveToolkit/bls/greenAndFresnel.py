@@ -1,36 +1,36 @@
 """
-Submodule for functions related to BLS model, specifically for the 
+Submodule for functions related to BLS model, specifically for the
 calculations of Fresnel coefficients and Green functions.
 
 
 This module implements:
 
-1. fresnel_coefficients: Computes Fresnel transmission coefficients for 
+1. fresnel_coefficients: Computes Fresnel transmission coefficients for
     p- and s-polarized waves as a function of lateral wavevector q.
-   
+
     The function accepts:
     - lambda_ : wavelength (in meters)
-    - DF      : array of dielectric functions (complex) for each 
+    - DF      : array of dielectric functions (complex) for each
                 layer, ordered from the top (superstrate) to bottom.
     - PM      : array of permeabilities for each layer (usually ones)
-    - d       : array of thicknesses for the layers between the 
-                superstrate and substrate (length should be 
+    - d       : array of thicknesses for the layers between the
+                superstrate and substrate (length should be
                 ``len(DF)-2``)
-    - source_layer_index: (1-indexed) index of the layer where the 
+    - source_layer_index: (1-indexed) index of the layer where the
                 source is located.
-    - output_layer_index: (1-indexed) index of the layer where the 
+    - output_layer_index: (1-indexed) index of the layer where the
                 output is desired.
-     
-   It returns two functions, `htp` and `hts`, which when called with a 
-   lateral wavevector q (scalar or numpy array) return the corresponding 
-   Fresnel transmission coefficient(s) for p- and s-polarization, 
+
+   It returns two functions, `htp` and `hts`, which when called with a
+   lateral wavevector q (scalar or numpy array) return the corresponding
+   Fresnel transmission coefficient(s) for p- and s-polarization,
    respectively.
-   
-2. sph_green_function: Computes the spherical Green's functions for p- 
-    and s-polarized fields, given the lateral wavevector components 
-    (Kx, Ky), the dielectric function of a target layer, wavelength, 
-    and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF 
-    are provided as 3×2 lists (each entry a numpy array of the same 
+
+2. sph_green_function: Computes the spherical Green's functions for p-
+    and s-polarized fields, given the lateral wavevector components
+    (Kx, Ky), the dielectric function of a target layer, wavelength,
+    and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF
+    are provided as 3×2 lists (each entry a numpy array of the same
     shape as Kx and Ky).
 """
 
@@ -69,6 +69,17 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     hts : function
         A function that computes the s-polarized Fresnel transmission
         coefficients for given q.
+
+    Notes
+    -----
+    The returned functions `htp` and `hts` take single argument `q`,
+    which can be a float or ndarray in units rad/m. The shape of their
+    output depends on the shape of `q` and the chosen
+    `output_layer_index`:
+
+    - if 0 or N-1 (top or bottom layer), output shape is ``(2, ...)``
+      where ``...`` is the shape of `q`,
+    - elsewhere (any interior layer), output shape is ``(2, 2, ...)``.
     """
     # Convert inputs to numpy arrays (ensure complex type for DF, PM, and d)
     DF = np.asarray(DF, dtype=complex)
@@ -172,14 +183,16 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         FactorUp = 1
         # Loop from the top layer to the source layer.
         for i in range(source_layer_index):
-            MUp = PjInv[i] @ Mji[i] @ MUp
+            # MUp = PjInv[i] @ Mji[i] @ MUp
+            MUp = np.einsum("ij...,jk...,kl...->il...", PjInv[i], Mji[i], MUp)
             FactorUp *= tpji[i]
         # Downward propagation: from bottom (last interface) upward to source layer.
         MDown = Mij[-1]
         FactorDown = tpij[-1]
         # Loop from the last propagation matrix index down to source_layer_index
         for i in range(len(Pj) - 1, source_layer_index - 1, -1):
-            MDown = Mij[i] @ Pj[i] @ MDown
+            # MDown = Mij[i] @ Pj[i] @ MDown
+            MDown = np.einsum("ij...,jk...,kl...->il...", Mij[i], Pj[i], MDown)
             FactorDown *= tpij[i]
 
         tmp_val = MDown[1, 1] * MUp[0, 0] - MDown[0, 1] * MUp[1, 0]
@@ -212,49 +225,50 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
                 ],
                 dtype=complex,
             )
+        elif output_layer_index < source_layer_index:
+            L = np.eye(2, dtype=complex)
+            for i in range(output_layer_index):
+                # L = PjInv[i] @ Mji[i] @ L
+                L = np.einsum("ij...,jk...,kl...->il...", PjInv[i], Mji[i], L)
+            Factor = 1
+            for i in range(output_layer_index, source_layer_index):
+                Factor *= tpji[i]
+            tp_out = np.array(
+                [
+                    [
+                        Factor * L[0, 0] * MDown[1, 1] / tmp_val,
+                        Factor * L[0, 0] * MDown[0, 1] / tmp_val,
+                    ],
+                    [
+                        Factor * L[1, 0] * MDown[1, 1] / tmp_val,
+                        Factor * L[1, 0] * MDown[0, 1] / tmp_val,
+                    ],
+                ],
+                dtype=complex,
+            )
+        elif output_layer_index > source_layer_index:
+            L = Mij[-1]
+            for i in range(len(Pj) - 1, output_layer_index - 1, -1):
+                # L = Mij[i] @ Pj[i] @ L
+                L = np.einsum("ij...,jk...,kl...->il...", Mij[i], Pj[i], L)
+            Factor = 1
+            for i in reversed(range(source_layer_index, output_layer_index)):
+                Factor *= tpij[i]
+            tp_out = np.array(
+                [
+                    [
+                        Factor * L[0, 1] * MUp[1, 0] / tmp_val,
+                        Factor * L[0, 1] * MUp[0, 0] / tmp_val,
+                    ],
+                    [
+                        Factor * L[1, 1] * MUp[1, 0] / tmp_val,
+                        Factor * L[1, 1] * MUp[0, 0] / tmp_val,
+                    ],
+                ],
+                dtype=complex,
+            )
         else:
-            if output_layer_index < source_layer_index:
-                L = np.eye(2, dtype=complex)
-                for i in range(output_layer_index):
-                    L = PjInv[i] @ Mji[i] @ L
-                Factor = 1
-                for i in range(output_layer_index, source_layer_index):
-                    Factor *= tpji[i]
-                tp_out = np.array(
-                    [
-                        [
-                            Factor * L[0, 0] * MDown[1, 1] / tmp_val,
-                            Factor * L[0, 0] * MDown[0, 1] / tmp_val,
-                        ],
-                        [
-                            Factor * L[1, 0] * MDown[1, 1] / tmp_val,
-                            Factor * L[1, 0] * MDown[0, 1] / tmp_val,
-                        ],
-                    ],
-                    dtype=complex,
-                )
-            elif output_layer_index > source_layer_index:
-                L = Mij[-1]
-                for i in range(len(Pj) - 1, output_layer_index - 1, -1):
-                    L = Mij[i] @ Pj[i] @ L
-                Factor = 1
-                for i in reversed(range(source_layer_index, output_layer_index)):
-                    Factor *= tpij[i]
-                tp_out = np.array(
-                    [
-                        [
-                            Factor * L[0, 1] * MUp[1, 0] / tmp_val,
-                            Factor * L[0, 1] * MUp[0, 0] / tmp_val,
-                        ],
-                        [
-                            Factor * L[1, 1] * MUp[1, 0] / tmp_val,
-                            Factor * L[1, 1] * MUp[0, 0] / tmp_val,
-                        ],
-                    ],
-                    dtype=complex,
-                )
-            else:
-                tp_out = None  # Should not occur
+            tp_out = None  # Should not occur
         return tp_out
 
     # ------------------------ s-polarization ------------------------
@@ -299,28 +313,52 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
                 PjInv.append(P)
             else:
                 phase = np.exp(1j * knz[i] * d[i - 1])
-                P = np.array([[phase, 0], [0, 1 / phase]], dtype=complex)
+                P = np.array(
+                    [
+                        [phase, np.zeros(np.shape(phase))],
+                        [np.zeros(np.shape(phase)), 1 / phase],
+                    ],
+                    dtype=complex,
+                )
                 Pj.append(P)
-                P_inv = np.array([[1 / phase, 0], [0, phase]], dtype=complex)
+                P_inv = np.array(
+                    [
+                        [1 / phase, np.zeros(np.shape(phase))],
+                        [np.zeros(np.shape(phase)), phase],
+                    ],
+                    dtype=complex,
+                )
                 PjInv.append(P_inv)
 
         Mij = []
         Mji = []
         for i in range(N - 1):
             tmp_val = tsij[i] * tsji[i] - rsij[i] * rsji[i]
-            Mji.append(np.array([[1, -rsij[i]], [rsji[i], tmp_val]], dtype=complex))
-            Mij.append(np.array([[tmp_val, rsij[i]], [-rsji[i], 1]], dtype=complex))
+            Mji.append(
+                np.array(
+                    [[np.ones(np.shape(rsij[i])), -rsij[i]], [rsji[i], tmp_val]],
+                    dtype=complex,
+                )
+            )
+            Mij.append(
+                np.array(
+                    [[tmp_val, rsij[i]], [-rsji[i], np.ones(np.shape(rsij[i]))]],
+                    dtype=complex,
+                )
+            )
 
         MUp = np.eye(2, dtype=complex)
         FactorUp = 1
         for i in range(source_layer_index):
-            MUp = PjInv[i] @ Mji[i] @ MUp
+            # MUp = PjInv[i] @ Mji[i] @ MUp
+            MUp = np.einsum("ij...,jk...,kl...->il...", PjInv[i], Mji[i], MUp)
             FactorUp *= tsji[i]
 
         MDown = Mij[-1]
         FactorDown = tsij[-1]
         for i in range(len(Pj) - 1, source_layer_index - 1, -1):
-            MDown = Mij[i] @ Pj[i] @ MDown
+            # MDown = Mij[i] @ Pj[i] @ MDown
+            MDown = np.einsum("ij...,jk...,kl...->il...", Mij[i], Pj[i], MDown)
             FactorDown *= tsij[i]
 
         tmp_val = MDown[1, 1] * MUp[0, 0] - MDown[0, 1] * MUp[1, 0]
@@ -349,49 +387,50 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
                 ],
                 dtype=complex,
             )
+        elif output_layer_index < source_layer_index:
+            L = np.eye(2, dtype=complex)
+            for i in range(output_layer_index):
+                # L = PjInv[i] @ Mji[i] @ L
+                L = np.einsum("ij...,jk...,kl...->il...", PjInv[i], Mji[i], L)
+            Factor = 1
+            for i in range(output_layer_index, source_layer_index):
+                Factor *= tsji[i]
+            ts_out = np.array(
+                [
+                    [
+                        Factor * L[0, 0] * MDown[1, 1] / tmp_val,
+                        Factor * L[0, 0] * MDown[0, 1] / tmp_val,
+                    ],
+                    [
+                        Factor * L[1, 0] * MDown[1, 1] / tmp_val,
+                        Factor * L[1, 0] * MDown[0, 1] / tmp_val,
+                    ],
+                ],
+                dtype=complex,
+            )
+        elif output_layer_index > source_layer_index:
+            L = Mij[-1]
+            for i in range(len(Pj) - 1, output_layer_index - 1, -1):
+                # L = Mij[i] @ Pj[i] @ L
+                L = np.einsum("ij...,jk...,kl...->il...", Mij[i], Pj[i], L)
+            Factor = 1
+            for i in reversed(range(source_layer_index, output_layer_index)):
+                Factor *= tsij[i]
+            ts_out = np.array(
+                [
+                    [
+                        Factor * L[0, 1] * MUp[1, 0] / tmp_val,
+                        Factor * L[0, 1] * MUp[0, 0] / tmp_val,
+                    ],
+                    [
+                        Factor * L[1, 1] * MUp[1, 0] / tmp_val,
+                        Factor * L[1, 1] * MUp[0, 0] / tmp_val,
+                    ],
+                ],
+                dtype=complex,
+            )
         else:
-            if output_layer_index < source_layer_index:
-                L = np.eye(2, dtype=complex)
-                for i in range(output_layer_index):
-                    L = PjInv[i] @ Mji[i] @ L
-                Factor = 1
-                for i in range(output_layer_index, source_layer_index):
-                    Factor *= tsji[i]
-                ts_out = np.array(
-                    [
-                        [
-                            Factor * L[0, 0] * MDown[1, 1] / tmp_val,
-                            Factor * L[0, 0] * MDown[0, 1] / tmp_val,
-                        ],
-                        [
-                            Factor * L[1, 0] * MDown[1, 1] / tmp_val,
-                            Factor * L[1, 0] * MDown[0, 1] / tmp_val,
-                        ],
-                    ],
-                    dtype=complex,
-                )
-            elif output_layer_index > source_layer_index:
-                L = Mij[-1]
-                for i in range(len(Pj) - 1, output_layer_index - 1, -1):
-                    L = Mij[i] @ Pj[i] @ L
-                Factor = 1
-                for i in reversed(range(source_layer_index, output_layer_index)):
-                    Factor *= tsij[i]
-                ts_out = np.array(
-                    [
-                        [
-                            Factor * L[0, 1] * MUp[1, 0] / tmp_val,
-                            Factor * L[0, 1] * MUp[0, 0] / tmp_val,
-                        ],
-                        [
-                            Factor * L[1, 1] * MUp[1, 0] / tmp_val,
-                            Factor * L[1, 1] * MUp[0, 0] / tmp_val,
-                        ],
-                    ],
-                    dtype=complex,
-                )
-            else:
-                ts_out = None
+            ts_out = None
         return ts_out
 
     return htp, hts

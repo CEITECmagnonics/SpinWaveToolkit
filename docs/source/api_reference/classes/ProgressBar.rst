@@ -1,5 +1,5 @@
-``SpinWaveToolkit.ProgressBar``
-======================================
+:class:`SpinWaveToolkit.ProgressBar`
+====================================
 
 .. autoclass:: SpinWaveToolkit.ProgressBar
    :members:
