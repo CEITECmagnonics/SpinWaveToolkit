@@ -303,19 +303,23 @@ class SingleLayer:
             x_try = zlab - np.sum(zlab * m, axis=0, keepdims=True) * m
             mask = np.linalg.norm(x_try, axis=0) < 1e-14
             if np.any(mask):
-                x_try[:, mask] = np.cross(m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0)
+                x_try[:, mask] = np.cross(
+                    m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0
+                )
                 mask2 = np.linalg.norm(x_try[:, mask], axis=0) < 1e-14
                 if np.any(mask2):
-                    x_try[:, mask2] = np.cross(m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0)
+                    x_try[:, mask2] = np.cross(
+                        m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0
+                    )
             x = x_try / np.linalg.norm(x_try, axis=0)
             y = np.cross(m, x, axis=0)
             rot = np.stack([x, y, m], axis=1)  # shape (3,3,N)
-            return np.einsum('jin,jk,kln->iln', rot, Tlab, rot)
+            return np.einsum("jin,jk,kln->iln", rot, Tlab, rot)
 
     def __update_w0(self):
         """
         Update the w0 parameter when any part changes.
-        Supports self.theta, self.phi, self.Bext, self.theta_H, and 
+        Supports self.theta, self.phi, self.Bext, self.theta_H, and
         self.phi_H as scalars or vectors.
         """
         # Broadcast all relevant parameters to a common shape
@@ -329,8 +333,8 @@ class SingleLayer:
 
         # Demag/anisotropy terms
         # mhat: (3, ...), Nd: (3,3), result: shape (...)
-        B_eff += -MU0 * self.Ms * np.einsum('i...,ij,j...->...', mhat, self.Nd, mhat)
-        B_eff += -MU0 * self.Ms * np.einsum('i...,ij,j...->...', mhat, self.Na, mhat)
+        B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Nd, mhat)
+        B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Na, mhat)
         # ### check that the sign of Na from MacEq is correct. Use TetraX maybe.
         self.w0 = self.gamma * B_eff  # shape matches broadcasted input
 

@@ -1,36 +1,36 @@
 """
-Submodule for functions related to BLS model, specifically for the 
+Submodule for functions related to BLS model, specifically for the
 calculations of Fresnel coefficients and Green functions.
 
 
 This module implements:
 
-1. fresnel_coefficients: Computes Fresnel transmission coefficients for 
+1. fresnel_coefficients: Computes Fresnel transmission coefficients for
     p- and s-polarized waves as a function of lateral wavevector q.
-   
+
     The function accepts:
     - lambda_ : wavelength (in meters)
-    - DF      : array of dielectric functions (complex) for each 
+    - DF      : array of dielectric functions (complex) for each
                 layer, ordered from the top (superstrate) to bottom.
     - PM      : array of permeabilities for each layer (usually ones)
-    - d       : array of thicknesses for the layers between the 
-                superstrate and substrate (length should be 
+    - d       : array of thicknesses for the layers between the
+                superstrate and substrate (length should be
                 ``len(DF)-2``)
-    - source_layer_index: (1-indexed) index of the layer where the 
+    - source_layer_index: (1-indexed) index of the layer where the
                 source is located.
-    - output_layer_index: (1-indexed) index of the layer where the 
+    - output_layer_index: (1-indexed) index of the layer where the
                 output is desired.
-     
-   It returns two functions, `htp` and `hts`, which when called with a 
-   lateral wavevector q (scalar or numpy array) return the corresponding 
-   Fresnel transmission coefficient(s) for p- and s-polarization, 
+
+   It returns two functions, `htp` and `hts`, which when called with a
+   lateral wavevector q (scalar or numpy array) return the corresponding
+   Fresnel transmission coefficient(s) for p- and s-polarization,
    respectively.
-   
-2. sph_green_function: Computes the spherical Green's functions for p- 
-    and s-polarized fields, given the lateral wavevector components 
-    (Kx, Ky), the dielectric function of a target layer, wavelength, 
-    and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF 
-    are provided as 3×2 lists (each entry a numpy array of the same 
+
+2. sph_green_function: Computes the spherical Green's functions for p-
+    and s-polarized fields, given the lateral wavevector components
+    (Kx, Ky), the dielectric function of a target layer, wavelength,
+    and the Fresnel coefficients (tp and ts).  The outputs pGF and sGF
+    are provided as 3×2 lists (each entry a numpy array of the same
     shape as Kx and Ky).
 """
 
@@ -72,12 +72,12 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
 
     Notes
     -----
-    The returned functions `htp` and `hts` take single argument `q`, 
-    which can be a float or ndarray in units rad/m. The shape of their 
-    output depends on the shape of `q` and the chosen 
+    The returned functions `htp` and `hts` take single argument `q`,
+    which can be a float or ndarray in units rad/m. The shape of their
+    output depends on the shape of `q` and the chosen
     `output_layer_index`:
-    
-    - if 0 or N-1 (top or bottom layer), output shape is ``(2, ...)`` 
+
+    - if 0 or N-1 (top or bottom layer), output shape is ``(2, ...)``
       where ``...`` is the shape of `q`,
     - elsewhere (any interior layer), output shape is ``(2, 2, ...)``.
     """
@@ -334,8 +334,18 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
         Mji = []
         for i in range(N - 1):
             tmp_val = tsij[i] * tsji[i] - rsij[i] * rsji[i]
-            Mji.append(np.array([[np.ones(np.shape(rsij[i])), -rsij[i]], [rsji[i], tmp_val]], dtype=complex))
-            Mij.append(np.array([[tmp_val, rsij[i]], [-rsji[i], np.ones(np.shape(rsij[i]))]], dtype=complex))
+            Mji.append(
+                np.array(
+                    [[np.ones(np.shape(rsij[i])), -rsij[i]], [rsji[i], tmp_val]],
+                    dtype=complex,
+                )
+            )
+            Mij.append(
+                np.array(
+                    [[tmp_val, rsij[i]], [-rsji[i], np.ones(np.shape(rsij[i]))]],
+                    dtype=complex,
+                )
+            )
 
         MUp = np.eye(2, dtype=complex)
         FactorUp = 1

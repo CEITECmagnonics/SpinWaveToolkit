@@ -29,7 +29,7 @@ Classes
     using a semi-analytical model of Zhou et al.
 :class:`~ProgressBar`
     Simple progress bar printed in terminal.
-    
+
 Constants
 ---------
 MU0 : float
@@ -86,7 +86,7 @@ thick NiFe (Permalloy) layer.
     lifetimePy = PyChar.GetLifetime()*1e9  # ns
     decLen = PyChar.GetDecLen()*1e6  # um
 
-@authors: 
+@authors:
     Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
     Jan Klima, jan.klima4@vutbr.cz
     Dominik Pavelka, dominik.pavelka@vutbr.cz

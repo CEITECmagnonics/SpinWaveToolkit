@@ -39,7 +39,7 @@ class ObjectiveLens:
     getFocalFieldRad
     getFocalFieldAzm
     getFocalField
-    
+
     """
 
     def __init__(self, wavelength, NA, f0, f):
