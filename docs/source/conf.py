@@ -116,9 +116,9 @@ numpydoc_xref_aliases = {  # Mappings to fully qualified paths (or correct ReST 
 
 intersphinx_mapping = {
     "python": ("http://docs.python.org/", None),
-    "numpy": ("https://www.numpy.org/devdocs", None),
+    "numpy": ("https://www.numpy.org/doc/stable/", None),
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
+    "pandas": ("http://pandas.pydata.org/docs/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 

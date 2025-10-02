@@ -36,13 +36,10 @@ class ObjectiveLens:
 
     Methods
     -------
-    getFocalFieldRad(z, rho_max, N)
-        Compute the focal field using the radial formulation.
-    getFocalFieldAzm(z, rho_max, N)
-        Compute the focal field using the azimuthal formulation
-        (with ``E_z = 0``).
-    getFocalField(z, rho_max, N)
-        Compute the focal field using a general formulation.
+    getFocalFieldRad
+    getFocalFieldAzm
+    getFocalField
+    
     """
 
     def __init__(self, wavelength, NA, f0, f):

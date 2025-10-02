@@ -65,6 +65,21 @@ In the current setup, there is only one version of docs for every minor release,
 > [!important]
 > **Do NOT commit anything to the `gh-pages` branch!** It is probably just a temporary solution and it would be nice to find a better way to version the docs.
 
+The developer (dev) version of docs is build at every push to the `new-release` branch. You can view this version by selecting *dev* in the version switcher right next to the SpinWaveToolkit title.
+
+### How to build your local documentation for testing
+If you want to test some elements of the documentation, it's better to do it locally instead of making pushes and reverting them in case it does not work out. Here is a short guide on how to setup your virtual environment so that you can do it yourself.
+
+1. Assuming you have the SpinWaveToolkit repository cloned to your local drive, open the command line or PowerShell and go to the root folder of the SpinWaveToolkit repository. You can do this by running the `cd <path_to_repo_root>` command (e.g. `cd C:\Users\<user_name>\Documents\GitHub\SpinWaveToolkit`).
+2. Create a virtual environment (see [here](https://code.visualstudio.com/docs/python/environments) on how to do it) if you don't already have one.
+3. Activate the environment and install the local SpinWaveToolkit with the `dev_doc` option (adds dependencies for the development of the module and documentation). This can be done by running `py -m pip install .[dev_doc]` in the terminal.
+4. Navigate yourself to the `docs` folder by running `cd docs` in terminal.
+5. Run `.\make html` to build the local documentation, which will be located in `build/html`. To view it, open the `index.html` in your browser.
+6. Now if you want to change something, do so. Then reinstall SpinWaveToolkit in the virtual environment by first navigating to root of the repo (`cd ..`) and installing the local files (`py -m pip install . --no-deps`, if you also changed some dependencies, omit the `--no-deps` flag).
+7. Repeat steps 4 and 5.
+8. Cycle through steps 6-7 until satisfied with testing and then commit your changes.
+
+
 
 ## Other notes
 

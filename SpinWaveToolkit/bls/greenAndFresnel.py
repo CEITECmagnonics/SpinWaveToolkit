@@ -76,6 +76,7 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
     which can be a float or ndarray in units rad/m. The shape of their 
     output depends on the shape of `q` and the chosen 
     `output_layer_index`:
+    
     - if 0 or N-1 (top or bottom layer), output shape is ``(2, ...)`` 
       where ``...`` is the shape of `q`,
     - elsewhere (any interior layer), output shape is ``(2, 2, ...)``.
