@@ -75,7 +75,7 @@ If you want to test some elements of the documentation, it's better to do it loc
 3. Activate the environment and install the local SpinWaveToolkit with the `dev_doc` option (adds dependencies for the development of the module and documentation). This can be done by running `py -m pip install .[dev_doc]` in the terminal.
 4. Navigate yourself to the `docs` folder by running `cd docs` in terminal.
 5. Run `.\make html` to build the local documentation, which will be located in `build/html`. To view it, open the `index.html` in your browser.
-6. Now if you want to change something, do so. Then reinstall SpinWaveToolkit in the virtual environment by first navigating to root of the repo (`cd ..`) and installing the local files (`py -m pip install . --no-deps`, if you also changed some dependencies, omit the `--no-deps` flag).
+6. Now if you want to change something, do so. If you changed something in the docstrings/code of the SpinWaveToolkit, then you need to reinstall it in the virtual environment by first navigating to root of the repo (`cd ..`) and installing the local files (`py -m pip install . --no-deps`, if you also changed some dependencies, omit the `--no-deps` flag).
 7. Repeat steps 4 and 5.
 8. Cycle through steps 6-7 until satisfied with testing and then commit your changes.
 
