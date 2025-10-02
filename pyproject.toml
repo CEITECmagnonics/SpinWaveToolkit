@@ -149,6 +149,7 @@ dev_doc = [  # for development and documentation build
     "sphinx-gallery",  # for ipynb gallery styles
     "ipython",  # for ipynb kernel and syntax linting
     "sphinx-toolbox",  # for special tools (collapsible sections, ...)
+    "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 deploy = [  # for automated build and deployment of documentation to GH Pages
     "sphinx",
@@ -160,6 +161,7 @@ deploy = [  # for automated build and deployment of documentation to GH Pages
     "sphinx-gallery",  # for ipynb gallery styles
     "ipython",  # for ipynb kernel and syntax linting
     "sphinx-toolbox",  # for special tools (collapsible sections, ...)
+    "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 test = ["pytest"]
 

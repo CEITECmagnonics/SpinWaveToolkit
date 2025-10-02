@@ -32,7 +32,7 @@ class SingleLayerNumeric:
         Its properties are saved as attributes, but this object is not.
     d : float
         (m ) layer thickness (in z direction)
-    kxi : float or ndarray, optional
+    kxi : float or 1D array, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally

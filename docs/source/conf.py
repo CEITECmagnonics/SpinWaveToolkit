@@ -29,6 +29,7 @@ extensions = [
     "sphinx_design",
     'sphinx_gallery.load_style',
     "sphinx_toolbox.collapse",
+    "sphinx_copybutton",
 ]
 
 templates_path = ['_templates']
