@@ -23,9 +23,12 @@ The SpinWaveToolkit repository adapts the following structure:
   - **SpinWaveToolkit** - the module base folder
     - `__init__.py` - script for importing all submodules (file where all useful classes, functions and constants are imported so that they are accessible from the first level module)
     - `helpers.py` - place for supplemental functions, not directly related a specific model, should not have any imports from other parts of this module
-    - `BLSmodel.py` - submodule for modelling BLS signal
-    - `greenAndFresnel.py` - submodule for functions used for em wave propagation characteristics, mainly in BLS signal modelling
     - `core` - folder with all classes as individual scripts (e.g. for Material class named _class_Material.py), usually each model type has its own class
+    - `bls` - folder representing the `bls` submodule
+      - `__init__.py` - script that makes `bls` a submodule, imports all relevant functions and classes
+      - `BLSmodel.py` - file with functions for modelling BLS signal
+      - `greenAndFresnel.py` - file with functions used for em wave propagation characteristics, mainly in BLS signal modelling
+      - `core` folder with classes, relevant to the `bls` submodule, as individual scripts
   - **docs** - documentation which build is deployed to [GitHub Pages][docs], currently emulated by [Sphinx](sphinx)  using the [PyData Sphinx theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html)
   - **examples** - folder containing use cases and examples, preferably in Jupyter Notebook format
   - other files are project configuration files, readme, etc.
