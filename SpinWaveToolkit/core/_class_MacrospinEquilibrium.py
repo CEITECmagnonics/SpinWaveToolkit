@@ -308,6 +308,72 @@ class MacrospinEquilibrium:
             ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
 
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
+    
+    def getHeff(self):
+        """Calculate effective field with the current magnetization 
+        direction.
+        
+        Performs a numerical derivative of the energy density wrt. 
+        magnetization to get the effective field vector.
+
+        Returns
+        -------
+        theta_Heff, phi_Heff : float
+            (rad) polar and azimuthal angle of the effective field 
+            direction.
+        Heff : float
+            (T) effective field magnitude.
+        """
+        # define relative and aboslute (in radians) step in numerical derivative
+        rstep, astep_rad = 1e-5, 1e-4
+        # get central values
+        Ms0 = float(self.Ms)
+        theta0 = float(self.M["theta"])
+        phi0 = float(self.M["phi"])
+
+        # radial derivative
+        self.Ms = Ms0*(1-rstep)
+        eden_ms_i = self.eval_energy(self.__getM())
+        self.Ms = Ms0*(1+rstep)
+        eden_ms_f = self.eval_energy(self.__getM())
+        self.Ms = Ms0  # reset Ms
+        heff_ms = (eden_ms_i-eden_ms_f)/(Ms0*2*rstep)  # negative sign included
+
+        # theta derivative
+        theta_i = theta0*(1-rstep)-astep_rad
+        theta_f = theta0*(1+rstep)+astep_rad
+        eden_th_i = self.eval_energy((theta_i, phi0))
+        eden_th_f = self.eval_energy((theta_f, phi0))
+        heff_th = 1/Ms0*(eden_th_i-eden_th_f)/(theta_f-theta_i)
+
+        # phi derivative
+        phi_i = phi0*(1-rstep)-astep_rad
+        phi_f = phi0*(1+rstep)+astep_rad
+        eden_ph_i = self.eval_energy((theta0, phi_i))
+        eden_ph_f = self.eval_energy((theta0, phi_f))
+        heff_ph = 1/(Ms0*np.sin(theta0))*(eden_ph_i-eden_ph_f)/(phi_f-phi_i)
+
+        # convert (heff_ms, heff_th, heff_ph) to cartesian coordinates
+        heff_cart = sphr2cart(theta0, phi0) * heff_ms
+        heff_cart += (
+            np.array([
+                np.cos(theta0) * np.cos(phi0),
+                np.cos(theta0) * np.sin(phi0),
+                -np.sin(theta0)
+            ]) * heff_th
+        )
+        heff_cart += (
+            np.array([
+                -np.sin(phi0),
+                np.cos(phi0),
+                0.0
+            ]) * heff_ph
+        )
+
+        # calculate magnitude and spherical angles
+        theta_Heff, phi_Heff, heff_mag = cart2sphr(*heff_cart)
+
+        return theta_Heff, phi_Heff, heff_mag
 
     def hysteresis(self, Bext, theta_H, phi_H, scipy_kwargs=None):
         """Calculate a hysteresis curve from a vector of swept field
@@ -363,7 +429,7 @@ class MacrospinEquilibrium:
             self.Bext["theta_H"] = theta_H[i]
             self.Bext["phi_H"] = phi_H[i]
             self.minimize(scipy_kwargs=scipy_kwargs, verbose=False)
-            theta[i], phi[i] = self.M["theta"], self.M["phi"]
+            theta[i], phi[i] = self.__getM()
             pb.next()
         pb.finish()
 
@@ -386,3 +452,7 @@ class MacrospinEquilibrium:
                 "Input angle larger than 2pi rad. Make sure"
                 + " all input angle values are in radians!"
             )
+    
+    def __getM(self):
+        """Returns magnetization vector data as ``(theta, phi)``."""
+        return self.M["theta"], self.M["phi"]
