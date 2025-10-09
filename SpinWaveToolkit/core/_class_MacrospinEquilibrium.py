@@ -108,6 +108,8 @@ class MacrospinEquilibrium:
     recalc_params
     minimize
     eval_energy
+    getHeff
+    hysteresis
 
     Examples
     --------
