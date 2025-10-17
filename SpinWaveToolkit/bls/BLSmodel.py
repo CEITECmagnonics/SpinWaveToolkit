@@ -10,6 +10,111 @@ from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
 
 
+def getBLSsignal_RT(
+    Exy, 
+    Ei_fields, 
+    Ej_fields,
+    KxKyBloch, 
+    Bloch,
+):
+    """
+    Compute Brillouin light scattering (BLS) spectrum using the 
+    reciprocity theorem.
+
+    Parameters
+    ----------
+    Exy : tuple[ndarray]
+        (m ) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
+        the X and Y coordinates of the electric field.
+    Ei_fields, Ej_fields : list of ndarray
+        (V/m) Focal fields [Ex, Ey, Ez], each (Nx, Ny).
+        Their polarizations should be perpendicular to each other.
+    KxKyBloch : tuple[ndarray]
+        (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
+        containing the kx and ky coordinates of the Bloch function.
+    Bloch : ndarray
+        Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch 
+        function components ``(Mx, My, Mz)`` for each frequency and KxKy 
+        grid point.
+
+    Returns
+    -------
+    sigmaSW : ndarray
+        BLS spectrum, ``(Nf,)``.
+    qmEiEj : ndarray
+        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
+        Uses same coordinates as Bloch (`KxKyBloch`)
+    """
+
+    # --- Axis ---
+    x, y = Exy
+    kx, ky = KxKyBloch
+
+    # --- Stack fields ---
+    Ei = np.stack(Ei_fields, axis=-1)
+    Ej = np.stack(Ej_fields, axis=-1)
+
+    # --- Local grid spacings ---
+    dx = np.diff(x, prepend=x[0], append=x[-1])
+    dx = (dx[:-1] + dx[1:]) / 2
+    dy = np.diff(y, prepend=y[0], append=y[-1])
+    dy = (dy[:-1] + dy[1:]) / 2
+    dS = np.outer(dx, dy)   # area elements
+
+    # --- Bloch components (no transpose) ---
+    mx = Bloch[0]  # (Nf, Nkx, Nky)
+    my = Bloch[1]
+    mz = Bloch[2]
+
+    _, Nf, Nkx, Nky = np.shape(Bloch)
+
+    # --- Susceptibility tensor with Nf as the first dimension ---
+    chi = np.zeros((3, 3, Nf, Nkx, Nky), dtype=complex)
+
+    chi[0, 1] = 1j * mz
+    chi[0, 2] = -1j * my
+    chi[1, 0] = -1j * mz
+    chi[1, 2] = 1j * mx
+    chi[2, 0] = 1j * my
+    chi[2, 1] = -1j * mx
+
+    # --- Fourier phase factors ---
+    ExFac = np.exp(1j * np.outer(kx, x))   # (Nkx, Nx)
+    EyFac = np.exp(1j * np.outer(ky, y))   # (Nky, Ny)
+
+    # --- Weighted field products (only off-diagonal terms) ---
+    EjEi = {}
+    for u in range(3):
+        for v in range(3):
+            if u != v:
+                F = (Ej[..., u] * Ei[..., v]) * dS
+                EjEi[(u, v)] = np.ascontiguousarray(F)
+
+    qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
+
+    # --- 2D Fourier transforms of field products ---
+    for u in range(3):
+        for v in range(3):
+            if u == v:
+                continue
+            F = EjEi[(u, v)]
+            B = F @ EyFac.T        # Fourier transform along y
+            M = ExFac @ B          # then along x
+            qmEiEj[u, v] = M
+
+    # --- Assemble BLS spectrum by weighting overlaps with susceptibility ---
+    sigmaSW = np.zeros(Nf)
+    for i in range(Nf):
+        tmp = np.zeros((Nkx, Nky), dtype=complex)
+        for u in range(3):
+            for v in range(3):
+                if u != v:
+                    tmp += qmEiEj[u, v] * chi[u, v, i]
+        sigmaSW[i] = np.sum(np.abs(tmp)**2)
+
+    return sigmaSW, qmEiEj
+
+
 def getBLSsignal(
     SweepBloch,
     KxKyBloch,
@@ -36,15 +141,16 @@ def getBLSsignal(
         Sweep vector of the Bloch functions with shape ``(Nf,)``.
         Usually frequency of spin waves.
     KxKyBloch : tuple[ndarray]
-        (rad/m) tuple containing the 1D grids ``(kx_grid, ky_grid)`` on
-        which the Bloch functions are defined.
+        (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
+        containing the kx and ky coordinates of the Bloch function.
     Bloch : ndarray
-        Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch function
-        components ``(Mx, My, Mz)`` for each frequency and KxKy grid point.
-    Exy : ndarray
+        Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch 
+        function components ``(Mx, My, Mz)`` for each frequency and KxKy 
+        grid point.
+    Exy : tuple[ndarray]
         (m ) XY grid for the electric field.
-        2D array with shape ``(Ny, Nx)`` containing the X and Y
-        coordinates of the electric field.
+        Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
+        the X and Y coordinates of the electric field.
     E : ndarray
         (V/m) 3D array with shape ``(3, Ny, Nx)`` containing the X, Y, Z
         components of the electric field.
