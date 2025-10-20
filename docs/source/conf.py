@@ -4,7 +4,6 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
-
 import SpinWaveToolkit
 
 # -- Project information -----------------------------------------------------
@@ -83,8 +82,9 @@ html_theme_options = {
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or'
     + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
     + ' your comments.</i>',  # ### remove after stable state of documentation is reached
+    "pygments_light_style": "friendly",
+    "pygments_dark_style": "a11y-dark",
 }
-pygments_style = "sphinx"
 nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
 
 
