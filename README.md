@@ -1,4 +1,4 @@
-# SpinWaveToolkit
+<h1><img src"https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_static/logo.svg" width="20"> SpinWaveToolkit</h1>
 
 SpinWaveToolkit is an open-source Python package which provides analytical tools for spin-wave physics and research.
 
