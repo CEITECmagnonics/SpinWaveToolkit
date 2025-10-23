@@ -10,16 +10,21 @@ from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
 
 
+import numpy as np
+
 def getBLSsignal_RT(
     Exy, 
     Ei_fields, 
     Ej_fields,
-    KxKyBloch, 
-    Bloch,
+    KxKyChi, 
+    Chi,
+    coherent_exc=False
 ):
     """
     Compute Brillouin light scattering (BLS) spectrum using the 
     reciprocity theorem.
+
+    Source paper: arXiv:2502.03262v2
 
     Parameters
     ----------
@@ -28,14 +33,19 @@ def getBLSsignal_RT(
         the X and Y coordinates of the electric field.
     Ei_fields, Ej_fields : list of ndarray
         (V/m) Focal fields [Ex, Ey, Ez], each (Nx, Ny).
-        Their polarizations should be perpendicular to each other.
-    KxKyBloch : tuple[ndarray]
+        Their polarizations should be perpendicular to each other
+        (conf. fields E_dr and E_v in source paper above).
+    KxKyChi : tuple[ndarray]
         (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
         containing the kx and ky coordinates of the Bloch function.
-    Bloch : ndarray
-        Array with shape ``(3, Nf, Nkx, Nky)`` containing the Bloch 
-        function components ``(Mx, My, Mz)`` for each frequency and KxKy 
-        grid point.
+    Chi : ndarray
+        Array with shape ``(3,3,Nkx,Nky,Nf)`` containing the dynamic magnetic 
+        susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
+        grid point. 
+    coherent_exc : bool, optional
+        If True, calculates the coherent BLS signal.
+        If False (default), calculates the non-coherent (e.g. thermal) BLS 
+        signal.
 
     Returns
     -------
@@ -43,44 +53,29 @@ def getBLSsignal_RT(
         BLS spectrum, ``(Nf,)``.
     qmEiEj : ndarray
         Transfer function of the system, ``(3, 3, Nkx, Nky)``.
-        Uses same coordinates as Bloch (`KxKyBloch`)
+        Uses same coordinates as Chi (`KxKyChi`)
     """
 
     # --- Axis ---
     x, y = Exy
-    kx, ky = KxKyBloch
+    kx, ky = KxKyChi
 
     # --- Stack fields ---
-    Ei = np.stack(Ei_fields, axis=-1)
-    Ej = np.stack(Ej_fields, axis=-1)
+    Ei = np.stack(Ei_fields, axis=-1) 
+    Ej = np.stack(Ej_fields, axis=-1) 
 
     # --- Local grid spacings ---
     dx = np.diff(x, prepend=x[0], append=x[-1])
     dx = (dx[:-1] + dx[1:]) / 2
     dy = np.diff(y, prepend=y[0], append=y[-1])
     dy = (dy[:-1] + dy[1:]) / 2
-    dS = np.outer(dx, dy)   # area elements
+    dS = np.outer(dx, dy)  # area elements
 
-    # --- Bloch components (no transpose) ---
-    mx = Bloch[0]  # (Nf, Nkx, Nky)
-    my = Bloch[1]
-    mz = Bloch[2]
-
-    _, Nf, Nkx, Nky = np.shape(Bloch)
-
-    # --- Susceptibility tensor with Nf as the first dimension ---
-    chi = np.zeros((3, 3, Nf, Nkx, Nky), dtype=complex)
-
-    chi[0, 1] = 1j * mz
-    chi[0, 2] = -1j * my
-    chi[1, 0] = -1j * mz
-    chi[1, 2] = 1j * mx
-    chi[2, 0] = 1j * my
-    chi[2, 1] = -1j * mx
+    _, _, Nf, Nkx, Nky = np.shape(Chi)
 
     # --- Fourier phase factors ---
-    ExFac = np.exp(1j * np.outer(kx, x))   # (Nkx, Nx)
-    EyFac = np.exp(1j * np.outer(ky, y))   # (Nky, Ny)
+    ExFac = np.exp(1j * np.outer(kx, x))  # (Nkx, Nx)
+    EyFac = np.exp(1j * np.outer(ky, y))  # (Nky, Ny)
 
     # --- Weighted field products (only off-diagonal terms) ---
     EjEi = {}
@@ -98,8 +93,8 @@ def getBLSsignal_RT(
             if u == v:
                 continue
             F = EjEi[(u, v)]
-            B = F @ EyFac.T        # Fourier transform along y
-            M = ExFac @ B          # then along x
+            B = F @ EyFac.T      # Fourier transform along y
+            M = ExFac @ B        # then along x
             qmEiEj[u, v] = M
 
     # --- Assemble BLS spectrum by weighting overlaps with susceptibility ---
@@ -109,8 +104,14 @@ def getBLSsignal_RT(
         for u in range(3):
             for v in range(3):
                 if u != v:
-                    tmp += qmEiEj[u, v] * chi[u, v, i]
-        sigmaSW[i] = np.sum(np.abs(tmp)**2)
+                    tmp += qmEiEj[u, v] * Chi[u, v, i]
+        
+        if coherent_exc:
+            # Coherent sum
+            sigmaSW[i] = np.abs(np.sum(tmp))**2
+        else:
+            # Thermal sum
+            sigmaSW[i] = np.sum(np.abs(tmp)**2)
 
     return sigmaSW, qmEiEj
 
