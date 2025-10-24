@@ -78,7 +78,7 @@ html_theme_options = {
         "version_match": release if release == "dev" else ".".join(release.strip("v").split(".")[:2]),  # use major.minor version for the switcher
     },
     # ### update after stable state of documentation is reached
-    "announcement": "https://github.com/CEITECmagnonics/SpinWaveToolkit/raw/master/docs/source/_templates/announcement_banner.html",
+    "announcement": "https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/new-release/docs/source/_templates/announcement_banner.html",
     "pygments_light_style": "friendly",
     "pygments_dark_style": "a11y-dark",
 }
