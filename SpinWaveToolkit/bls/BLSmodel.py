@@ -4,7 +4,7 @@ Submodule for calculations regarding the BLS signal model.
 
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
-from scipy.signal import convolve2d
+from scipy.signal import convolve2d, fftconvolve
 from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
@@ -32,14 +32,14 @@ def getBLSsignal_RT(
         (m ) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
         the X and Y coordinates of the electric field.
     Ei_fields, Ej_fields : list of ndarray
-        (V/m) Focal fields [Ex, Ey, Ez], each (Nx, Ny).
-        Their polarizations should be perpendicular to each other
+        (V/m) Focal fields [Ex, Ey, Ez], each ``(Nx, Ny)``.
+        Their polarizations should be orthogonal
         (conf. fields E_dr and E_v in source paper above).
     KxKyChi : tuple[ndarray]
         (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
         containing the kx and ky coordinates of the Bloch function.
     Chi : ndarray
-        Array with shape ``(3,3,Nkx,Nky,Nf)`` containing the dynamic magnetic 
+        Array with shape ``(3,3,Nf, Nkx,Nky)`` containing the dynamic magnetic 
         susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
         grid point. 
     coherent_exc : bool, optional
@@ -90,8 +90,8 @@ def getBLSsignal_RT(
     # --- 2D Fourier transforms of field products ---
     for u in range(3):
         for v in range(3):
-            if u == v:
-                continue
+            #if u == v:
+            #   continue
             F = EjEi[(u, v)]
             B = F @ EyFac.T      # Fourier transform along y
             M = ExFac @ B        # then along x
@@ -103,8 +103,8 @@ def getBLSsignal_RT(
         tmp = np.zeros((Nkx, Nky), dtype=complex)
         for u in range(3):
             for v in range(3):
-                if u != v:
-                    tmp += qmEiEj[u, v] * Chi[u, v, i]
+                #if u != v:
+                tmp += qmEiEj[u, v] * Chi[u, v, i]
         
         if coherent_exc:
             # Coherent sum
@@ -115,6 +115,101 @@ def getBLSsignal_RT(
 
     return sigmaSW, qmEiEj
 
+
+def getBLSsignal_RT_reci(
+    KxKy, 
+    Ei_fields, 
+    Ej_fields,
+    Chi, 
+    coherent_exc=False
+):
+    """
+    Compute Brillouin light scattering (BLS) spectrum using the 
+    reciprocity theorem, starting from fields in RECIPROCAL space.
+
+    FT(f * g) = FT(f) * FT(g)  (where * is convolution)
+
+    The transfer function qmEiEj = FT(Ej * Ei) is therefore calculated as
+    the convolution of the k-space fields: qmEiEj = FT(Ej) * FT(Ei).
+
+    Parameters
+    ----------
+    KxKy : tuple[ndarray]
+        (rad/m) Tuple of two vectors (kx, ky) with shapes ``(Nkx,)``, 
+        ``(Nky,)`` containing the k coordinates. Assumed to be a uniform grid.
+    Ei_fields, Ej_fields : list of ndarray
+        Pupil fields [Ekx, Eky, Ekz], each ``(Nx, Ny)``.
+        Their polarizations should be orthogonal
+        (conf. fields E_dr and E_v in source paper above).
+    Chi : ndarray
+        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
+        susceptibility tensor components ``Chi_ij`` for each frequency and 
+        KxKy grid point. 
+    coherent_exc : bool, optional
+        If True, calculates the coherent BLS signal.
+        If False (default), calculates the non-coherent (e.g. thermal) BLS 
+        signal.
+
+    Returns
+    -------
+    sigmaSW : ndarray
+        BLS spectrum, ``(Nf,)``.
+    qmEiEj : ndarray
+        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
+    """
+    
+    # K-space coordinates
+    kx, ky = KxKy
+    Nkx = len(kx)
+    Nky = len(ky)
+
+    # Stack fields
+    Ei_k = np.stack(Ei_fields, axis=-1) # Shape (Nkx, Nky, 3)
+    Ej_k = np.stack(Ej_fields, axis=-1) # Shape (Nkx, Nky, 3)
+
+    # K-space grid spacings (for discrete convolution normalization)
+    dkx = kx[1] - kx[0] if Nkx > 1 else 1.0
+    dky = ky[1] - ky[0] if Nky > 1 else 1.0
+    dK = dkx * dky
+    
+    # Normalization factor for 2D FT convolution theorem
+    normalization = dK / (2 * np.pi)**2
+
+    qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
+
+    # 2D Convolutions of k-space field products
+    for u in range(3):
+        for v in range(3):
+            #if u == v:
+            #continue
+            
+            # Convolve FT(Ej[u]) and FT(Ei[v])
+            conv = fftconvolve(
+                Ej_k[..., u], 
+                Ei_k[..., v], 
+                mode='same' # Keep output size same as input
+            )
+            
+            qmEiEj[u, v] = normalization * conv
+
+    # Assemble BLS spectrum by weighting overlaps with susceptibility
+    if coherent_exc:
+        # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
+        # 'uvxy' are qmEiEj dims (3, 3, Nkx, Nky)
+        # 'uvfxy' are Chi dims (3, 3, Nf, Nkx, Nky)
+        # einsum sums over u,v,x,y, leaving just 'f'
+        tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
+        sigmaSW = np.abs(tmp)**2
+    
+    else:
+        # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
+        # einsum sums over u,v, leaving 'f,x,y'
+        tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
+        
+        # Sum over k-space (x and y axes)
+        sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2))
+
+    return sigmaSW, qmEiEj
 
 def getBLSsignal(
     SweepBloch,
