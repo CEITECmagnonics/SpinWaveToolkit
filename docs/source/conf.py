@@ -77,11 +77,8 @@ html_theme_options = {
         "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
         "version_match": release if release == "dev" else ".".join(release.strip("v").split(".")[:2]),  # use major.minor version for the switcher
     },
-    "announcement": "This site is currently under <b>intensive construction</b>."
-    + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
-    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or'
-    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
-    + ' your comments.</i>',  # ### remove after stable state of documentation is reached
+    # ### update after stable state of documentation is reached
+    "announcement": "https://github.com/CEITECmagnonics/SpinWaveToolkit/raw/master/docs/source/_templates/announcement_banner.html",
     "pygments_light_style": "friendly",
     "pygments_dark_style": "a11y-dark",
 }
