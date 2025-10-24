@@ -39,7 +39,7 @@ def getBLSsignal_RT(
         (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
         containing the kx and ky coordinates of the Bloch function.
     Chi : ndarray
-        Array with shape ``(3,3,Nf, Nkx,Nky)`` containing the dynamic magnetic 
+        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
         susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
         grid point. 
     coherent_exc : bool, optional
@@ -81,9 +81,9 @@ def getBLSsignal_RT(
     EjEi = {}
     for u in range(3):
         for v in range(3):
-            if u != v:
-                F = (Ej[..., u] * Ei[..., v]) * dS
-                EjEi[(u, v)] = np.ascontiguousarray(F)
+            #if u != v:
+            F = (Ej[..., u] * Ei[..., v]) * dS
+            EjEi[(u, v)] = np.ascontiguousarray(F)
 
     qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
 
