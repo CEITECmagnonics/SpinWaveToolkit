@@ -17,40 +17,45 @@ class SingleLayerNumeric:
     The dispersion model uses the approach of Tacchi et al., see:
     https://doi.org/10.1103/PhysRevB.100.104406
 
+    The laboratory coordinate frame of reference is
+    *z || to film normal* and *x || to in-plane wavevector*.
+
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction)
-    kxi : float or ndarray, optional
+        (m ) layer thickness (in z direction)
+    kxi : float or 1D array, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle static M, pi/2 is totally
-        in-plane magnetization.
+        in-plane magnetization.  Other values than pi/2 multiples
+        might give wrong results, as the model currently does not
+        describe these situations.
     phi : float or ndarray, optional
-        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
+        (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
+        (m ) effective width of the waveguide (not used for zeroth
         order width modes).
     boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
         totally pinned BC, 3 is a long wave limit, 4 is partially
         pinned BC.  Default is 1.
-        ### The only working BCs are 1 right now, some functions
+            ### The only working BCs are 1 right now, some functions
             implement 2 and 4, but it is not complete!
     dp : float, optional
         pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned.
     KuOOP : float, optional
         (J/m^3) OOP anisotropy strength used in the Tacchi model.
-        ### Should this be calculated from the surface anisotropy
+            ### Should this be calculated from the surface anisotropy
             strength as `KuOOP = 2*Ks/d + OOP_comp_of_bulk_anis`?,
             where `d` is film thickness and `Ks` is the surface
             anisotropy strength (same as material.Ku)
@@ -73,15 +78,15 @@ class SingleLayerNumeric:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Hext``
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``wM = MU0*gamma*Ms``
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
+        (m^2) parameter in Kalinikos-Slavin equation.
         ``A = Aex*2/(Ms**2*MU0)``
     wU : float
         (rad*Hz) circular frequency of OOP anisotropy field,
@@ -96,6 +101,8 @@ class SingleLayerNumeric:
     GetDensityOfStates
     GetBlochFunction
     GetExchangeLen
+    set_DE
+    set_BV
 
     Private methods
     ---------------
@@ -116,7 +123,7 @@ class SingleLayerNumeric:
     thick NiFe (Permalloy) layer.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayerNumeric(Bext=20e-3, kxi=kxi, theta=np.pi/2,
@@ -154,6 +161,10 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
+        if (theta + 1e-4) % np.pi / 2 > 1e-3:
+            print(
+                "WARNING: theta is not a multiple of pi/2. The results might be misleading!"
+            )
         self.theta = theta
         self.phi = phi
         self.d = d
@@ -162,7 +173,7 @@ class SingleLayerNumeric:
         self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0, A
+        # Compute Kalinikos-Slavin parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * Bext
         self.wU = self.gamma * 2 * self.KuOOP / self.Ms  # only for Tacchi
@@ -170,7 +181,7 @@ class SingleLayerNumeric:
 
     @property
     def Bext(self):
-        """external field value (T)"""
+        """External field value (T)."""
         return self._Bext
 
     @Bext.setter
@@ -180,7 +191,7 @@ class SingleLayerNumeric:
 
     @property
     def Ms(self):
-        """saturation magnetization (A/m)"""
+        """Saturation magnetization (A/m)."""
         return self._Ms
 
     @Ms.setter
@@ -192,7 +203,7 @@ class SingleLayerNumeric:
 
     @property
     def gamma(self):
-        """gyromagnetic ratio (rad*Hz/T)"""
+        """Gyromagnetic ratio (rad*Hz/T)."""
         return self._gamma
 
     @gamma.setter
@@ -224,24 +235,41 @@ class SingleLayerNumeric:
 
     @property
     def N(self):
-        """number of modes to calculate."""
+        """Number of modes to calculate."""
         return self._N
 
     @N.setter
     def N(self, val):
         self._N = val
 
-    def __CnncTacchi(self, n, nc, k, phi):
+    def __ang_coeff(self):
+        """Compute A, B, C, D, E as in Kalinikos-Slavin 1986."""
+        th = self.theta
+        ph = self.phi
+        s = np.sin
+        c = np.cos
+        A = -s(th) ** 2
+        E = s(ph) ** 2 + c(th) ** 2 * c(ph) ** 2
+        D = -2.0 * s(th) * s(ph)
+        # B and C not used in the mapping below; included for completeness:
+        B = -np.sin(2.0 * th) * np.cos(ph)
+        C = 0.5 * np.sin(2.0 * th) * np.cos(ph)
+        return A, B, C, D, E
+
+    def __CnncTacchi(self, n, nc, k):
         """Calculate the C_{n,nc}."""
-        return -self.wM / 2 * (1 - np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return 0.5 * self.wM * (A + E) * self.__PnncTacchi(n, nc, k)
 
-    def __pnncTacchi(self, n, nc, k, phi):
+    def __pnncTacchi(self, n, nc, k):
         """Calculate the p_{n,nc}."""
-        return -self.wM / 2 * (1 + np.sin(phi) ** 2) * self.__PnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return -0.5 * self.wM * (E - A) * self.__PnncTacchi(n, nc, k)
 
-    def __qnncTacchi(self, n, nc, k, phi):
+    def __qnncTacchi(self, n, nc, k):
         """Calculate the q_{n,nc}."""
-        return -2 * self.wM * np.sin(phi) * self.__QnncTacchi(n, nc, k)
+        A, B, C, D, E = self.__ang_coeff()
+        return self.wM * D * self.__QnncTacchi(n, nc, k)
 
     def __OmegankTacchi(self, n, k):
         """Calculate the w_{n,k}."""
@@ -249,11 +277,15 @@ class SingleLayerNumeric:
 
     def __ankTacchi(self, n, k):
         """Calculate the a_{n,k}."""
-        return self.__OmegankTacchi(n, k) + self.wM / 2 - self.wU / 2
+        return (
+            self.__OmegankTacchi(n, k)
+            + 0.5 * self.wM * np.sin(self.theta) ** 2
+            - 0.5 * self.wU
+        )
 
     def __bTacchi(self):
         """Calculate the b."""
-        return self.wM / 2 - self.wU / 2
+        return 0.5 * self.wM * np.sin(self.theta) ** 2 - 0.5 * self.wU
 
     def __PnncTacchi(self, n, nc, kxi):
         """Gives dimensionless propagation vector.
@@ -479,7 +511,7 @@ class SingleLayerNumeric:
         kappa0 = kappa0[~np.isnan(kappa0)]  # remove NaNs
         return kappa0[0]
 
-    def _Ck(self, k, phi, N=3):
+    def _Ck(self, k, N=3):
         """
         Build Tacchi/Kalinikos `C_k` with `N` thickness modes (size `2N x 2N`).
         Default ``N=3``, which gives 6x6 matrix.
@@ -489,8 +521,8 @@ class SingleLayerNumeric:
 
         # Diagonal 2x2 blocks for each mode n
         for n in range(N):
-            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k, phi)
-            pnn = self.__pnncTacchi(n, n, k, phi)
+            ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k)
+            pnn = self.__pnncTacchi(n, n, k)
             i = 2 * n
             C[i, i] = -ann
             C[i, i + 1] = -(b + pnn)
@@ -507,8 +539,8 @@ class SingleLayerNumeric:
                 i, j = 2 * n, 2 * m
                 if (n - m) % 2 == 0:
                     # same parity -> C,p block; keep your (col_mode, row_mode) call order
-                    Cmn = self.__CnncTacchi(m, n, k, phi)
-                    pmn = self.__pnncTacchi(m, n, k, phi)
+                    Cmn = self.__CnncTacchi(m, n, k)
+                    pmn = self.__pnncTacchi(m, n, k)
                     C[i, j] += -Cmn
                     C[i, j + 1] += -pmn
                     C[i + 1, j] += pmn
@@ -516,7 +548,7 @@ class SingleLayerNumeric:
                 else:
                     # opposite parity -> q block
                     qmn = self.__qnncTacchi(
-                        m, n, k, phi
+                        m, n, k
                     )  # note antisymmetry is inside your function
                     C[i, j + 1] += -qmn
                     C[i + 1, j] += -qmn
@@ -530,7 +562,7 @@ class SingleLayerNumeric:
 
         The model formulates a system matrix and then numerically solves
         its eigenvalues and eigenvectors. The eigenvalues represent the
-        dispersion relation (as the matrix is `2*N x 2*N` it has `2*N` 
+        dispersion relation (as the matrix is `2*N x 2*N` it has `2*N`
         eigenvalues).
         The eigen values represent `N` lowest spin-wave modes
         (`N` with negative and positive frequency).  The eigenvectors
@@ -553,12 +585,11 @@ class SingleLayerNumeric:
             Has a shape of ``(2*N, N, M)``, where ``M = kxi.shape[0]``.
         """
         ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
-        phi = self.phi
         wV = np.zeros((self.N, np.size(ks, 0)))
         vV = np.zeros((2 * self.N, self.N, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Ck = np.array(
-                self._Ck(k=k, phi=phi, N=self.N),
+                self._Ck(k=k, N=self.N),
                 dtype=float,
             )
             w, v = linalg.eig(Ck)
@@ -609,7 +640,7 @@ class SingleLayerNumeric:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -645,7 +676,7 @@ class SingleLayerNumeric:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
@@ -709,3 +740,15 @@ class SingleLayerNumeric:
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
         return np.sqrt(self.A)
+
+    def set_DE(self):
+        """Changes angles theta and phi to match the Damon Eshbach
+        geometry, i.e. M || y, Bext || y.
+        """
+        self.theta, self.phi = np.pi / 2, np.pi / 2
+
+    def set_BV(self):
+        """Changes angles theta and phi to match the backward volume
+        geometry, i.e. M || x, Bext || x.
+        """
+        self.theta, self.phi = np.pi / 2, 0

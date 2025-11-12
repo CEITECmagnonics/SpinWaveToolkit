@@ -14,6 +14,10 @@ __all__ = [
     "wavelength2wavenumber",
     "wrapAngle",
     "roots",
+    "bisect",
+    "rootsearch",
+    "sphr2cart",
+    "cart2sphr",
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -34,7 +38,7 @@ def wavenumber2wavelength(wavenumber):
     Returns
     -------
     wavelength : float or ndarray
-        (m) corresponding wavelength.
+        (m ) corresponding wavelength.
 
     See also
     --------
@@ -50,7 +54,7 @@ def wavelength2wavenumber(wavelength):
     Parameters
     ----------
     wavelength : float or array_like
-        (m) wavelength of the wave.
+        (m ) wavelength of the wave.
 
     Returns
     -------
@@ -64,21 +68,26 @@ def wavelength2wavenumber(wavelength):
     return 2 * np.pi / np.array(wavelength)
 
 
-def wrapAngle(angle):
-    """Wrap angle in radians to range ``[0, 2*np.pi)``.
+def wrapAngle(angle, amin=0, amax=2 * np.pi):
+    """Wrap angle in radians to range ``[amin, amax)``, by default
+    ``[0, 2*np.pi)``.
 
     Parameters
     ----------
     angle : float or array_like
         (rad) angle to wrap.
+    amin : float, optional
+        (rad) minimum value of the interval (inclusive).
+    amax : float, optional
+        (rad) maximum value of the interval (exclusive).
 
     Returns
     -------
     wrapped_angle : float or ndarray
-        (rad) angle wrapped to ``[0, 2*np.pi)``.
+        (rad) angle wrapped to ``[amin, amax)``.
     """
-    # return np.mod(angle + np.pi, 2 * np.pi) - np.pi
-    return np.mod(angle, 2 * np.pi)
+    angle = np.asarray(angle)
+    return (angle - amin) % (amax - amin) + amin
 
 
 def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
@@ -90,9 +99,9 @@ def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
     w : float
         (rad Hz) angular frequency.
     temp : float
-        (K) temperature.
+        (K ) temperature.
     mu : float
-        (J) chemical potential.
+        (J ) chemical potential.
 
     Returns
     -------
@@ -115,7 +124,7 @@ def rootsearch(f, a, b, dx, args=()):
     Parameters
     ----------
     f : callable
-        Function to evaluate, f(x, *args).
+        Function to evaluate, ``f(x, *args)``.
     a, b : float
         (x units) left and right boundaries of the interval to search.
     dx : float
@@ -156,7 +165,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     Parameters
     ----------
     f : callable
-        Function to evaluate, f(x, *args).
+        Function to evaluate, ``f(x, *args)``.
     x1, x2 : float
         (x units) left and right boundaries of the interval to search.
     epsilon : float, optional
@@ -167,7 +176,7 @@ def bisect(f, x1, x2, epsilon=1e-9, args=()):
     Returns
     -------
     x3 : float or None
-        (x units) the root.  Returns None if `x1 * x2 > 0`.
+        (x units) the root.  Returns None if ``x1 * x2 > 0``.
 
     See also
     --------
@@ -246,3 +255,57 @@ def roots(f, a, b, dx=1e-3, eps=1e-9, args=()):
             xs.append(root)
     # return xs
     return np.round(xs, -np.log10(eps).astype(int))
+
+
+def sphr2cart(theta, phi, r=1.0):
+    """Convert spherical coordinates to cartesian.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    theta : float
+        (rad) polar angle (from surface normal).
+    phi : float
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float, optional
+        (length unit) radial distance. Default is 1.
+
+    Returns
+    -------
+    xyz : ndarray
+        (length unit) vector of shape ``(3, ...)`` as for (x, y, z).
+    """
+    st, ct = np.sin(theta), np.cos(theta)
+    cp, sp = np.cos(phi), np.sin(phi)
+    return np.array(
+        [r * st * cp, r * st * sp, r * ct * np.ones_like(cp)], dtype=np.float64
+    )
+
+
+def cart2sphr(x, y, z):
+    """Convert cartesian coordinates to spherical.
+
+    Inputs can be either floats or ndarrays of same shape.
+
+    Parameters
+    ----------
+    x, y, z : float or array_like
+        (length unit) cartesian coordinates.
+
+    Returns
+    -------
+    theta : float or ndarray
+        (rad) polar angle (from surface normal).
+    phi : float or ndarray
+        (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
+    r : float or ndarray
+        (length unit) radial distance.
+    """
+    x = np.array(x, dtype=np.float64)
+    y = np.array(y, dtype=np.float64)
+    z = np.array(z, dtype=np.float64)
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+    return theta, phi, r

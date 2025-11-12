@@ -1,30 +1,39 @@
 """
 This module provides analytical tools in spin-wave physics.
 
+.. currentmodule:: SpinWaveToolkit
+
+Submodules
+----------
+:mod:`~SpinWaveToolkit.bls`
+    Modelling Brillouin light scattering signal.
+
 Classes
 -------
-SingleLayer
+:class:`~Material`
+    Class for magnetic materials used in spin wave research.
+:class:`MacrospinEquilibrium`
+    Compute the static macrospin equilibrium direction.
+:class:`~SingleLayer`
     Compute spin-wave characteristics in dependance to k-vector for
     a single layer using an analytical model of Kalinikos and Slavin.
-SingleLayerNumeric
+:class:`~SingleLayerNumeric`
     Compute spin-wave characteristics in dependance to k-vector for
     a single layer using a numerical approach by Tacchi et al.
-DoubleLayerNumeric
+:class:`~DoubleLayerNumeric`
     Compute spin-wave characteristics in dependance to k-vector for
     a double layer using a numerical model of Gallardo et al.
-SingleLayerSCcoupled
+:class:`~SingleLayerSCcoupled`
     Compute spin-wave characteristics in dependance to k-vector for
     a single ferromagnetic layer dipolarly coupled to a superconductor
     using a semi-analytical model of Zhou et al.
-Material
-    Class for magnetic materials used in spin wave research.
-ObjectiveLens
-    Class for calculation of the focal electric fields of given lens.
-    
+
 Constants
 ---------
 MU0 : float
     (N/A^2) magnetic permeability of free space.
+C : float
+    (m/s) speed of free-space light.
 KB : float
     (J/K) Boltzmann constant.
 HBAR : float
@@ -40,36 +49,19 @@ YIG : Material
 
 Functions
 ---------
-wavenumber2wavelength
-    Convert wavenumber to wavelength.
-wavelength2wavenumber
-    Convert wavelength to wavenumber.
-wrapAngle
-    Wrap angle in radians to range `[0, 2*np.pi)`.
-rootsearch
-    Search for a root of a continuous function within an
-    interval `[a, b]`.
-bisect
-    Simple bisection method of root finding.
-roots
-    Find all roots of a continuous function `f(x, *args)` within a
-    given interval `[a, b]`.
-distBE
-    Bose-Einstein distribution function.
-fresnel_coefficients
-    Compute Fresnel reflection and transmission coefficients.
-htp
-    Compute p-polarized Fresnel coefficients for a given lateral 
-    wavevector q.  Returned by fresnel_coefficients().
-hts
-    Compute s-polarized Fresnel coefficients for a given lateral 
-    wavevector q.  Returned by fresnel_coefficients().
-sph_green_function
-    Compute the spherical Green's functions for p- and s-polarized 
-    fields.
-getBLSsignal
-    Compute the Brillouin light scattering signal using Green's 
-    functions formalism.
+
+.. autosummary::
+
+    ~wavenumber2wavelength
+    ~wavelength2wavenumber
+    ~wrapAngle
+    ~rootsearch
+    ~bisect
+    ~roots
+    ~distBE
+    ~sphr2cart
+    ~cart2sphr
+
 
 Example
 -------
@@ -92,7 +84,7 @@ thick NiFe (Permalloy) layer.
     lifetimePy = PyChar.GetLifetime()*1e9  # ns
     decLen = PyChar.GetDecLen()*1e6  # um
 
-@authors: 
+@authors:
     Ondrej Wojewoda, ondrej.wojewoda@ceitec.vutbr.cz
     Jan Klima, jan.klima4@vutbr.cz
     Dominik Pavelka, dominik.pavelka@vutbr.cz
@@ -101,29 +93,27 @@ thick NiFe (Permalloy) layer.
 
 # import all needed classes, functions, and constants
 from .helpers import *
-from .greenAndFresnel import *
-from .BLSmodel import *
 from .core._class_Material import *
 from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
 from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
 from .core._class_BulkPolariton import *
-from .core._class_ObjectiveLens import *
+from .core._class_MacrospinEquilibrium import *
+from . import bls
 
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __all__ = [
     "helpers",
-    "greenAndFresnel",
-    "BLSmodel",
     *core._class_Material.__all__,
     "SingleLayer",
     "SingleLayerNumeric",
     "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
     "BulkPolariton",
-    "ObjectiveLens",
+    "MacrospinEquilibrium",
+    "bls",
 ]
 # if you add __all__ lists to all files, you can use wildcard imports and do not
 #   worry about re-importing also stuff like numpy as e.g. `SWT.np` as `np` :D

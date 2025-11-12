@@ -26,7 +26,7 @@ class BulkPolariton:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
@@ -49,12 +49,12 @@ class BulkPolariton:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Hext``
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Ms``
 
     Methods
@@ -68,7 +68,7 @@ class BulkPolariton:
     other important quantities, for a magnon-polariton in a bulk YIG.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 1e3, 101)
 
         YIGchar = BulkPolariton(Bext=20e-3, material=SWT.YIG,
@@ -101,7 +101,7 @@ class BulkPolariton:
         self.iota = iota
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0
+        # Compute Kalinikos-Slavin parameters wM, w0
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * self.Bext
 
@@ -145,6 +145,16 @@ class BulkPolariton:
         self._gamma = val
         self.wM = self.Ms * val * MU0
         self.w0 = val * self.Bext
+
+    @property
+    def Aex(self):
+        """Exchange stiffness constant (J/m)."""
+        return self._Aex
+
+    @Aex.setter
+    def Aex(self, val):
+        self._Aex = val
+        self.A = val * 2 / (self.Ms**2 * MU0)
 
     def GetDispersion(self):
         """Gives frequencies for defined k (dispersion relation) for

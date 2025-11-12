@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, roots
+from SpinWaveToolkit.helpers import MU0, roots, sphr2cart
 
 __all__ = ["SingleLayer"]
 
@@ -14,8 +14,11 @@ class SingleLayer:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    The model uses the famous Slavin-Kalinikos equation from
+    The model uses the famous Kalinikos-Slavin equation from
     https://doi.org/10.1088/0022-3719/19/35/014
+
+    The laboratory coordinate frame of reference is
+    *z || to film normal* and *x || to in-plane wavevector*.
 
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
@@ -24,24 +27,25 @@ class SingleLayer:
     A.G. Gurevich and G.A. Melkov. Magnetization Oscillations and Waves.
     CRC Press, 1996.
 
+
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction).
+        (m ) layer thickness (in z direction).
     kxi : float or ndarray, optional
-        (rad/m) k-vector (wavenumber), usually a vector.
+        (rad/m) in-plane k-vector (wavenumber), usually a vector.
     theta : float, optional
-        (rad) out of plane angle of static M, pi/2 is totally
-        in-plane magnetization.
+        (rad) out of plane angle of static M.  Measured from film
+        normal, i.e. pi/2 is totally in-plane magnetization.
     phi : float or ndarray, optional
-        (rad) in-plane angle of kxi from M, pi/2 is DE geometry.
+        (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
-        (m) effective width of the waveguide (not used for zeroth
+        (m ) effective width of the waveguide (not used for zeroth
         order width modes).
     boundary_cond : {1, 2, 3, 4}, optional
         boundary conditions (BCs), 1 is totally unpinned and 2 is
@@ -51,6 +55,19 @@ class SingleLayer:
         (rad/m) pinning parameter for 4 BC, ranges from 0 to inf,
         0 means totally unpinned. Can be calculated as ``dp=Ks/Aex``,
         see https://doi.org/10.1103/PhysRev.131.594.
+    theta_H : float or None, optional
+        (rad) polar angle of external field wrt. film normal.  If None,
+        field is taken as collinear with M.  Default is None.
+    phi_H : float, optional
+        (rad) azimuthal angle of external field wrt. kxi.  If None,
+        field is taken as collinear with M.  Default is None.
+    Nd : (3,3) array or None, optional
+        Shape demag tensor in lab frame.
+        If None, taken as for an infinite thin film
+        ``np.diag([0,0,1])``.  Default is None.
+    Na : (3,3) array or None, optional
+        () anisotropy tensor in lab frame.  If None,
+        ``np.zeros((3, 3))`` is used.  Default is None.
 
     Attributes
     ----------
@@ -64,15 +81,15 @@ class SingleLayer:
     alpha : float
         () Gilbert damping.
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         `w0 = MU0*gamma*Hext`
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``wM = MU0*gamma*Ms``
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
+        (m^2) parameter in Kalinikos-Slavin equation.
         ``A = Aex*2/(Ms**2*MU0)``
 
     Methods
@@ -90,6 +107,9 @@ class SingleLayer:
     GetCouplingParam
     GetThresholdField
     GetThresholdFieldNonAdiabatic
+    set_DE
+    set_BV
+    set_FV
 
     Private methods
     ---------------
@@ -106,7 +126,7 @@ class SingleLayer:
     thick NiFe (Permalloy) layer.
 
     .. code-block:: python
-    
+
         kxi = np.linspace(1e-6, 150e6, 150)
 
         PyChar = SingleLayer(Bext=20e-3, kxi=kxi, theta=np.pi/2,
@@ -134,14 +154,23 @@ class SingleLayer:
         weff=3e-6,
         boundary_cond=1,
         dp=0,
+        theta_H=None,
+        phi_H=None,
+        Nd=None,
+        Na=None,
     ):
         self._Bext = Bext
         self._Ms = material.Ms
         self._gamma = material.gamma
         self._Aex = material.Aex
+        self._theta = theta
+        self._theta_H = self.theta if (theta_H is None) else theta_H
+        self._phi_H = phi if (phi_H is None) else phi_H
+        # Demag tensors in laboratory frame (z = film normal)
+        self._Nd = np.diag([0.0, 0.0, 1.0]) if Nd is None else np.array(Nd)
+        self._Na = np.zeros((3, 3)) if Na is None else np.array(Na)
 
         self.kxi = np.array(kxi)
-        self.theta = theta
         self.phi = phi
         self.d = d
         self.weff = weff
@@ -149,10 +178,12 @@ class SingleLayer:
         self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0, A
+        # Compute Kalinikos-Slavin parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * self.Bext
         self.A = self.Aex * 2 / (self.Ms**2 * MU0)
+
+        self.__update_w0()
 
     @property
     def Bext(self):
@@ -162,7 +193,7 @@ class SingleLayer:
     @Bext.setter
     def Bext(self, val):
         self._Bext = val
-        self.w0 = self.gamma * val
+        self.__update_w0()
 
     @property
     def Ms(self):
@@ -174,6 +205,7 @@ class SingleLayer:
         self._Ms = val
         self.wM = val * self.gamma * MU0
         self.A = self.Aex * 2 / (val**2 * MU0)
+        self.__update_w0()
 
     @property
     def gamma(self):
@@ -184,7 +216,7 @@ class SingleLayer:
     def gamma(self, val):
         self._gamma = val
         self.wM = self.Ms * val * MU0
-        self.w0 = val * self.Bext
+        self.__update_w0()
 
     @property
     def Aex(self):
@@ -195,6 +227,116 @@ class SingleLayer:
     def Aex(self, val):
         self._Aex = val
         self.A = val * 2 / (self.Ms**2 * MU0)
+
+    @property
+    def theta(self):
+        """Out-of-plane angle of static M (rad)."""
+        return self._theta
+
+    @theta.setter
+    def theta(self, val):
+        self._theta = val
+        self.__update_w0()
+
+    @property
+    def theta_H(self):
+        """Polar angle of external field wrt. film normal (rad)."""
+        return self._theta_H
+
+    @theta_H.setter
+    def theta_H(self, val):
+        self._theta_H = val
+        self.__update_w0()
+
+    @property
+    def phi_H(self):
+        """Azimuthal angle of external field wrt. M (rad)."""
+        return self._phi_H
+
+    @phi_H.setter
+    def phi_H(self, val):
+        self._phi_H = val
+        self.__update_w0()
+
+    @property
+    def Nd(self):
+        """Shape demag tensor in lab frame."""
+        return self._Nd
+
+    @Nd.setter
+    def Nd(self, val):
+        self._Nd = val
+        self.__update_w0()
+
+    @property
+    def Na(self):
+        """Anisotropy tensor in lab frame."""
+        return self._Na
+
+    @Na.setter
+    def Na(self, val):
+        self._Na = val
+        self.__update_w0()
+
+    def __tensor_in_Mframe(self, Tlab):
+        """
+        Transform tensor `Tlab` from lab frame to M frame.
+        Supports self.theta and self.phi as scalars or vectors.
+        Returns: (3,3) if scalar, (3,3,N) if broadcasted shape is (N,)
+        """
+        theta, phi = np.broadcast_arrays(self.theta, self.phi)
+        m = sphr2cart(theta, phi)  # shape (3,) or (3, N)
+        if m.ndim == 1:  # scalar case
+            zlab = np.array([0.0, 0.0, 1.0])
+            x_try = zlab - np.dot(zlab, m) * m
+            if np.linalg.norm(x_try) < 1e-14:
+                x_try = np.cross(m, np.array([1.0, 0.0, 0.0]))
+                if np.linalg.norm(x_try) < 1e-14:
+                    x_try = np.cross(m, np.array([0.0, 1.0, 0.0]))
+            x = x_try / np.linalg.norm(x_try)
+            y = np.cross(m, x)
+            rot = np.column_stack([x, y, m])  # (3,3)
+            return rot.T @ Tlab @ rot
+        # else vectorized case
+        # ### needs to be checked if works well
+        zlab = np.array([0.0, 0.0, 1.0])[:, None]  # shape (3,1)
+        x_try = zlab - np.sum(zlab * m, axis=0, keepdims=True) * m
+        mask = np.linalg.norm(x_try, axis=0) < 1e-14
+        if np.any(mask):
+            x_try[:, mask] = np.cross(
+                m[:, mask], np.array([1.0, 0.0, 0.0])[:, None], axis=0
+            )
+            mask2 = np.linalg.norm(x_try[:, mask], axis=0) < 1e-14
+            if np.any(mask2):
+                x_try[:, mask2] = np.cross(
+                    m[:, mask2], np.array([0.0, 1.0, 0.0])[:, None], axis=0
+                )
+        x = x_try / np.linalg.norm(x_try, axis=0)
+        y = np.cross(m, x, axis=0)
+        rot = np.stack([x, y, m], axis=1)  # shape (3,3,N)
+        return np.einsum("jin,jk,kln->iln", rot, Tlab, rot)
+
+    def __update_w0(self):
+        """
+        Update the w0 parameter when any part changes.
+        Supports self.theta, self.phi, self.Bext, self.theta_H, and
+        self.phi_H as scalars or vectors.
+        """
+        # Broadcast all relevant parameters to a common shape
+        theta, phi, Bext, theta_H, phi_H = np.broadcast_arrays(
+            self.theta, self.phi, self.Bext, self.theta_H, self.phi_H
+        )
+        mhat = sphr2cart(theta, phi)  # shape (3, ...)
+        hhat = sphr2cart(theta_H, phi_H)  # shape (3, ...)
+        # Dot product along the first axis (vector axis)
+        B_eff = Bext * np.sum(mhat * hhat, axis=0)
+
+        # Demag/anisotropy terms
+        # mhat: (3, ...), Nd: (3,3), result: shape (...)
+        B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Nd, mhat)
+        B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Na, mhat)
+        # ### check that the sign of Na from MacEq is correct. Use TetraX maybe.
+        self.w0 = self.gamma * B_eff  # shape matches broadcasted input
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
         """Gives dimensionless propagation vector.
@@ -525,7 +667,27 @@ class SingleLayer:
             * (Pnn * (1 - Pnn) * np.power(np.sin(phi), 2))
             / (self.w0 + self.A * self.wM * np.power(k, 2))
         )
-        return Fnn
+        # anisotropy correction in M-frame [Eq. (17b) in KS 1990]
+        NaM = self.__tensor_in_Mframe(self.Na)
+        Nxx, Nyy, Nzz = NaM[0, 0], NaM[1, 1], NaM[2, 2]
+        Nxz = NaM[0, 2]  # = Nzx
+
+        Qn = self.w0 + self.A * self.wM * (k**2)
+        sT, cT = np.sin(self.theta), np.cos(self.theta)
+
+        Fnna = (
+            Nxx
+            + Nyy
+            + (self.wM / Qn) * (Nxx * Nyy + Nzz * (sT**2) - Nxz**2)
+            + (self.wM / Qn)
+            * Pnn
+            * (
+                Nxx * (np.cos(phi) ** 2 - sT**2 * (1.0 + np.cos(phi) ** 2))
+                + Nyy * (np.sin(phi) ** 2)
+                - Nxz * (cT * np.sin(2.0 * phi))
+            )
+        )
+        return Fnn + Fnna
 
     def GetDispersion(self, n=0, nT=0):
         """Gives frequencies for defined k (Dispersion relation).
@@ -590,7 +752,7 @@ class SingleLayer:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         w0_ori = self.w0
         step = 1e-5
@@ -621,7 +783,7 @@ class SingleLayer:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n, nT=nT) * self.GetGroupVelocity(n=n, nT=nT)
 
@@ -656,8 +818,8 @@ class SingleLayer:
         Pnn = self.__GetPropagationVector(n=n, nc=n)
         Pncnc = self.__GetPropagationVector(n=nc, nc=nc)
         Qnnc = self.__GetPropagationQVector(n=n, nc=nc)
-        wnn = self.GetDispersion(n=n, nc=n)
-        wncnc = self.GetDispersion(n=nc, nc=nc)
+        wnn = self.GetDispersion(n=n)
+        wncnc = self.GetDispersion(n=nc)
         if self.theta == 0:
             wdn = np.sqrt(
                 wnn**2
@@ -867,17 +1029,16 @@ class SingleLayer:
     def GetThresholdField(self):
         """Calculate threshold field for parallel pumping.
 
-        mu_0 * h_th = w_r / Vk (relaxation frequency / coupling parameter)
+        mu_0 * h_th = w_r / Vk
+        (relaxation frequency / coupling parameter)
 
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping.
+            (T ) threshold field for parallel pumping.
         """
 
-        return (
-            2 * np.pi / self.GetLifetime(n=0, nc=0, nT=0) / abs(self.GetCouplingParam())
-        )
+        return 2 * np.pi / self.GetLifetime(n=0, nT=0) / abs(self.GetCouplingParam())
 
     def GetThresholdFieldNonAdiabatic(self, L=1e-6):
         """Threshold field for parallel pumping including
@@ -896,13 +1057,34 @@ class SingleLayer:
         Returns
         -------
         mu_0 * h_th : float
-            (T) threshold field for parallel pumping including radiative
-            losses.
+            (T ) threshold field for parallel pumping including
+            radiative losses.
         """
 
         alfa = np.abs(np.sinc(self.kxi * L / np.pi))
         return (
-            self.GetGroupVelocity(n=0, nc=0, nT=0)
+            self.GetGroupVelocity(n=0, nT=0)
             / (L * self.GetCouplingParam())
             * (np.arccos(alfa) / np.sqrt(1 - alfa**2))
         )
+
+    def set_DE(self):
+        """Changes angles theta and phi to match the Damon Eshbach
+        geometry, i.e. M || y, Bext || y.
+        """
+        self.theta, self.phi = np.pi / 2, np.pi / 2
+        self.theta_H, self.phi_H = np.pi / 2, np.pi / 2
+
+    def set_BV(self):
+        """Changes angles theta and phi to match the backward volume
+        geometry, i.e. M || x, Bext || x.
+        """
+        self.theta, self.phi = np.pi / 2, 0
+        self.theta_H, self.phi_H = np.pi / 2, 0
+
+    def set_FV(self):
+        """Changes angles theta and phi to match the forward volume
+        geometry, i.e. M || z, Bext || z.
+        """
+        self.theta = 0
+        self.theta_H, self.phi_H = 0, 0

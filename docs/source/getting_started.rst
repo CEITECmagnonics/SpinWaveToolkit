@@ -2,7 +2,7 @@ Getting Started
 ===============
 
 .. warning::
-    
+
    Needs to be updated!
 
 
@@ -15,12 +15,12 @@ The easiest way to install `SpinWaveToolkit` is via pip from PyPI. To do this, o
 
     py -m pip install SpinWaveToolkit --user
 
-Other installation approaches are descried in the :doc:`User Guide <usage/installation>`.
+Other installation approaches are described in the :doc:`User Guide <usage/installation>`.
 
 
 Setting up the experiment
 -------------------------
-Import needed packages. For plotting, we will use :py:mod:`matplotlib`, but `SpinWaveToolkit` does not depend on it.
+Import the required packages. For plotting, we will use :py:mod:`matplotlib`, but `SpinWaveToolkit` does not depend on it.
 
 .. code-block:: python
 
@@ -30,11 +30,11 @@ Import needed packages. For plotting, we will use :py:mod:`matplotlib`, but `Spi
 
 Choose a model
 ^^^^^^^^^^^^^^
-First, you need to choose the appropriate model for your experiment. This depends mainly on the configuration. Currently, there are these dispersion models:
+First, you need to choose the appropriate model for your experiment. This depends mainly on the configuration. Currently, these dispersion models are available:
 
 - single magnetic layer (zeroth perturbation - omits intermode coupling, mainly for thin films) - :py:class:`.SingleLayer`
 - single magnetic layer with intermode coupling (useful for thicker layers) - :py:class:`.SingleLayerNumeric`
-- two coupled magnetic layers (e.g. syntheric antiferromagnets) - :py:class:`.DoubleLayerNumeric`
+- two coupled magnetic layers (e.g., synthetic antiferromagnets) - :py:class:`.DoubleLayerNumeric`
 - one magnetic layer dipolarly coupled to a superconducting layer - :py:class:`.SingleLayerSCcoupled`
 - magnon-polariton in a bulk ferromagnet (very small wavevectors) - :py:class:`.BulkPolariton`
 
@@ -42,7 +42,7 @@ Let's assume a single magnetic layer for the following examples. Therefore, we w
 
 Define your material
 ^^^^^^^^^^^^^^^^^^^^
-To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You can either use one of the predefined materials (see documentation of :py:class:`.Material`), or define your own by specifying its parameters
+To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You can either use one of the predefined materials (see the documentation of :py:class:`.Material`), or define your own by specifying its parameters
 
 .. code-block:: python
 
@@ -68,13 +68,13 @@ Here, we will assume a 30 nm thick film in an in-plane external field of 10 mT. 
 
 Retrieve dispersion relation
 ----------------------------
-To calculate the dispersion relation, simply call the :py:meth:`.SingleLayer.GetDispersion` method of the model instance. This will return the frequencies of the spin wave modes in rad/s (angular frequency), but spin waves are usually studied in the GHz frequencies.
+To calculate the dispersion relation, simply call the :py:meth:`.SingleLayer.GetDispersion` method of the model instance. This will return the frequencies of the spin wave modes in rad/s (angular frequency), but spin waves are usually studied in GHz frequencies.
 
 .. code-block:: python
 
    f = sl.GetDispersion() / (2e9 * np.pi)  # rad/s to GHz
 
-In this model, we can also simply calculate higher-order perpendicular standing spin wave (PSSW) modes by specifying the mode number as an argument to :py:meth:`.SingleLayer.GetDispersion`. For example, to get the first three modes
+In this model, we can also easily calculate higher-order perpendicular standing spin wave (PSSW) modes by specifying the mode number as an argument to :py:meth:`.SingleLayer.GetDispersion`. For example, to get the first three modes
 
 .. code-block:: python
 
@@ -82,13 +82,13 @@ In this model, we can also simply calculate higher-order perpendicular standing 
    f1 = sl.GetDispersion(n=1) / (2e9 * np.pi)  # first PSSW mode
    f2 = sl.GetDispersion(n=2) / (2e9 * np.pi)  # second PSSW mode
 
-or more concisely
+or more concisely:
 
 .. code-block:: python
 
    modes = np.array([sl.GetDispersion(n=i) / (2e9 * np.pi) for i in range(3)])
 
-which can be then easily plotted e.g. as
+which can then be easily plotted, e.g., as
 
 .. code-block:: python
 
@@ -99,11 +99,11 @@ which can be then easily plotted e.g. as
    plt.legend(loc="lower right")
 
 .. image:: _static/getting_started/img0.png
-   :alt: Dispersion relation of three lowest order modes for DE spin waves.
+   :alt: Dispersion relation of the three lowest order modes for DE spin waves.
 
 Calculate other quantities
 --------------------------
-Similarly to the dispersion relation, other quantities can be calculated. For example, the group velocity can be obtained by calling :py:meth:`.SingleLayer.GetGroupVelocity`. Analogically, the lifetime and decay length are retrieved. Those are numerically calculated based on the dispersion relation for the given PSSW mode.
+Similarly to the dispersion relation, other quantities can be calculated. For example, the group velocity can be obtained by calling :py:meth:`.SingleLayer.GetGroupVelocity`. Analogously, the lifetime and decay length are retrieved. These are numerically calculated based on the dispersion relation for the given PSSW mode.
 
 .. code-block:: python
 
@@ -115,15 +115,15 @@ Similarly to the dispersion relation, other quantities can be calculated. For ex
 
 
 .. image:: _static/getting_started/img1.png
-   :alt: Other derived quantities of three lowest order modes for DE spin waves.
+   :alt: Other derived quantities of the three lowest order modes for DE spin waves.
 
 .. note::
 
-   The methods for dispersion relation, group velocity, lifetime, and decay length are usually implemented in all dispersion models with a similar syntax. For exact syntax and full list of the supported methods, refer to the appropriate :doc:`class documentation <api_reference/classes>`.
+   The methods for dispersion relation, group velocity, lifetime, and decay length are usually implemented in all dispersion models with similar syntax. For the exact syntax and a full list of the supported methods, refer to the appropriate :doc:`class documentation <api_reference/classes>`.
 
 Change parameters
 -----------------
-With the instance of the respective model, it is simple to change individual parameters, as most of them are also accessible at attributes of the same name as the input parameters. For example to change now to backward volume spin waves, just change the in-plane angle ``phi`` of our :py:class:`.SingleLayer` instance.
+With the instance of the respective model, it is simple to change individual parameters, as most of them are also accessible as attributes with the same name as the input parameters. For example, to change now to backward volume spin waves, just change the in-plane angle ``phi`` of our :py:class:`.SingleLayer` instance.
 
 .. code-block:: python
 
@@ -151,14 +151,3 @@ This can be further used to make sweeps of certain parameters. Here we show a fi
 ---------------------
 
 That's it! You have learned the basic usage of the `SpinWaveToolkit`! Now you can head over to the :doc:`user_guide` and :doc:`examples` for more tutorials. If you encounter any problems, see the appropriate topic in the :doc:`api_reference/index` or let us know in the `Discussions on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions>`_.
-
-
-
-
-
-
-
-
-
-
-

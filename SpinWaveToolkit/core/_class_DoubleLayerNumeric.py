@@ -24,17 +24,20 @@ class DoubleLayerNumeric:
     Parameters
     ----------
     Bext : float
-        (T) external magnetic field.
+        (T ) external magnetic field.
     material : Material
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m) layer thickness (in z direction).
+        (m ) layer thickness (in z direction).
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
         (rad) out of plane angle of Bext, pi/2 is totally in-plane
-        magnetization.
+        magnetization. Beware of (partially) OOP calculations for
+        spin-wave dispersion relation, as they are not implemented here.
+        For energy calculations, theta other than pi/2 is supported in
+        experimental code.
     phi : float or ndarray, optional
         (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
     Ku : float, optional
@@ -46,9 +49,9 @@ class DoubleLayerNumeric:
     Jbq : float, optional
         (J/m^2) biquadratic RKKY coupling parameter.
     s : float, optional
-        (m) spacing layer thickness.
+        (m ) spacing layer thickness.
     d2 : float or None
-        (m) thickness of the second magnetic layer, if None,
+        (m ) thickness of the second magnetic layer, if None,
         same as `d`.
     material2 : Material or None
         instance of `Material` describing the second magnetic
@@ -75,15 +78,15 @@ class DoubleLayerNumeric:
     gamma : float
         (rad*Hz/T) gyromagnetic ratio (positive convention).
     mu0dH0 : float
-        (T) inhomogeneous broadening.
+        (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Kalinikos-Slavin equation,
         ``w0 = MU0*gamma*Hext``.
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Kalinikos-Slavin equation,
         ``wM = MU0*gamma*Ms``.
     A, A2 : float
-        (m^2) parameter in Slavin-Kalinikos equation,
+        (m^2) parameter in Kalinikos-Slavin equation,
         ``A = Aex*2/(Ms**2*MU0)``.
     Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,
@@ -162,6 +165,8 @@ class DoubleLayerNumeric:
         self._Ku2 = Ku2
 
         self.kxi = np.array(kxi)
+        if abs(theta - np.pi / 2) > 1e-4:
+            print("WARNING: theta other than pi/2 might give misleading results.")
         self.theta = theta
         self.phi = phi
         self.d = d
@@ -291,7 +296,7 @@ class DoubleLayerNumeric:
         -------
         wV : ndarray
             (rad*Hz) frequencies of the acoustic and optic spin-wave
-            modes.  Has a shape of ``(2, N)``, where 
+            modes.  Has a shape of ``(2, N)``, where
             ``N = kxi.shape[0]``.
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
@@ -500,7 +505,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         E : float
-            (J) energy density of the system.
+            (J ) energy density of the system.
         """
         phiAnis1 = self.phiAnis1  # EA along x direction
         phiAnis2 = self.phiAnis2  # EA along x direction
@@ -581,8 +586,15 @@ class DoubleLayerNumeric:
         Returns
         -------
         E : float
-            (J) energy density of the system.
+            (J ) energy density of the system.
+
+        Notes
+        -----
+        This method is experimental. There are some unresolved
+        functionalities, such as surface anisotropy terms and uniaxial
+        anisotropy axis direction.
         """
+        # ### WTF is this mess? we should make these as params, but are they valid?
         phiAnis = np.pi / 2  # EA along x direction
         phi1 = np.pi / 2  # No OOP magnetization
         phi2 = -np.pi / 2
@@ -683,7 +695,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         lifetime : ndarray
-            (s) lifetime.
+            (s ) lifetime.
         """
         Bext_ori = self.Bext
         step = 1e-5
@@ -718,7 +730,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         declen : ndarray
-            (m) decay length.
+            (m ) decay length.
         """
         return self.GetLifetime(n=n) * self.GetGroupVelocity(n=n)
 
@@ -760,7 +772,7 @@ class DoubleLayerNumeric:
         Nf : int, optional
             Number of frequency points for the Bloch function.
         lifetime : float, optional
-            (s) fixed lifetime to bypass its dispersion calculation.
+            (s ) fixed lifetime to bypass its dispersion calculation.
 
         Returns
         -------

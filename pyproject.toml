@@ -121,7 +121,8 @@ classifiers = [
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
     "numpy>1.20",  # also compatible with np>2.0, but exceptions may occur
-    "scipy>1.8"
+    "scipy>1.8",
+    "tqdm>4.66",
 ]
 
 # List additional groups of dependencies here (e.g. development
@@ -141,12 +142,15 @@ dev_doc = [  # for development and documentation build
     "pytest",
     "matplotlib",
     "sphinx",
-    "pydata-sphinx-theme",
+    "pydata-sphinx-theme==0.16.0", # ### remove after sourcelink bug fixed on pydata-sphinx-theme 1.16.1 (see https://github.com/pydata/pydata-sphinx-theme/issues/2088)
     "numpydoc",
     "nbsphinx<=0.9.6",  # for ipynb files in sphinx documentation  # ### check their docs if sphinx<8.2 still applies for 0.9.7
     "pypandoc",  # for nbsphinx (best if pandoc installed manually and path to its binaries pasted to docs/pandoc_path.ignore)
     "sphinx-design",  # for nice design elements
     "sphinx-gallery",  # for ipynb gallery styles
+    "ipython",  # for ipynb kernel and syntax linting
+    "sphinx-toolbox",  # for special tools (collapsible sections, ...)
+    "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 deploy = [  # for automated build and deployment of documentation to GH Pages
     "sphinx",
@@ -158,6 +162,7 @@ deploy = [  # for automated build and deployment of documentation to GH Pages
     "sphinx-gallery",  # for ipynb gallery styles
     "ipython",  # for ipynb kernel and syntax linting
     "sphinx-toolbox",  # for special tools (collapsible sections, ...)
+    "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 test = ["pytest"]
 

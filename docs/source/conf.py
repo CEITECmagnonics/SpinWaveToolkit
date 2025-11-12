@@ -4,7 +4,6 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
-
 import SpinWaveToolkit
 
 # -- Project information -----------------------------------------------------
@@ -29,6 +28,7 @@ extensions = [
     "sphinx_design",
     'sphinx_gallery.load_style',
     "sphinx_toolbox.collapse",
+    "sphinx_copybutton",
 ]
 
 templates_path = ['_templates']
@@ -75,15 +75,13 @@ html_theme_options = {
     # ### check correct state of the version switcher (see https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)
     "switcher": {
         "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
-        "version_match": release if release == "dev" else ".".join(release.split(".")[:2]),  # use major.minor version for the switcher
+        "version_match": release if release == "dev" else ".".join(release.strip("v").split(".")[:2]),  # use major.minor version for the switcher
     },
-    "announcement": "This site is currently under <b>intensive construction</b>."
-    + " Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our"
-    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or'
-    + ' <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for'
-    + ' your comments.</i>',  # ### remove after stable state of documentation is reached
+    # ### update after stable state of documentation is reached
+    "announcement": "https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/new-release/docs/source/_templates/announcement_banner.html",
+    "pygments_light_style": "friendly",
+    "pygments_dark_style": "a11y-dark",
 }
-pygments_style = "sphinx"
 nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
 
 
@@ -91,7 +89,8 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 
 autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
 numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
-numpydoc_xref_aliases = {
+numpydoc_xref_ignore = {"type", "optional", "default", "or", "of"}
+numpydoc_xref_aliases = {  # Mappings to fully qualified paths (or correct ReST references) for the aliases/shortcuts used when specifying the types of parameters.
     # python
     "sequence": ":term:`python:sequence`",
     "iterable": ":term:`python:iterable`",
@@ -104,19 +103,20 @@ numpydoc_xref_aliases = {
     "array_like": ":term:`numpy:array_like`",
     # SpinWaveToolkit
     "Material": "SpinWaveToolkit.Material",
+    "MacrospinEquilibrium": "SpinWaveToolkit.MacrospinEquilibrium",
     "SingleLayer": "SpinWaveToolkit.SingleLayer",
     "SingleLayerNumeric": "SpinWaveToolkit.SingleLayerNumeric",
     "SingleLayerSCcoupled": "SpinWaveToolkit.SingleLayerSCcoupled",
     "DoubleLayerNumeric": "SpinWaveToolkit.DoubleLayerNumeric",
     "BulkPolariton": "SpinWaveToolkit.BulkPolariton",
-    "ObjectiveLens": "SpinWaveToolkit.ObjectiveLens",
+    "ObjectiveLens": "SpinWaveToolkit.bls.ObjectiveLens",
 }
 
 intersphinx_mapping = {
     "python": ("http://docs.python.org/", None),
-    "numpy": ("https://www.numpy.org/devdocs", None),
+    "numpy": ("https://www.numpy.org/doc/stable/", None),
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
+    "pandas": ("http://pandas.pydata.org/docs/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 

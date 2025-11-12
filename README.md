@@ -1,5 +1,7 @@
 # SpinWaveToolkit
 
+<img src="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/new-release/docs/source/_static/logo+text.svg#L1" width=60%>
+
 SpinWaveToolkit is an open-source Python package which provides analytical tools for spin-wave physics and research.
 
 > [!TIP]
@@ -8,7 +10,7 @@ SpinWaveToolkit is an open-source Python package which provides analytical tools
 
 ## Installation
 
-Currently you can either 
+Currently you can either
 1. *(recommended)* install latest release from PyPI via `pip` by typing in the command line
 ```
 py -m pip install SpinWaveToolkit --user
@@ -24,7 +26,7 @@ py -m pip install https://github.com/CEITECmagnonics/SpinWaveToolkit/tarball/<br
 ```
 C:\Users\<user>\AppData\Roaming\Python\Python<python-version>\site-packages
 ```
-for user-installed modules, or at 
+for user-installed modules, or at
 ```
 C:\<python-installation-folder>\Python<python-version>\Lib\site-packages
 ```
@@ -84,7 +86,7 @@ BibTeX entry:
     title = {SpinWaveToolkit: Set of tools useful in spin wave research},
     year = {2025},
     publisher = {GitHub},
-    version = {1.0.0},
+    version = {1.2.0},
     url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
     language = {en},
 }
