@@ -27,8 +27,6 @@ Classes
     Compute spin-wave characteristics in dependance to k-vector for
     a single ferromagnetic layer dipolarly coupled to a superconductor
     using a semi-analytical model of Zhou et al.
-:class:`~ProgressBar`
-    Simple progress bar printed in terminal.
 
 Constants
 ---------
@@ -105,7 +103,7 @@ from .core._class_MacrospinEquilibrium import *
 from . import bls
 
 
-__version__ = "1.1.1dev"
+__version__ = "1.2.0"
 __all__ = [
     "helpers",
     *core._class_Material.__all__,

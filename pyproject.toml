@@ -121,7 +121,8 @@ classifiers = [
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
     "numpy>1.20",  # also compatible with np>2.0, but exceptions may occur
-    "scipy>1.8"
+    "scipy>1.8",
+    "tqdm",  # ### add minimal version?
 ]
 
 # List additional groups of dependencies here (e.g. development

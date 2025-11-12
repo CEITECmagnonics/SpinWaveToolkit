@@ -4,7 +4,8 @@ Core (private) file for the `MacrospinEquilibrium` class.
 
 import numpy as np
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr, ProgressBar
+from tqdm import tqdm
+from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr
 
 __all__ = ["MacrospinEquilibrium"]
 
@@ -310,18 +311,18 @@ class MacrospinEquilibrium:
             ea_uni = 0.5 * MU0 * self.Ms**2 * float(m @ self.Na_tot @ m)
 
         return [eZ, ed, ea_uni] if components else eZ + ed + ea_uni
-    
+
     def getHeff(self):
-        """Calculate effective field with the current magnetization 
+        """Calculate effective field with the current magnetization
         direction.
-        
-        Performs a numerical derivative of the energy density wrt. 
+
+        Performs a numerical derivative of the energy density wrt.
         magnetization to get the effective field vector.
 
         Returns
         -------
         theta_Heff, phi_Heff : float
-            (rad) polar and azimuthal angle of the effective field 
+            (rad) polar and azimuthal angle of the effective field
             direction.
         Heff : float
             (T) effective field magnitude.
@@ -425,15 +426,12 @@ class MacrospinEquilibrium:
         Bext, theta_H, phi_H = ones * Bext, ones * theta_H, ones * phi_H
         theta, phi = np.empty(n), np.empty(n)
 
-        pb = ProgressBar(n)
-        for i in range(n):
+        for i in tqdm(range(n), ascii=True, ncols=80):
             self.Bext["Bext"] = Bext[i]
             self.Bext["theta_H"] = theta_H[i]
             self.Bext["phi_H"] = phi_H[i]
             self.minimize(scipy_kwargs=scipy_kwargs, verbose=False)
             theta[i], phi[i] = self.__getM()
-            pb.next()
-        pb.finish()
 
         return theta, phi
 
@@ -454,7 +452,7 @@ class MacrospinEquilibrium:
                 "Input angle larger than 2pi rad. Make sure"
                 + " all input angle values are in radians!"
             )
-    
+
     def __getM(self):
         """Returns magnetization vector data as ``(theta, phi)``."""
         return self.M["theta"], self.M["phi"]

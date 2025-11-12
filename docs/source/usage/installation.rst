@@ -1,7 +1,7 @@
 Installation
 ============
 
-Currently you can either 
+Currently you can either
 
 1. *(recommended)* install latest release from PyPI via `pip` by typing in the command line
 
@@ -23,10 +23,10 @@ Currently you can either
 
         C:\Users\<user>\AppData\Roaming\Python\Python<python-version>\site-packages
 
-    for user-installed modules, or at 
+    for user-installed modules, or at
 
     .. code-block::
-        
+
         C:\<python-installation-folder>\Python<python-version>\Lib\site-packages
 
     for global modules.
@@ -43,6 +43,7 @@ The SpinWaveToolkit package is compatible with Python >3.7, and uses the followi
 
 - :py:mod:`numpy` >1.20 (>2.0 is also ok, bugs be reported in `Issues <https://github.com/CEITECmagnonics/SpinWaveToolkit/issues>`_)
 - :py:mod:`scipy` >1.8
+- :mod:`tqdm`
 
 .. note::
 
