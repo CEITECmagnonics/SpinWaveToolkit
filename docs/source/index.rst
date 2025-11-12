@@ -9,7 +9,7 @@ SpinWaveToolkit Documentation
 
 .. warning::
    .. :collapsible:
-   
+
    Needs to be updated.
 
 
@@ -82,7 +82,7 @@ If you use SpinWaveToolkit in your work, please cite it as follows:
        title = {SpinWaveToolkit: Set of tools useful in spin wave research},
        year = {2025},
        publisher = {GitHub},
-       version = {1.0.0},
+       version = {1.2.0},
        url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
        language = {en},
    }

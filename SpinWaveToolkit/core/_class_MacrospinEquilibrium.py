@@ -335,43 +335,40 @@ class MacrospinEquilibrium:
         phi0 = float(self.M["phi"])
 
         # radial derivative
-        self.Ms = Ms0*(1-rstep)
+        self.Ms = Ms0 * (1 - rstep)
         eden_ms_i = self.eval_energy(self.__getM())
-        self.Ms = Ms0*(1+rstep)
+        self.Ms = Ms0 * (1 + rstep)
         eden_ms_f = self.eval_energy(self.__getM())
         self.Ms = Ms0  # reset Ms
-        heff_ms = (eden_ms_i-eden_ms_f)/(Ms0*2*rstep)  # negative sign included
+        heff_ms = (eden_ms_i - eden_ms_f) / (Ms0 * 2 * rstep)  # negative sign included
 
         # theta derivative
-        theta_i = theta0*(1-rstep)-astep_rad
-        theta_f = theta0*(1+rstep)+astep_rad
+        theta_i = theta0 * (1 - rstep) - astep_rad
+        theta_f = theta0 * (1 + rstep) + astep_rad
         eden_th_i = self.eval_energy((theta_i, phi0))
         eden_th_f = self.eval_energy((theta_f, phi0))
-        heff_th = 1/Ms0*(eden_th_i-eden_th_f)/(theta_f-theta_i)
+        heff_th = 1 / Ms0 * (eden_th_i - eden_th_f) / (theta_f - theta_i)
 
         # phi derivative
-        phi_i = phi0*(1-rstep)-astep_rad
-        phi_f = phi0*(1+rstep)+astep_rad
+        phi_i = phi0 * (1 - rstep) - astep_rad
+        phi_f = phi0 * (1 + rstep) + astep_rad
         eden_ph_i = self.eval_energy((theta0, phi_i))
         eden_ph_f = self.eval_energy((theta0, phi_f))
-        heff_ph = 1/(Ms0*np.sin(theta0))*(eden_ph_i-eden_ph_f)/(phi_f-phi_i)
+        heff_ph = 1 / (Ms0 * np.sin(theta0)) * (eden_ph_i - eden_ph_f) / (phi_f - phi_i)
 
         # convert (heff_ms, heff_th, heff_ph) to cartesian coordinates
         heff_cart = sphr2cart(theta0, phi0) * heff_ms
         heff_cart += (
-            np.array([
-                np.cos(theta0) * np.cos(phi0),
-                np.cos(theta0) * np.sin(phi0),
-                -np.sin(theta0)
-            ]) * heff_th
+            np.array(
+                [
+                    np.cos(theta0) * np.cos(phi0),
+                    np.cos(theta0) * np.sin(phi0),
+                    -np.sin(theta0),
+                ]
+            )
+            * heff_th
         )
-        heff_cart += (
-            np.array([
-                -np.sin(phi0),
-                np.cos(phi0),
-                0.0
-            ]) * heff_ph
-        )
+        heff_cart += np.array([-np.sin(phi0), np.cos(phi0), 0.0]) * heff_ph
 
         # calculate magnitude and spherical angles
         theta_Heff, phi_Heff, heff_mag = cart2sphr(*heff_cart)

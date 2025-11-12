@@ -14,7 +14,7 @@ class SingleLayer:
     (wavenumber) such as frequency, group velocity, lifetime and
     propagation length.
 
-    The model uses the famous Slavin-Kalinikos equation from
+    The model uses the famous Kalinikos-Slavin equation from
     https://doi.org/10.1088/0022-3719/19/35/014
 
     The laboratory coordinate frame of reference is
@@ -83,13 +83,13 @@ class SingleLayer:
     mu0dH0 : float
         (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         `w0 = MU0*gamma*Hext`
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``wM = MU0*gamma*Ms``
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
+        (m^2) parameter in Kalinikos-Slavin equation.
         ``A = Aex*2/(Ms**2*MU0)``
 
     Methods
@@ -178,7 +178,7 @@ class SingleLayer:
         self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0, A
+        # Compute Kalinikos-Slavin parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * self.Bext
         self.A = self.Aex * 2 / (self.Ms**2 * MU0)

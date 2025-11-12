@@ -6,6 +6,28 @@ Release Notes
     For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
 
 
+Version 1.2.0
+-------------
+`2025-11-12`
+
+Dispersion model fixes and static magnetization problem solver.
+
+What's new
+^^^^^^^^^^
+- All BLS-related functions moved to a separate submodule :py:mod:`.bls`. It will be extended in future releases.
+- :py:func:`.bls.getBLSsignal` now returns also the polarization induced in the ferromagnetic film.
+- Added static magnetization solver :py:class:`.MacrospinEquilibrium` for finding the equilibrium orientation of the magnetization in a ferromagnetic film under an applied magnetic field and uniaxial anisotropies. This can be used to find the angle of magnetization before calculating the spin-wave dispersion. For this, helper functions :py:func:`.sphr2cart` and :py:func:`.cart2sphr` were added as well as an example notebook (see :doc:`_example_nbs/macrospin_equilibrium_histloop`).
+- Added a dependency on the (lightweight) ``tqdm`` package for progress bars.
+- Class :py:class:`.SingleLayer` now supports dispersion calculation with the static magnetization at an arbitrary angle to the film plane and with any uniaxial anisotropy.
+
+Fixes
+^^^^^
+- Instructions in ``CONTRIBUTING.md`` updated.
+- :py:class:`.SingleLayerNumeric` now notifies the user if the used geometry is valid, referring to the partially-out-of-plane magnetization, which is not currently supported. (We hope to fix this in future releases.)
+- Docstring fixes and minor improvements.
+- Documentation improvements.
+
+
 Version 1.1.1
 -------------
 `2025-08-26`

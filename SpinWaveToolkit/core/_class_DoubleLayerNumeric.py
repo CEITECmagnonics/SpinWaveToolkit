@@ -80,13 +80,13 @@ class DoubleLayerNumeric:
     mu0dH0 : float
         (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Kalinikos-Slavin equation,
         ``w0 = MU0*gamma*Hext``.
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation,
+        (rad*Hz) parameter in Kalinikos-Slavin equation,
         ``wM = MU0*gamma*Ms``.
     A, A2 : float
-        (m^2) parameter in Slavin-Kalinikos equation,
+        (m^2) parameter in Kalinikos-Slavin equation,
         ``A = Aex*2/(Ms**2*MU0)``.
     Hani, Hani2 : float
         (A/m) uniaxial anisotropy field of corresponding Ku,

@@ -11,7 +11,7 @@
 
 We use GitHub [Issues and Milestones][Issues] to plan and track this project. Open a new Issue to report a bug, to point out a problem, or to make a feature request, e.g. following a fruitful discussion. Within the issue we will define in detail what should be done. For small bug fixes, code cleanups, and other small improvements it's not necessary to create issues. Please check if any relevant issue is already posted and consider raising your concern there rather than creating a new issue.
 
-For more general talks about new features, improvements, etc., use the GitHub [Discussions](https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions) in this repository. 
+For more general talks about new features, improvements, etc., use the GitHub [Discussions](https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions) in this repository.
 
 
 
@@ -42,7 +42,7 @@ All direct contributors ([CEITECmagnonics] members) are requested to use the fol
 - Work on assigned [Issues] (based on their priority if possible, see [this](https://github.com/orgs/CEITECmagnonics/projects/1) project). Post a new issue if you are working on larger modifications, so that others can comment and/or focus on other improvements.
 - When working on some critical file (e.g. [_class_SingleLayer.py](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/master/SpinWaveToolkit/core/_class_SingleLayer.py)), it's good to let others know, e.g. via MS Teams, to prevent conflicts.
 - When possible, apply the [PEP8] style to your scripts. The [black] package might simplify your effort (there is an [extension](https://black.readthedocs.io/en/stable/integrations/editors.html) for PyCharm and other IDEs) - its use is mandatory on the module files. Examples and other scripts rely mostly on your feeling for nice code.
-- For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html). 
+- For docstrings (i.e. `"""block comments"""` in modules, classes, and function descriptions), apply the [Numpy docstring style](https://numpydoc.readthedocs.io/en/latest/format.html).
 > [!NOTE]
 > [black] does not change the docstrings, apart from too long lines.
 - Use [pylint] for checking code errors and formatting issues (best if rated 10/10).
@@ -122,7 +122,7 @@ The process is similar for external contributors (i.e. people outside of the [CE
 
 ### Checks before each PR of a new release
 Things to check before merging to `master`:
-- Correct SWT version in [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py), [`build_deploy_docs.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs.yml), and [`version.json`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/versions.json) (for this see [Version switcher docs](https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)). 
+- Correct SWT version in [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py), [`build_deploy_docs.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs.yml), [`version.json`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/versions.json) (for this see [Version switcher docs](https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/version-dropdown.html)), [`CITATION.cff`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/CITATION.cff), and in *Cite Us* sections in [`README.md`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/README.md) and [`index.rst` in docs](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/index.rst).
   *(In [`conf.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/docs/source/conf.py) it is automatically read from [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py) or [`build_deploy_docs.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs.yml) or [`build_deploy_docs_dev.yml`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/.github/workflows/build_deploy_docs_dev.yml))*
 - All functions, modules, classes, and constants of SWT are documented in the [docs](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/new-release/docs/source) and in [`__init__.py`](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/new-release/SpinWaveToolkit/__init__.py) docstring (where applicable).
 

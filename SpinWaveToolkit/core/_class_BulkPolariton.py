@@ -51,10 +51,10 @@ class BulkPolariton:
     mu0dH0 : float
         (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Hext``
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Ms``
 
     Methods
@@ -101,7 +101,7 @@ class BulkPolariton:
         self.iota = iota
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0
+        # Compute Kalinikos-Slavin parameters wM, w0
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * self.Bext
 

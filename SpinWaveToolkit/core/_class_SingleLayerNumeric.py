@@ -80,13 +80,13 @@ class SingleLayerNumeric:
     mu0dH0 : float
         (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Hext``
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``wM = MU0*gamma*Ms``
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
+        (m^2) parameter in Kalinikos-Slavin equation.
         ``A = Aex*2/(Ms**2*MU0)``
     wU : float
         (rad*Hz) circular frequency of OOP anisotropy field,
@@ -173,7 +173,7 @@ class SingleLayerNumeric:
         self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0, A
+        # Compute Kalinikos-Slavin parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * Bext
         self.wU = self.gamma * 2 * self.KuOOP / self.Ms  # only for Tacchi

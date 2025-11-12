@@ -10,7 +10,9 @@ type: software
 authors:
   - given-names: Ondřej
     family-names: Wojewoda
+    orcid: "https://orcid.org/0000-0002-4276-520X"
   - given-names: Jan
     family-names: Klíma
+    orcid: "https://orcid.org/0009-0002-1838-5546"
 repository-code: 'https://github.com/CEITECmagnonics/SpinWaveToolkit'
-date-released: '2025-03-09'
+date-released: '2025-11-12'

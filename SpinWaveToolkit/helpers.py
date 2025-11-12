@@ -2,8 +2,6 @@
 Place for all helping functions and constants in this module.
 """
 
-from time import time
-import sys
 import numpy as np
 
 __all__ = [
