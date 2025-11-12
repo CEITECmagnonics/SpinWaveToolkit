@@ -122,7 +122,7 @@ classifiers = [
 dependencies = [
     "numpy>1.20",  # also compatible with np>2.0, but exceptions may occur
     "scipy>1.8",
-    "tqdm",  # ### add minimal version?
+    "tqdm>4.66",
 ]
 
 # List additional groups of dependencies here (e.g. development

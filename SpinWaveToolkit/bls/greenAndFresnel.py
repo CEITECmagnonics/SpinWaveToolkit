@@ -36,6 +36,8 @@ This module implements:
 
 import numpy as np
 
+__all__ = ["fresnel_coefficients", "sph_green_function"]
+
 
 def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_index):
     """

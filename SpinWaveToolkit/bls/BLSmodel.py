@@ -9,6 +9,8 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
 
+__all__ = ["getBLSsignal"]
+
 
 def getBLSsignal(
     SweepBloch,
