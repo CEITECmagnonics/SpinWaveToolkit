@@ -669,8 +669,8 @@ class SingleLayer:
         )
         # anisotropy correction in M-frame [Eq. (17b) in KS 1990]
         NaM = self.__tensor_in_Mframe(self.Na)
-        Nxx, Nyy, Nzz = NaM[0, 0], NaM[1, 1], NaM[2, 2]
-        Nxz = NaM[0, 2]  # = Nzx
+        Nxx, Nyy = NaM[0, 0], NaM[1, 1]
+        Nxy = NaM[0, 1]  # = Nyx
 
         Qn = self.w0 + self.A * self.wM * (k**2)
         sT, cT = np.sin(self.theta), np.cos(self.theta)
@@ -678,13 +678,13 @@ class SingleLayer:
         Fnna = (
             Nxx
             + Nyy
-            + (self.wM / Qn) * (Nxx * Nyy + Nzz * (sT**2) - Nxz**2)
+            + (self.wM / Qn) * (Nxx * Nyy + Nyy * sT**2 - Nxy**2 / 4)
             + (self.wM / Qn)
             * Pnn
             * (
-                Nxx * (np.cos(phi) ** 2 - sT**2 * (1.0 + np.cos(phi) ** 2))
-                + Nyy * (np.sin(phi) ** 2)
-                - Nxz * (cT * np.sin(2.0 * phi))
+                Nyy * (np.cos(phi) ** 2 - sT**2 * (1.0 - np.cos(phi) ** 2))
+                + Nxx * (np.sin(phi) ** 2)
+                - Nxy * (cT * np.sin(2.0 * phi)) / 2
             )
         )
         return Fnn + Fnna
