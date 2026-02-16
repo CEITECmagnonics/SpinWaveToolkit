@@ -161,7 +161,7 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
-        if (theta + 1e-4) % np.pi / 2 > 1e-3:
+        if (theta + 1e-6) % (np.pi / 2) > 1e-3:
             print(
                 "WARNING: theta is not a multiple of pi/2. The results might be misleading!"
             )
