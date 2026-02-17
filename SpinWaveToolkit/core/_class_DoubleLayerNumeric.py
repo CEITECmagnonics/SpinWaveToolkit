@@ -18,6 +18,9 @@ class DoubleLayerNumeric:
     The dispersion model uses the approach of Gallardo et al., see:
     https://doi.org/10.1103/PhysRevApplied.12.034012
 
+    The laboratory coordinate frame of reference is
+    *z || to film normal* and *x || to in-plane wavevector*.
+
     Most parameters can be specified as vectors (1d numpy arrays)
     of the same shape. This functionality is not guaranteed.
 
@@ -29,7 +32,7 @@ class DoubleLayerNumeric:
         Instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
     d : float
-        (m ) layer thickness (in z direction).
+        (m ) thickness (in z direction) of the first magnetic layer.
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.
     theta : float, optional
@@ -39,11 +42,9 @@ class DoubleLayerNumeric:
         For energy calculations, theta other than pi/2 is supported in
         experimental code.
     phi : float or ndarray, optional
-        (rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.
+        (rad) in-plane angle of Bext from kxi, pi/2 is DE geometry.
     Ku : float, optional
         (J/m^3) uniaxial anisotropy strength.
-    Ku2 : float, optional
-        (J/m^3) uniaxial anisotropy strength of the second layer.
     Jbl : float, optional
         (J/m^2) bilinear RKKY coupling parameter.
     Jbq : float, optional
@@ -51,24 +52,27 @@ class DoubleLayerNumeric:
     s : float, optional
         (m ) spacing layer thickness.
     d2 : float or None
-        (m ) thickness of the second magnetic layer, if None,
+        (m ) thickness of the second magnetic layer.  If None,
         same as `d`.
+    Ku2 : float or None
+        (J/m^3) uniaxial anisotropy strength of the second layer.
+        If None, same as `Ku` (initially).
     material2 : Material or None
         instance of `Material` describing the second magnetic
-        layer, if None, `material` parameter is used instead.
+        layer.  If None, `material` parameter is used instead.
         Its properties are saved as attributes, but this object is not.
     JblDyn : float or None
-        (J/m^2) dynamic bilinear RKKY coupling parameter,
-        if None, same as `Jbl`.
+        (J/m^2) dynamic bilinear RKKY coupling parameter.
+        If None, same as `Jbl`.
     JbqDyn : float or None
-        (J/m^2) dynamic biquadratic RKKY coupling parameter,
-        if None, same as `Jbq`.
+        (J/m^2) dynamic biquadratic RKKY coupling parameter.
+        If None, same as `Jbq`.
     phiAnis1, phiAnis2 : float, optional
-        (rad) uniaxial anisotropy axis in-plane angle from kxi for
-        both magnetic layers.
+        (rad) uniaxial anisotropy axis in-plane angle (from kxi) of the
+        first and second layer.
     phiInit1, phiInit2 : float, optional
-        (rad) initial value of magnetization in-plane angle of the
-        first and second layer, used for energy minimization.
+        (rad) initial value of magnetization in-plane angle (from kxi)
+        of the first and second layer, used for energy minimization.
 
     Attributes
     ----------
@@ -111,19 +115,21 @@ class DoubleLayerNumeric:
     --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the acoustic mode in a 30 nm
-    thick NiFe (Permalloy) bilayer.
+    thick NiFe (Permalloy) bilayer separated by 0.5 nm.
 
     .. code-block:: python
 
         kxi = np.linspace(1e-6, 150e6, 150)
 
-        PyChar = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
-                                    kxi=kxi, theta=np.pi/2, Ku=
-                                    )
-        DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
-        vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
-        lifetimePy = PyChar.GetLifetime()*1e9  # ns
-        decLen = PyChar.GetDecLen()*1e6  # um
+        dln = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
+                                 kxi=kxi, theta=np.pi/2, phi=0,
+                                 Ku=3e3, Jbl=-1e-3, s=5e-10,
+                                 phiAnis1=np.pi/2, phiAnis2=np.pi/2
+                                 )
+        DispPy = dln.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
+        vgPy = dln.GetGroupVelocity()*1e-3  # km/s
+        lifetimePy = dln.GetLifetime()*1e9  # ns
+        decLen = dln.GetDecLen()*1e6  # um
 
     See also
     --------
@@ -140,12 +146,12 @@ class DoubleLayerNumeric:
         theta=np.pi / 2,
         phi=np.pi / 2,
         Ku=0,
-        Ku2=0,
         Jbl=0,
         Jbq=0,
         s=0,
         d2=None,
         material2=None,
+        Ku2=None,
         JblDyn=None,
         JbqDyn=None,
         phiAnis1=np.pi / 2,
@@ -162,7 +168,7 @@ class DoubleLayerNumeric:
             material2 = material
         self._Ms2 = material2.Ms
         self._Aex2 = material2.Aex
-        self._Ku2 = Ku2
+        self._Ku2 = Ku if Ku2 is None else Ku2
 
         self.kxi = np.array(kxi)
         if abs(theta - np.pi / 2) > 1e-4:
@@ -170,7 +176,6 @@ class DoubleLayerNumeric:
         self.theta = theta
         self.phi = phi
         self.d = d
-        self.d1 = d
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
         # Compute A, Hani
@@ -308,7 +313,7 @@ class DoubleLayerNumeric:
         A2 = self.A2
         Hu1 = self.Hani
         Hu2 = self.Hani2
-        d1 = self.d1
+        d1 = self.d
         d2 = self.d2
         phiAnis1 = self.phiAnis1
         phiAnis2 = self.phiAnis2
@@ -323,9 +328,9 @@ class DoubleLayerNumeric:
         vV = np.zeros((4, 2, np.size(ks, 0)))
         for idx, k in enumerate(ks):
             Zet1 = (
-                np.sinh(k * self.d1 / 2)
-                / (k * self.d1 / 2)
-                * np.exp(-abs(k) * self.d1 / 2)
+                np.sinh(k * self.d / 2)
+                / (k * self.d / 2)
+                * np.exp(-abs(k) * self.d / 2)
             )
             Zet2 = (
                 np.sinh(k * self.d2 / 2)
@@ -540,7 +545,7 @@ class DoubleLayerNumeric:
 
         E = (
             EJ1
-            + self.d1
+            + self.d
             * (
                 -self.Ms
                 * MU0
@@ -627,7 +632,7 @@ class DoubleLayerNumeric:
 
         E = (
             EJ1
-            + self.d1
+            + self.d
             * (
                 -self.Ms
                 * MU0
