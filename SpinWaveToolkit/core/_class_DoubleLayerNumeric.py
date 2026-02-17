@@ -192,8 +192,6 @@ class DoubleLayerNumeric:
         self.s = s
         self.Jbl = Jbl
         self.Jbq = Jbq
-        self.Ku = Ku
-        self.Ku2 = Ku2
         if JblDyn is None:
             JblDyn = Jbl
         if JbqDyn is None:
