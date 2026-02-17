@@ -10,7 +10,7 @@ import SpinWaveToolkit
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SpinWaveToolkit'
-copyright = '2025, CEITECmagnonics and SpinWaveToolkit contributors'
+copyright = '2025-2026, CEITECmagnonics and SpinWaveToolkit contributors'
 author = 'Ondřej Wojewoda'
 release = os.environ.get("DOCS_VERSION", SpinWaveToolkit.__version__)
 
