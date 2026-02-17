@@ -90,7 +90,7 @@ class TestClass:
         notnan = ~np.isnan(refdata[[0, 2, 4]])
         for i in range(nd):
             dln = SWT.DoubleLayerNumeric(0, co, d[i], refdata[2*i, notnan[i]]*1e6,
-                                         theta=np.pi/2, Ku=Ku, Jbl=J, s=s, material2=nife)
+                                         theta=np.pi/2, Ku=Ku, Jbl=J, s=s, material2=nife, Ku2=0)
             # only frequencies of the first (acoustic) mode
             f_dln[i, notnan[i]] = dln.GetDispersion()[0][0]/2e9/np.pi
 
