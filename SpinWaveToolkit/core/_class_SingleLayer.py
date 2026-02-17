@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, roots, sphr2cart
+from SpinWaveToolkit.helpers import MU0, roots, sphr2cart, distBE
 
 __all__ = ["SingleLayer"]
 
@@ -690,8 +690,7 @@ class SingleLayer:
         return Fnn + Fnna
 
     def GetDispersion(self, n=0, nT=0):
-        """Gives frequencies for defined k (Dispersion relation).
-        The returned values are in rad*Hz.
+        """Gives frequencies for defined k (dispersion relation).
 
         Parameters
         ----------
@@ -699,6 +698,11 @@ class SingleLayer:
             Quantization number.
         nT : int, optional
             Waveguide (transversal) quantization number.
+
+        Returns
+        -------
+        w : ndarray
+            (rad*Hz) mode frequencies.
         """
         if self.boundary_cond == 4:
             kappa = self.GetPartiallyPinnedKappa(n)
@@ -772,6 +776,9 @@ class SingleLayer:
         """Give decay lengths for defined k.
         Decay length is computed as lambda = v_g*tau.
         The result is given in m.
+
+        .. warning::
+            Works only when ``kxi.shape[0] >= 2``.
 
         Parameters
         ----------
@@ -919,6 +926,9 @@ class SingleLayer:
         Output is density of states in 1D for given dispersion
         characteristics.
 
+        .. warning::
+            Works only when ``kxi.shape[0] >= 2``.
+
         Parameters
         ----------
         n : int
@@ -933,8 +943,9 @@ class SingleLayer:
         """
         return 1 / self.GetGroupVelocity(n=n, nT=nT)
 
-    def GetBlochFunction(self, n=0, nT=0, Nf=200):
-        """Give Bloch function for given mode.
+    def GetBlochFunction(self, n=0, nT=0, Nf=200, temp=None, mu=None):
+        """Gives Bloch function for given mode.
+
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
@@ -947,13 +958,20 @@ class SingleLayer:
             Waveguide (transversal) quantization number.
         Nf : int, optional
             Number of frequency levels for the Bloch function.
+        temp : float or None, optional
+            (K ) temperature for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
+        mu : float or None, optional
+            (J ) chemical potential for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
 
         Returns
         -------
         w : ndarray
             (rad*Hz) frequency axis for the 2D Bloch function.
         blochFunc : ndarray
-            () 2D Bloch function for given `kxi` and `w`.
+            () 2D Bloch function for given `w` and `kxi` with shape
+            ``(Nf, kxi.shape[0])``.
         """
         w00 = self.GetDispersion(n=n, nT=nT)
         lifeTime = self.GetLifetime(n=n, nT=nT)
@@ -966,6 +984,9 @@ class SingleLayer:
         wMat = np.tile(w, (len(lifeTime), 1)).T
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
 
+        if temp is not None and mu is not None:
+            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
+
         return w, blochFunc
 
     def GetExchangeLen(self):
@@ -977,7 +998,7 @@ class SingleLayer:
         all `kxi`.
 
         Taking that wk^2 = Ak^2 - |Bk|^2,
-        where wk is the frequency `f` from `GetDispersion()` function.
+        where wk is the frequency `w` from `GetDispersion()` function.
         """
         Fnn = self.__GetFnn(n=0, nc=0, nT=0)
 

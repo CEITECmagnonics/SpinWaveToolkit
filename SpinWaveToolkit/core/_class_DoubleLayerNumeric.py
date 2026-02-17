@@ -5,7 +5,7 @@ Core (private) file for the `DoubleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import MU0, wrapAngle
+from SpinWaveToolkit.helpers import MU0, wrapAngle, distBE
 
 __all__ = ["DoubleLayerNumeric"]
 
@@ -277,8 +277,7 @@ class DoubleLayerNumeric:
         self.Hani2 = 2 * val / self.Ms2 / MU0
 
     def GetDispersion(self):
-        """Gives frequencies for defined k (Dispersion relation).
-        The returned value is in the rad*Hz.
+        """Gives frequencies for defined k (dispersion relation).
 
         The model formulates a system matrix and then numerically solves
         its eigenvalues and eigenvectors. The eigenvalues represent the
@@ -756,12 +755,14 @@ class DoubleLayerNumeric:
         """
         return 1 / self.GetGroupVelocity(n=n)
 
-    def GetBlochFunction(self, n=0, Nf=200, lifeTime=None):
-        """Give Bloch function for given mode.
+    def GetBlochFunction(self, n=0, Nf=200, temp=None, mu=None, lifeTime=None):
+        """Gives Bloch function for given mode.
+
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
-        As there is problems with lifetime calculation for the
+
+        As there might be problems with lifetime calculation for the
         double layers, you can set fixed one as input parameter.
 
         Parameters
@@ -771,6 +772,12 @@ class DoubleLayerNumeric:
             Default is 0.
         Nf : int, optional
             Number of frequency points for the Bloch function.
+        temp : float or None, optional
+            (K ) temperature for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
+        mu : float or None, optional
+            (J ) chemical potential for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
         lifetime : float, optional
             (s ) fixed lifetime to bypass its dispersion calculation.
 
@@ -779,7 +786,8 @@ class DoubleLayerNumeric:
         w : ndarray
             (rad*Hz) frequency axis for the 2D Bloch function.
         blochFunc : ndarray
-            () 2D Bloch function for given kxi and w.
+            () 2D Bloch function for given `w` and `kxi` with shape
+            ``(Nf, kxi.shape[0])``.
         """
         w, _ = self.GetDispersion()
         if lifeTime is None:
@@ -795,6 +803,9 @@ class DoubleLayerNumeric:
         )
         wMat = np.tile(w, (len(lifeTime), 1)).T
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        if temp is not None and mu is not None:
+            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
 
         return w, blochFunc
 

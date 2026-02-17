@@ -158,7 +158,7 @@ class BulkPolariton:
 
     def GetDispersion(self):
         """Gives frequencies for defined k (dispersion relation) for
-        both hybridized modes.  The returned values are in rad*Hz.
+        both hybridized modes.
 
         Returns
         -------
