@@ -18,42 +18,46 @@ def getBLSsignal_RT3D(
     coherent_exc=False
 ):
     """
-    Compute Brillouin light scattering (BLS) spectrum using the 
-    reciprocity theorem, evaluating signal contribution from multiple depths.
-
-    Source paper: https://doi.org/10.1126/sciadv.ady8833
+    Compute Brillouin light scattering (BLS) spectrum using the reciprocity theorem, 
+    evaluating signal contribution from multiple depths.
 
     EXPERIMENTAL FUNCTION
 
+    Source paper: https://doi.org/10.1126/sciadv.ady8833
+
     Parameters
     ----------
-    Exy : tuple[ndarray]
-        (m) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
-        the X and Y coordinates of the electric field grid.
-    Ei_fields, Ej_fields : list of ndarray
-        (V/m) List of [Ex, Ey, Ez] components. 
-        Each component can be shape ``(Nx, Ny)`` for a single layer or 
-        ``(Nx, Ny, Nz)`` for multiple depths.
-    KxKyChi : tuple[ndarray]
-        (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
-        containing the kx and ky coordinates of the Bloch function.
+    Exy : tuple of ndarray
+        Tuple of two 1D arrays `(x, y)` with shapes `(Nx,)` and `(Ny,)` containing 
+        the spatial coordinates of the electric field grid in meters (m).
+    Ei_fields : list of ndarray
+        List of the three spatial components `[Ex, Ey, Ez]` of the driving 
+        electric field E_dr (incident laser). Each component must have shape 
+        `(Nx, Ny)` for a single layer or `(Nx, Ny, Nz)` for multiple depths. 
+        Units are V/m.
+    Ej_fields : list of ndarray
+        List of the three spatial components `[Ex, Ey, Ez]` of the virtual 
+        electric field E_v (detector side). Each component must have shape 
+        `(Nx, Ny)` for a single layer or `(Nx, Ny, Nz)` for multiple depths. 
+        Units are V/m.
+    KxKyChi : tuple of ndarray
+        Tuple of two 1D arrays `(kx, ky)` with shapes `(Nkx,)` and `(Nky,)` 
+        containing the reciprocal space coordinates of the Bloch function in rad/m.
     Chi : ndarray
-        Dynamic magnetic susceptibility tensor.
-        Shape: ``(Nz, 3, 3, Nf, Nkx, Nky)``.
-        Note: If inputs are 2D (Nz=1), the first dimension can be omitted 
-        (shape ``(3, 3, Nf, Nkx, Nky)``), and it will be reshaped automatically.
+        Dynamic magnetic susceptibility tensor. Must have shape `(Nz, 3, 3, Nf, Nkx, Nky)`.
+        If inputs are 2D (`Nz=1`), the first dimension can be omitted resulting in 
+        shape `(3, 3, Nf, Nkx, Nky)`, which will be reshaped automatically.
     coherent_exc : bool, optional
-        If True, calculates the coherent BLS signal (sum then square).
-        If False (default), calculates the non-coherent (thermal) BLS 
-        signal (square then sum).
+        If True, calculates the coherent BLS signal (amplitudes sum first).
+        If False (default), calculates the non-coherent / thermal BLS 
+        signal (intensities sum first).
 
     Returns
     -------
     sigmaSW : ndarray
-        BLS spectrum, ``(Nf,)``.
+        Calculated BLS spectrum. Shape is `(Nf,)`.
     qmEiEj : ndarray
-        Transfer function of the system, 
-        Shape: ``(3, 3, Nkx, Nky, Nz)``.
+        Transfer function of the system. Shape is `(3, 3, Nkx, Nky, Nz)`.
     """
 
     # --- Axis and Grid Weights ---
@@ -79,7 +83,9 @@ def getBLSsignal_RT3D(
         Chi = Chi[np.newaxis, ...]
     
     if Chi.shape[0] != Nz:
-        raise ValueError(f"Chi depth dimension ({Chi.shape[0]}) does not match field depth dimension ({Nz}).")
+        raise ValueError(
+            f"Chi depth dimension ({Chi.shape[0]}) does not match field depth dimension ({Nz})."
+        )
     
     # --- Local grid spacings and Fourier factors ---
     dS_3d = np.outer(np.gradient(x), np.gradient(y))[:, :, np.newaxis]
@@ -119,7 +125,7 @@ def getBLSsignal_RT3D(
 
     return sigmaSW, qmEiEj
 
-def getBLSsignal_RT_reci(
+def getBLSsignal_RT_pupil(
     KxKy, 
     Ei_fields, 
     Ej_fields,
@@ -127,69 +133,80 @@ def getBLSsignal_RT_reci(
     coherent_exc=False
 ):
     """
-    Compute Brillouin light scattering (BLS) spectrum using the 
-    reciprocity theorem, starting from fields in RECIPROCAL space.
+    Compute Brillouin light scattering (BLS) spectrum using the reciprocity theorem, 
+    starting directly from fields in reciprocal (k) space.
 
-    FT(f * g) = FT(f) * FT(g)  (where * is convolution)
+    The transfer function `qmEiEj` requires the convolution of the k-space 
+    fields: `qmEiEj = FT(Ej) * FT(Ei)`. 
 
-    The transfer function qmEiEj = FT(Ej * Ei) is therefore calculated as
-    the convolution of the k-space fields: qmEiEj = FT(Ej) * FT(Ei).
+    IMPORTANT: Because this function relies on the Fast Fourier Transform (FFT) 
+    algorithm, the input k-space grid (`KxKy`) MUST be strictly equidistant.
 
     Source paper: https://doi.org/10.1126/sciadv.ady8833
 
     Parameters
     ----------
-    KxKy : tuple[ndarray]
-        (rad/m) Tuple of two vectors (kx, ky) with shapes ``(Nkx,)``, 
-        ``(Nky,)`` containing the k coordinates. Assumed to be a uniform grid.
-    Ei_fields, Ej_fields : list of ndarray
-        Pupil fields [Ekx, Eky, Ekz], each ``(Nx, Ny)``.
-        (conf. fields E_dr and E_v in source paper above).
+    KxKy : tuple of ndarray
+        Tuple of two 1D arrays `(kx, ky)` with shapes `(Nkx,)` and `(Nky,)` 
+        containing the reciprocal space coordinates in rad/m. Assumed to be a 
+        uniform/equidistant grid.
+    Ei_fields : list of ndarray
+        List of the three reciprocal pupil field components `[Ekx, Eky, Ekz]` 
+        corresponding to the driving field E_dr (incident laser). Each must 
+        have shape `(Nkx, Nky)`.
+    Ej_fields : list of ndarray
+        List of the three reciprocal pupil field components `[Ekx, Eky, Ekz]` 
+        corresponding to the virtual field E_v (detector side). Each must 
+        have shape `(Nkx, Nky)`.
     Chi : ndarray
-        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
-        susceptibility tensor components ``Chi_ij`` for each frequency and 
-        KxKy grid point. 
+        Dynamic magnetic susceptibility tensor. Must have shape `(3, 3, Nf, Nkx, Nky)` 
+        containing the tensor components `Chi_ij` for each frequency and grid point.
     coherent_exc : bool, optional
-        If True, calculates the coherent BLS signal.
-        If False (default), calculates the non-coherent (e.g. thermal) BLS 
-        signal.
+        If True, calculates the coherent BLS signal (amplitudes sum first).
+        If False (default), calculates the non-coherent / thermal BLS 
+        signal (intensities sum first).
 
     Returns
     -------
     sigmaSW : ndarray
-        BLS spectrum, ``(Nf,)``.
+        Calculated BLS spectrum. Shape is `(Nf,)`.
     qmEiEj : ndarray
-        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
+        Transfer function of the system. Shape is `(3, 3, Nkx, Nky)`.
     """
     
-    # K-space coordinates
+    # --- K-space coordinates ---
     kx, ky = KxKy
-    Nkx = len(kx)
-    Nky = len(ky)
+    Nkx, Nky = len(kx), len(ky)
 
-    # Stack fields
+    # --- Validation: Ensure grid is equidistant for FFT ---
+    if Nkx > 1 and not np.allclose(np.diff(kx), kx[1] - kx[0]):
+        raise ValueError("The kx grid must be strictly equidistant to use fftconvolve.")
+    if Nky > 1 and not np.allclose(np.diff(ky), ky[1] - ky[0]):
+        raise ValueError("The ky grid must be strictly equidistant to use fftconvolve.")
+
+    # --- Stack fields ---
     Ei_k = np.stack(Ei_fields, axis=-1) # Shape (Nkx, Nky, 3)
     Ej_k = np.stack(Ej_fields, axis=-1) # Shape (Nkx, Nky, 3)
 
-    # K-space grid spacings (for discrete convolution normalization)
+    # --- K-space grid spacings ---
     dkx = kx[1] - kx[0] if Nkx > 1 else 1.0
     dky = ky[1] - ky[0] if Nky > 1 else 1.0
     dK = dkx * dky
     
-    # Normalization factor for 2D FT convolution theorem
+    # Normalization factor for continuous convolution approximation
     normalization = dK / (2 * np.pi)**2
 
+    # --- Calculate Transfer Function qmEiEj ---
     qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
 
-    # 2D Convolutions of k-space field products
     for u in range(3):
         for v in range(3):
             # Skip components where susceptibility is zero
             if not np.any(Chi[u, v]):
                 continue
             
-            # Convolve FT(Ej[u]) and FT(Ei[v])
-            conv = convolve2d(
+            # Fast FFT-based convolution
+            conv = fftconvolve(
                 Ej_k[..., u], 
                 Ei_k[..., v], 
                 mode='same' # Keep output size same as input
@@ -197,21 +214,15 @@ def getBLSsignal_RT_reci(
             
             qmEiEj[u, v] = normalization * conv
 
-    # Assemble BLS spectrum by weighting overlaps with susceptibility
+    # --- Assemble BLS spectrum ---
     if coherent_exc:
         # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
-        # 'uvxy' are qmEiEj dims (3, 3, Nkx, Nky)
-        # 'uvfxy' are Chi dims (3, 3, Nf, Nkx, Nky)
-        # einsum sums over u,v,x,y, leaving just 'f'
         tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
         sigmaSW = np.abs(tmp * dK)**2
     
     else:
         # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
-        # einsum sums over u,v, leaving 'f,x,y'
         tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
-        
-        # Sum over k-space (x and y axes)
         sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
 
     return sigmaSW, qmEiEj
@@ -225,38 +236,41 @@ def getBLSsignal_RT(
     coherent_exc=False
 ):
     """
-    Compute Brillouin light scattering (BLS) spectrum using the 
-    reciprocity theorem.
+    Compute Brillouin light scattering (BLS) spectrum using the reciprocity theorem.
 
     Source paper: https://doi.org/10.1126/sciadv.ady8833
 
     Parameters
     ----------
-    Exy : tuple[ndarray]
-        (m ) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
-        the X and Y coordinates of the electric field.
-    Ei_fields, Ej_fields : list of ndarray
-        (V/m) Focal fields [Ex, Ey, Ez], each ``(Nx, Ny)``.
-        (conf. fields E_dr and E_v in source paper above).
-    KxKyChi : tuple[ndarray]
-        (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
-        containing the kx and ky coordinates of the Bloch function.
+    Exy : tuple of ndarray
+        Tuple of two 1D arrays `(x, y)` with shapes `(Nx,)` and `(Ny,)` containing 
+        the spatial coordinates of the electric field grid in meters (m).
+    Ei_fields : list of ndarray
+        List of the three spatial components `[Ex, Ey, Ez]` of the focal driving 
+        electric field E_dr (incident laser). Each component must have shape 
+        `(Nx, Ny)`. Units are V/m.
+    Ej_fields : list of ndarray
+        List of the three spatial components `[Ex, Ey, Ez]` of the focal virtual 
+        electric field E_v (detector side). Each component must have shape 
+        `(Nx, Ny)`. Units are V/m.
+    KxKyChi : tuple of ndarray
+        Tuple of two 1D arrays `(kx, ky)` with shapes `(Nkx,)` and `(Nky,)` 
+        containing the reciprocal space coordinates of the Bloch function in rad/m.
     Chi : ndarray
-        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
-        susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
-        grid point. 
+        Dynamic magnetic susceptibility tensor. Must have shape `(3, 3, Nf, Nkx, Nky)` 
+        containing the tensor components `Chi_ij` for each frequency and grid point. 
     coherent_exc : bool, optional
-        If True, calculates the coherent BLS signal.
-        If False (default), calculates the non-coherent (e.g. thermal) BLS 
-        signal.
+        If True, calculates the coherent BLS signal (amplitudes sum first).
+        If False (default), calculates the non-coherent / thermal BLS 
+        signal (intensities sum first).
 
     Returns
     -------
     sigmaSW : ndarray
-        BLS spectrum, ``(Nf,)``.
+        Calculated BLS spectrum. Shape is `(Nf,)`.
     qmEiEj : ndarray
-        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
-        Uses same coordinates as Chi (`KxKyChi`)
+        Transfer function of the system. Shape is `(3, 3, Nkx, Nky)`. Uses the 
+        same coordinates as the susceptibility tensor (`KxKyChi`).
     """
 
     # --- Axis and Grid ---

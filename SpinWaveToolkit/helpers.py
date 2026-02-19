@@ -431,36 +431,65 @@ class ProgressBar:
 
 def rotate_field(Ei_fields, x, y, angle_deg):
     """
-    Rotate both polarization and spatial distribution of 2D electric field.
+    Rotate both the polarization vectors and the spatial distribution of a 2D 
+    electric field. 
+
+    The rotation is an active, counter-clockwise rotation of the field itself. 
+    It applies a 2D rotation matrix to the [Ex, Ey] polarization components, 
+    and applies an inverse rotation to the coordinate grid to sample the 
+    interpolated spatial distribution correctly.
 
     Parameters
     ----------
-    Ei_fields : list of 3 complex 2D arrays [Ex, Ey, Ez]
-    x, y : 1D arrays of grid coordinates
-    angle_deg : rotation angle, counter-clockwise
+    Ei_fields : list of ndarray
+        List of the three spatial components `[Ex, Ey, Ez]` of the electric 
+        field. Each component must be a 2D complex array of shape `(Nx, Ny)`.
+    x : ndarray
+        1D array of length `Nx` containing the spatial x-coordinates. 
+        Assumed to be strictly equidistant.
+    y : ndarray
+        1D array of length `Ny` containing the spatial y-coordinates. 
+        Assumed to be strictly equidistant.
+    angle_deg : float
+        The counter-clockwise rotation angle in degrees.
 
     Returns
     -------
-    Ex_rot, Ey_rot, Ez_rot : rotated fields
+    Ei_rot : list of ndarray
+        List of the three rotated spatial components `[Ex_rot, Ey_rot, Ez_rot]`, 
+        each with shape `(Nx, Ny)`.
     """
     Ex, Ey, Ez = Ei_fields
+    
+    # Convert angle to radians
     theta = np.deg2rad(angle_deg)
     cos_t, sin_t = np.cos(theta), np.sin(theta)
 
-    # Rotate polarization
-    Ejx = cos_t*Ex - sin_t*Ey
-    Ejy = sin_t*Ex + cos_t*Ey
-    Ejz = Ez.copy()
+    # 1. Rotate the polarization vectors (Active CCW rotation)
+    Ejx = cos_t * Ex - sin_t * Ey
+    Ejy = sin_t * Ex + cos_t * Ey
+    Ejz = Ez.copy() # Z-polarization is invariant under 2D in-plane rotation
 
-    # Rotate coordinates
+    # 2. Create the target meshgrid for the physical coordinates
     X, Y = np.meshgrid(x, y, indexing='ij')
-    Xr =  cos_t*X + sin_t*Y
-    Yr =  -sin_t*X + cos_t*Y
 
-    # Interpolate fields onto rotated grid
-    coords = [(Xr - x[0])/(x[1]-x[0]), (Yr - y[0])/(y[1]-y[0])]  # normalized indices
-    Ex_rot = map_coordinates(Ejx, coords, order=1, mode='nearest')
-    Ey_rot = map_coordinates(Ejy, coords, order=1, mode='nearest')
-    Ez_rot = map_coordinates(Ejz, coords, order=1, mode='nearest')
+    # Calculate the corresponding coordinates in the original unrotated frame.
+    # (This uses the inverse/passive rotation matrix)
+    Xr = cos_t * X + sin_t * Y
+    Yr = -sin_t * X + cos_t * Y
 
-    return Ex_rot, Ey_rot, Ez_rot
+    # 3. Convert physical coordinates to normalized index coordinates
+    dx = x[1] - x[0] if len(x) > 1 else 1.0
+    dy = y[1] - y[0] if len(y) > 1 else 1.0
+    
+    idx_X = (Xr - x[0]) / dx
+    idx_Y = (Yr - y[0]) / dy
+    coords = [idx_X, idx_Y]
+
+    # 4. Interpolate the rotated polarization components onto the original grid
+    # (map_coordinates natively supports complex arrays in modern SciPy)
+    Ex_rot = map_coordinates(Ejx, coords, order=1, mode='constant', cval=0.0)
+    Ey_rot = map_coordinates(Ejy, coords, order=1, mode='constant', cval=0.0)
+    Ez_rot = map_coordinates(Ejz, coords, order=1, mode='constant', cval=0.0)
+
+    return [Ex_rot, Ey_rot, Ez_rot]
