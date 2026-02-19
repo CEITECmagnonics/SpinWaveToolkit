@@ -442,22 +442,22 @@ def rotate_field(Ei_fields, x, y, angle_deg):
     Parameters
     ----------
     Ei_fields : list of ndarray
-        List of the three spatial components `[Ex, Ey, Ez]` of the electric 
-        field. Each component must be a 2D complex array of shape `(Nx, Ny)`.
+        (V/m) List of the three spatial components `[Ex, Ey, Ez]` of the electric 
+        field. Each component must be a 2D complex array of shape ``(Nx, Ny)``.
     x : ndarray
-        1D array of length `Nx` containing the spatial x-coordinates. 
+        (m) 1D array of length ``Nx`` containing the spatial x-coordinates. 
         Assumed to be strictly equidistant.
     y : ndarray
-        1D array of length `Ny` containing the spatial y-coordinates. 
+        (m) 1D array of length ``Ny`` containing the spatial y-coordinates. 
         Assumed to be strictly equidistant.
     angle_deg : float
-        The counter-clockwise rotation angle in degrees.
+        (deg) The counter-clockwise rotation angle in degrees.
 
     Returns
     -------
     Ei_rot : list of ndarray
-        List of the three rotated spatial components `[Ex_rot, Ey_rot, Ez_rot]`, 
-        each with shape `(Nx, Ny)`.
+        (V/m) List of the three rotated spatial components `[Ex_rot, Ey_rot, Ez_rot]`, 
+        each with shape ``(Nx, Ny)``.
     """
     Ex, Ey, Ez = Ei_fields
     
