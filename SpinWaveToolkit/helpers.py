@@ -5,6 +5,7 @@ Place for all helping functions and constants in this module.
 from time import time
 import sys
 import numpy as np
+from scipy.ndimage import map_coordinates
 
 __all__ = [
     "MU0",
@@ -427,3 +428,39 @@ class ProgressBar:
         self.i = self.niter - 1
         self.__up()
         print()  # newline after progress bar
+
+def rotate_field(Ei_fields, x, y, angle_deg):
+    """
+    Rotate both polarization and spatial distribution of 2D electric field.
+
+    Parameters
+    ----------
+    Ei_fields : list of 3 complex 2D arrays [Ex, Ey, Ez]
+    x, y : 1D arrays of grid coordinates
+    angle_deg : rotation angle, counter-clockwise
+
+    Returns
+    -------
+    Ex_rot, Ey_rot, Ez_rot : rotated fields
+    """
+    Ex, Ey, Ez = Ei_fields
+    theta = np.deg2rad(angle_deg)
+    cos_t, sin_t = np.cos(theta), np.sin(theta)
+
+    # Rotate polarization
+    Ejx = cos_t*Ex - sin_t*Ey
+    Ejy = sin_t*Ex + cos_t*Ey
+    Ejz = Ez.copy()
+
+    # Rotate coordinates
+    X, Y = np.meshgrid(x, y, indexing='ij')
+    Xr =  cos_t*X + sin_t*Y
+    Yr =  -sin_t*X + cos_t*Y
+
+    # Interpolate fields onto rotated grid
+    coords = [(Xr - x[0])/(x[1]-x[0]), (Yr - y[0])/(y[1]-y[0])]  # normalized indices
+    Ex_rot = map_coordinates(Ejx, coords, order=1, mode='nearest')
+    Ey_rot = map_coordinates(Ejy, coords, order=1, mode='nearest')
+    Ez_rot = map_coordinates(Ejz, coords, order=1, mode='nearest')
+
+    return Ex_rot, Ey_rot, Ez_rot

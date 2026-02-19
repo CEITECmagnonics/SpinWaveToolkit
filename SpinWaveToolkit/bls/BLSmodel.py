@@ -9,10 +9,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
 
-
-import numpy as np
-
-def getBLSsignal_RT(
+def getBLSsignal_RT3D(
     Exy, 
     Ei_fields, 
     Ej_fields,
@@ -22,99 +19,105 @@ def getBLSsignal_RT(
 ):
     """
     Compute Brillouin light scattering (BLS) spectrum using the 
-    reciprocity theorem.
+    reciprocity theorem, evaluating signal contribution from multiple depths.
 
-    Source paper: arXiv:2502.03262v2
+    Source paper: https://doi.org/10.1126/sciadv.ady8833
+
+    EXPERIMENTAL FUNCTION
 
     Parameters
     ----------
     Exy : tuple[ndarray]
-        (m ) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
-        the X and Y coordinates of the electric field.
+        (m) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
+        the X and Y coordinates of the electric field grid.
     Ei_fields, Ej_fields : list of ndarray
-        (V/m) Focal fields [Ex, Ey, Ez], each ``(Nx, Ny)``.
-        Their polarizations should be orthogonal
-        (conf. fields E_dr and E_v in source paper above).
+        (V/m) List of [Ex, Ey, Ez] components. 
+        Each component can be shape ``(Nx, Ny)`` for a single layer or 
+        ``(Nx, Ny, Nz)`` for multiple depths.
     KxKyChi : tuple[ndarray]
         (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
         containing the kx and ky coordinates of the Bloch function.
     Chi : ndarray
-        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
-        susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
-        grid point. 
+        Dynamic magnetic susceptibility tensor.
+        Shape: ``(Nz, 3, 3, Nf, Nkx, Nky)``.
+        Note: If inputs are 2D (Nz=1), the first dimension can be omitted 
+        (shape ``(3, 3, Nf, Nkx, Nky)``), and it will be reshaped automatically.
     coherent_exc : bool, optional
-        If True, calculates the coherent BLS signal.
-        If False (default), calculates the non-coherent (e.g. thermal) BLS 
-        signal.
+        If True, calculates the coherent BLS signal (sum then square).
+        If False (default), calculates the non-coherent (thermal) BLS 
+        signal (square then sum).
 
     Returns
     -------
     sigmaSW : ndarray
         BLS spectrum, ``(Nf,)``.
     qmEiEj : ndarray
-        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
-        Uses same coordinates as Chi (`KxKyChi`)
+        Transfer function of the system, 
+        Shape: ``(3, 3, Nkx, Nky, Nz)``.
     """
 
-    # --- Axis ---
+    # --- Axis and Grid Weights ---
     x, y = Exy
     kx, ky = KxKyChi
+    Nkx, Nky = len(kx), len(ky)
 
-    # --- Stack fields ---
-    Ei = np.stack(Ei_fields, axis=-1) 
-    Ej = np.stack(Ej_fields, axis=-1) 
+    # Calculate reciprocal space weights for proper integration
+    dkx = np.mean(np.gradient(kx)) if Nkx > 1 else 1.0
+    dky = np.mean(np.gradient(ky)) if Nky > 1 else 1.0
+    dK = dkx * dky
 
-    # --- Local grid spacings ---
-    dx = np.diff(x, prepend=x[0], append=x[-1])
-    dx = (dx[:-1] + dx[1:]) / 2
-    dy = np.diff(y, prepend=y[0], append=y[-1])
-    dy = (dy[:-1] + dy[1:]) / 2
-    dS = np.outer(dx, dy)  # area elements
+    # --- Standardize dimensions to (Nx, Ny, Nz) ---
+    def ensure_3d(arr):
+        return arr[:, :, np.newaxis] if arr.ndim == 2 else arr
 
-    _, _, Nf, Nkx, Nky = np.shape(Chi)
+    Ei = np.stack([ensure_3d(f) for f in Ei_fields], axis=-1) 
+    Ej = np.stack([ensure_3d(f) for f in Ej_fields], axis=-1)
+    Nx, Ny, Nz, _ = Ei.shape
 
-    # --- Fourier phase factors ---
-    ExFac = np.exp(1j * np.outer(kx, x))  # (Nkx, Nx)
-    EyFac = np.exp(1j * np.outer(ky, y))  # (Nky, Ny)
+    # Ensure Chi has the depth dimension (Nz, 3, 3, Nf, Nkx, Nky)
+    if Chi.ndim == 5:
+        Chi = Chi[np.newaxis, ...]
+    
+    if Chi.shape[0] != Nz:
+        raise ValueError(f"Chi depth dimension ({Chi.shape[0]}) does not match field depth dimension ({Nz}).")
+    
+    # --- Local grid spacings and Fourier factors ---
+    dS_3d = np.outer(np.gradient(x), np.gradient(y))[:, :, np.newaxis]
 
-    # --- Weighted field products (only off-diagonal terms) ---
-    EjEi = {}
+    ExFac = np.exp(1j * np.outer(kx, x)) 
+    EyFac = np.exp(1j * np.outer(ky, y)) 
+
+    # --- Transfer Function Calculation ---
+    qmEiEj = np.zeros((3, 3, Nkx, Nky, Nz), dtype=complex)
+
     for u in range(3):
         for v in range(3):
-            #if u != v:
-            F = (Ej[..., u] * Ei[..., v]) * dS
-            EjEi[(u, v)] = np.ascontiguousarray(F)
+            # Check if this tensor component is zero across all depths to skip FT
+            if not np.any(Chi[:, u, v]):
+                continue
+            
+            F = (Ej[..., u] * Ei[..., v]) * dS_3d 
+            
+            # Efficient 2D Fourier Transform across all depths simultaneously
+            # (Nx, Ny, Nz) @ (Nky, Ny).T -> (Nx, Nz, Nky)
+            B = np.tensordot(F, EyFac, axes=([1], [1])) 
+            # (Nkx, Nx) @ (Nx, Nz, Nky) -> (Nkx, Nz, Nky)
+            M = np.tensordot(ExFac, B, axes=([1], [0]))
+            
+            qmEiEj[u, v] = np.transpose(M, (0, 2, 1)) # To (Nkx, Nky, Nz)
 
-    qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
-
-    # --- 2D Fourier transforms of field products ---
-    for u in range(3):
-        for v in range(3):
-            #if u == v:
-            #   continue
-            F = EjEi[(u, v)]
-            B = F @ EyFac.T      # Fourier transform along y
-            M = ExFac @ B        # then along x
-            qmEiEj[u, v] = M
-
-    # --- Assemble BLS spectrum by weighting overlaps with susceptibility ---
-    sigmaSW = np.zeros(Nf)
-    for i in range(Nf):
-        tmp = np.zeros((Nkx, Nky), dtype=complex)
-        for u in range(3):
-            for v in range(3):
-                #if u != v:
-                tmp += qmEiEj[u, v] * Chi[u, v, i]
-        
-        if coherent_exc:
-            # Coherent sum
-            sigmaSW[i] = np.abs(np.sum(tmp))**2
-        else:
-            # Thermal sum
-            sigmaSW[i] = np.sum(np.abs(tmp)**2)
+    # --- BLS Spectrum Assembly via Einstein Summation ---
+    if coherent_exc:
+        # Sum amplitudes over tensor (uv), k-space (xy), and depth (z), then square
+        # Weight by dK inside the square for coherent integration
+        tmp = np.einsum('uvxyz,zuvfxy->f', qmEiEj, Chi)
+        sigmaSW = np.abs(tmp * dK)**2
+    else:
+        # Sum amplitudes over tensor (uv) and depth (z), square, then integrate intensities over k-space (xy)
+        tmp = np.einsum('uvxyz,zuvfxy->fxy', qmEiEj, Chi)
+        sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
 
     return sigmaSW, qmEiEj
-
 
 def getBLSsignal_RT_reci(
     KxKy, 
@@ -132,6 +135,8 @@ def getBLSsignal_RT_reci(
     The transfer function qmEiEj = FT(Ej * Ei) is therefore calculated as
     the convolution of the k-space fields: qmEiEj = FT(Ej) * FT(Ei).
 
+    Source paper: https://doi.org/10.1126/sciadv.ady8833
+
     Parameters
     ----------
     KxKy : tuple[ndarray]
@@ -139,7 +144,6 @@ def getBLSsignal_RT_reci(
         ``(Nky,)`` containing the k coordinates. Assumed to be a uniform grid.
     Ei_fields, Ej_fields : list of ndarray
         Pupil fields [Ekx, Eky, Ekz], each ``(Nx, Ny)``.
-        Their polarizations should be orthogonal
         (conf. fields E_dr and E_v in source paper above).
     Chi : ndarray
         Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
@@ -180,11 +184,12 @@ def getBLSsignal_RT_reci(
     # 2D Convolutions of k-space field products
     for u in range(3):
         for v in range(3):
-            #if u == v:
-            #continue
+            # Skip components where susceptibility is zero
+            if not np.any(Chi[u, v]):
+                continue
             
             # Convolve FT(Ej[u]) and FT(Ei[v])
-            conv = fftconvolve(
+            conv = convolve2d(
                 Ej_k[..., u], 
                 Ei_k[..., v], 
                 mode='same' # Keep output size same as input
@@ -199,7 +204,7 @@ def getBLSsignal_RT_reci(
         # 'uvfxy' are Chi dims (3, 3, Nf, Nkx, Nky)
         # einsum sums over u,v,x,y, leaving just 'f'
         tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
-        sigmaSW = np.abs(tmp)**2
+        sigmaSW = np.abs(tmp * dK)**2
     
     else:
         # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
@@ -207,7 +212,107 @@ def getBLSsignal_RT_reci(
         tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
         
         # Sum over k-space (x and y axes)
-        sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2))
+        sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
+
+    return sigmaSW, qmEiEj
+
+def getBLSsignal_RT(
+    Exy, 
+    Ei_fields, 
+    Ej_fields,
+    KxKyChi, 
+    Chi,
+    coherent_exc=False
+):
+    """
+    Compute Brillouin light scattering (BLS) spectrum using the 
+    reciprocity theorem.
+
+    Source paper: https://doi.org/10.1126/sciadv.ady8833
+
+    Parameters
+    ----------
+    Exy : tuple[ndarray]
+        (m ) Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing 
+        the X and Y coordinates of the electric field.
+    Ei_fields, Ej_fields : list of ndarray
+        (V/m) Focal fields [Ex, Ey, Ez], each ``(Nx, Ny)``.
+        (conf. fields E_dr and E_v in source paper above).
+    KxKyChi : tuple[ndarray]
+        (rad/m) Tuple of two vectors with shapes ``(Nkx,)``, ``(Nky,)`` 
+        containing the kx and ky coordinates of the Bloch function.
+    Chi : ndarray
+        Array with shape ``(3,3,Nf,Nkx,Nky)`` containing the dynamic magnetic 
+        susceptibility tensor components ``Chi_ij`` for each frequency and KxKy 
+        grid point. 
+    coherent_exc : bool, optional
+        If True, calculates the coherent BLS signal.
+        If False (default), calculates the non-coherent (e.g. thermal) BLS 
+        signal.
+
+    Returns
+    -------
+    sigmaSW : ndarray
+        BLS spectrum, ``(Nf,)``.
+    qmEiEj : ndarray
+        Transfer function of the system, ``(3, 3, Nkx, Nky)``.
+        Uses same coordinates as Chi (`KxKyChi`)
+    """
+
+    # --- Axis and Grid ---
+    x, y = Exy
+    kx, ky = KxKyChi
+    Nkx, Nky = len(kx), len(ky)
+
+    # --- Stack fields into (Nx, Ny, 3) ---
+    Ei = np.stack(Ei_fields, axis=-1) 
+    Ej = np.stack(Ej_fields, axis=-1) 
+
+    # --- Area elements (dS) ---
+    dx = np.gradient(x)
+    dy = np.gradient(y)
+    dS = np.outer(dx, dy)
+
+    # k-space weights
+    dkx = np.mean(np.gradient(kx)) if len(kx) > 1 else 1.0
+    dky = np.mean(np.gradient(ky)) if len(ky) > 1 else 1.0
+    dK = dkx * dky
+
+    # --- Fourier phase factors ---
+    ExFac = np.exp(1j * np.outer(kx, x))  # (Nkx, Nx)
+    EyFac = np.exp(1j * np.outer(ky, y))  # (Nky, Ny)
+
+    # --- Calculate Transfer Function qmEiEj (3, 3, Nkx, Nky) ---
+    qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
+    for u in range(3):
+        for v in range(3):
+            # Skip components where susceptibility is zero
+            if not np.any(Chi[u, v]):
+                continue
+            
+            # Element-wise product weighted by area
+            F = (Ej[..., u] * Ei[..., v]) * dS
+            
+            # Fast 2D Fourier Transform via matrix multiplication
+            # Result: (Nkx, Nky)
+            qmEiEj[u, v] = ExFac @ (F @ EyFac.T)
+
+    # Assemble BLS spectrum by weighting overlaps with susceptibility
+    if coherent_exc:
+        # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
+        # 'uvxy' are qmEiEj dims (3, 3, Nkx, Nky)
+        # 'uvfxy' are Chi dims (3, 3, Nf, Nkx, Nky)
+        # einsum sums over u,v,x,y, leaving just 'f'
+        tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
+        sigmaSW = np.abs(tmp * dK)**2
+    
+    else:
+        # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
+        # einsum sums over u,v, leaving 'f,x,y'
+        tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
+        
+        # Sum over k-space (x and y axes)
+        sigmaSW = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
 
     return sigmaSW, qmEiEj
 
