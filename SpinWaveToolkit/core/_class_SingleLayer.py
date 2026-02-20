@@ -1026,13 +1026,15 @@ class SingleLayer:
     def GetEllipticity(self):
         """Calculate ellipticity of the precession ellipse for
         all `kxi`.  It is defined such that it falls within [0, 1].
+        1 = circular precession,
+        0 = elliptical precession with zero minor axis (linear precession).
 
         Returns
         -------
         ellipticity : ndarray
             () ellipticity for all `kxi`.
         """
-        return 2 * abs(self.__GetBk()) / (self.__GetAk() + abs(self.__GetBk()))
+        return (self.__GetAk() - np.abs(self.__GetBk())) / (self.__GetAk() + np.abs(self.__GetBk()))
 
     def GetCouplingParam(self):
         """Calculate coupling parameter of the parallel pumped
