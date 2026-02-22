@@ -1,7 +1,7 @@
 # This CITATION.cff file was generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
 
-cff-version: 1.2.0
+cff-version: 1.2.1
 title: SpinWaveToolkit
 message: >-
   If you use this software, please cite it using the
@@ -15,4 +15,4 @@ authors:
     family-names: Klíma
     orcid: "https://orcid.org/0009-0002-1838-5546"
 repository-code: 'https://github.com/CEITECmagnonics/SpinWaveToolkit'
-date-released: '2025-11-12'
+date-released: '2026-02-23'

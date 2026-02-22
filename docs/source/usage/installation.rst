@@ -43,7 +43,7 @@ The SpinWaveToolkit package is compatible with Python >3.7, and uses the followi
 
 - :py:mod:`numpy` >1.20 (>2.0 is also ok, bugs be reported in `Issues <https://github.com/CEITECmagnonics/SpinWaveToolkit/issues>`_)
 - :py:mod:`scipy` >1.8
-- :mod:`tqdm`
+- `tqdm <https://tqdm.github.io/docs/>`_ >4.66
 
 .. note::
 

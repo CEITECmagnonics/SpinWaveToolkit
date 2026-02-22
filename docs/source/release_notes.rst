@@ -6,6 +6,27 @@ Release Notes
     For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
 
 
+Version 1.2.1
+-------------
+`2026-02-23`
+
+Patch featuring important dispersion-model fixes and small tweaks.
+
+What's new
+^^^^^^^^^^
+- All ``GetBlochFunction()`` methods now include optional weighting by Bose-Einstein distribution.
+- New physical constant - Planck constant :py:attr:`.H` - added to the module.
+
+Fixes
+^^^^^
+- Anisotropy tensor in :py:class:`.SingleLayer` is now correctly handled for dispersion relation calculations.
+- Correct formula for ellipticity use in :py:class:`.SingleLayer`.
+- Docstring fixes and minor improvements, mainly in :py:class:`.DoubleLayerNumeric`.
+- BLS example now includes also first PSSW mode and usage of BE distribution (see :doc:`_example_nbs/BLS_signal_from_single_layer`).
+- Documentation improvements.
+- Instructions in ``CONTRIBUTING.md`` updated.
+
+
 Version 1.2.0
 -------------
 `2025-11-12`
