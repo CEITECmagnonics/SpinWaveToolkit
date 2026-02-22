@@ -10,6 +10,8 @@ Constants
 
 .. autodata:: SpinWaveToolkit.helpers.C
 
+.. autodata:: SpinWaveToolkit.helpers.H
+
 .. autodata:: SpinWaveToolkit.helpers.HBAR
 
 .. autodata:: SpinWaveToolkit.helpers.KB

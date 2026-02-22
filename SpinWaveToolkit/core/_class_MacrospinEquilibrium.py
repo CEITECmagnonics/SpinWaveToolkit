@@ -236,7 +236,7 @@ class MacrospinEquilibrium:
             :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol``
             and ``bounds`` keywords, as they are fixly set here.
             If None, ``{"method": "Nelder-Mead"}`` is used.
-            Defualt is None. Try changing the
+            Default is None. Try changing the
             optimization method is you have concern about the results
             (see documentation of :py:func:`scipy.optimize.minimize`).
         verbose : bool or None, optional
