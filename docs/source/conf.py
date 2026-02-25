@@ -10,7 +10,7 @@ import SpinWaveToolkit
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SpinWaveToolkit'
-copyright = '2025, CEITECmagnonics and SpinWaveToolkit contributors'
+copyright = '2025-2026, CEITECmagnonics and SpinWaveToolkit contributors'
 author = 'Ondřej Wojewoda'
 release = os.environ.get("DOCS_VERSION", SpinWaveToolkit.__version__)
 
@@ -78,7 +78,7 @@ html_theme_options = {
         "version_match": release if release == "dev" else ".".join(release.strip("v").split(".")[:2]),  # use major.minor version for the switcher
     },
     # ### update after stable state of documentation is reached
-    "announcement": "https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/new-release/docs/source/_templates/announcement_banner.html",
+    "announcement": "https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_templates/announcement_banner.html",
     "pygments_light_style": "friendly",
     "pygments_dark_style": "a11y-dark",
 }
@@ -118,6 +118,7 @@ intersphinx_mapping = {
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
     "pandas": ("http://pandas.pydata.org/docs/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
+    # "tqdm": ("https://tqdm.github.io/docs/", None), # does not work (probably does not use sphinx)
 }
 
 

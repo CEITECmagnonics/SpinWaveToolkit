@@ -8,6 +8,7 @@ __all__ = [
     "MU0",
     "C",
     "KB",
+    "H",
     "HBAR",
     "distBE",
     "wavenumber2wavelength",
@@ -23,6 +24,7 @@ __all__ = [
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
 C = 299792458.0  #: (m/s) speed of light
 KB = 1.38064852e-23  #: (J/K) Boltzmann constant
+H = 6.62607015e-34  #: (J s) Planck constant
 HBAR = 1.054571817e-34  #: (J s) reduced Planck constant
 
 
@@ -90,7 +92,7 @@ def wrapAngle(angle, amin=0, amax=2 * np.pi):
     return (angle - amin) % (amax - amin) + amin
 
 
-def distBE(w, temp=300, mu=-1e12 * 2 * np.pi * HBAR):
+def distBE(w, temp=300, mu=-1e12 * H):
     """Returns Bose-Einstein distribution for given chemical potential
     and temperature.
 

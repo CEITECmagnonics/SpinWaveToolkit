@@ -1,6 +1,6 @@
 # SpinWaveToolkit
 
-<img src="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/new-release/docs/source/_static/logo+text.svg#L1" width=60%>
+<img src="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_static/logo+text.svg#L1" width=60%>
 
 SpinWaveToolkit is an open-source Python package which provides analytical tools for spin-wave physics and research.
 
@@ -38,6 +38,7 @@ for global modules.
 The SpinWaveToolkit package is compatible with Python >3.7, and uses the following modules:
 - [numpy] >1.20 (>2.0 is also ok, bugs be reported in [Issues])
 - [scipy] >1.8
+- [tqdm] >4.66
 
 > [!NOTE]
 > If you encounter compatibility errors in contradiction with this list, let us know by posting your findings in a new [Issue][Issues].
@@ -76,17 +77,28 @@ For more examples (with images) look [here](https://ceitecmagnonics.github.io/Sp
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
 
-[1] Wojewoda, O., & Klíma, J. *SpinWaveToolkit: Set of tools useful in spin wave research.* GitHub, 2025. [https://github.com/CEITECmagnonics/SpinWaveToolkit]()
+[1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" (2026) [arXiv:2601.23227 [cond-mat.mes-hall]](https://doi.org/10.48550/arXiv.2601.23227)
+[2] Wojewoda, O., & Klíma, J. "SpinWaveToolkit: Set of tools useful in spin wave research." GitHub, 2026. [https://github.com/CEITECmagnonics/SpinWaveToolkit]()
 
 
 BibTeX entry:
 ``` BibTeX
+@misc{klima2026,
+    title={{SpinWaveToolkit}: {Python} package for (semi-)analytical calculations in the field of spin-wave physics}, 
+    author={Klíma, Jan and Wojewoda, Ondřej and Krčma, Jakub and Hrtoň, Martin and Pavelka, Dominik and Holobrádek, Jakub and Urbánek, Michal},
+    year={2026},
+    eprint={2601.23227},
+    archivePrefix={arXiv},
+    primaryClass={cond-mat.mes-hall},
+    url={https://arxiv.org/abs/2601.23227}, 
+}
+
 @online{swt,
     author = {Wojewoda, Ondřej and Klíma, Jan},
     title = {SpinWaveToolkit: Set of tools useful in spin wave research},
-    year = {2025},
+    year = {2026},
     publisher = {GitHub},
-    version = {1.2.0},
+    version = {1.2.1},
     url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
     language = {en},
 }
@@ -105,6 +117,7 @@ All sources of models used within the SpinWaveToolkit are cited in their respect
 [SWTpy]:SpinWaveToolkit
 [numpy]:https://numpy.org/
 [scipy]:https://scipy.org/
+[tqdm]:https://tqdm.github.io/
 [Issues]:https://github.com/CEITECmagnonics/SpinWaveToolkit/issues
 [docs]:https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/
 
