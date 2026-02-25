@@ -1,0 +1,885 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Dispersion relation calculation - field sweeps &#8212; SpinWaveToolkit dev documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../_static/documentation_options.js?v=3ce10a4d"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_example_nbs/dispersion_relation_fieldsweeps';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = false;
+        </script>
+    <link rel="icon" href="../_static/logo.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Static magnetization equilibrium and hysteresis loops" href="macrospin_equilibrium_histloop.html" />
+    <link rel="prev" title="Basic dispersion relation calculations" href="dispersion_relation_basic.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+  <aside class="bd-header-announcement d-print-none d-none" aria-label="Announcement" data-pst-announcement-url="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_templates/announcement_banner.html"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../_static/logo.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">SpinWaveToolkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../publications.html">
+    Publications
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api_reference/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../publications.html">
+    Publications
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dispersion_relation_basic.html">Basic dispersion relation calculations</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Dispersion relation calculation - field sweeps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="macrospin_equilibrium_histloop.html">Static magnetization equilibrium and hysteresis loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SAFdispersion_simple.html">Nonreciprocal dispersion of a synthetic antiferromagnet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BLS_signal_from_single_layer.html">Modeling BLS signal from single magnetic layer</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../examples.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Dispersion relation calculation - field sweeps</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Dispersion-relation-calculation---field-sweeps">
+<h1>Dispersion relation calculation - field sweeps<a class="headerlink" href="#Dispersion-relation-calculation---field-sweeps" title="Link to this heading">#</a></h1>
+<p>This example shows how we can sweep parameters of the dispersion and plot different views on the data. In this example we will use the <code class="docutils literal notranslate"><span class="pre">SingleLayer</span></code> class based on the Kalinikos-Slavin model <a class="reference external" href="https://doi.org/10.1088/0022-3719/19/35/014">[J. Phys. C: Solid State Phys., 19, 7013 (1986)]</a> and plot field dependency of the selected spin wave properties (e.g. mode frequencies and decay lengths) for specified set of k-vectors. The same approach can be used also with other classes available in
+SpinWaveToolkit.</p>
+<p>Let’s start by importing necessary modules and defining material and “experiment” parameters:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#necessary imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">SpinWaveToolkit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">SWT</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># prepare arrays with k-vectors and B-field values of interest</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">10e6</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span> <span class="c1"># k-vector values in rad/m,</span>
+<span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-5</span> <span class="c1"># we use k=1e-5 instead of k=0 to avoid badly conditioned calculations at k=0</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">100e-3</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span> <span class="c1"># define values of a field sweep in T</span>
+<span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-5</span> <span class="c1"># we use B=1e-5 instead of B=0 to avoid badly conditioned calculations at B=0</span>
+
+<span class="c1"># Define the experiment geometry</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span>  <span class="c1"># (rad) for in-plane magnetization</span>
+<span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span>  <span class="c1"># (rad) for Damon-Eshbach geometry</span>
+
+<span class="c1"># Define material parameters</span>
+<span class="c1"># We will use built-in material parameters of NiFe in this example. Built in materials are: (NiFe, YIG, CoFeB, FeNi).</span>
+<span class="n">mat</span> <span class="o">=</span> <span class="n">SWT</span><span class="o">.</span><span class="n">NiFe</span>
+<span class="n">d</span> <span class="o">=</span> <span class="mf">30e-9</span>  <span class="c1"># (m) layer thickness</span>
+<span class="n">bc</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># boundary conditions (1 - totally unpinned, 2 - totally pinned spins)</span>
+</pre></div>
+</div>
+</div>
+<section id="Calculate-dispersions-for-defined-values-of-external-magnetic-field">
+<h2>Calculate dispersions for defined values of external magnetic field<a class="headerlink" href="#Calculate-dispersions-for-defined-values-of-external-magnetic-field" title="Link to this heading">#</a></h2>
+<p>Now we can initiate <code class="docutils literal notranslate"><span class="pre">SWT.SingleLayer</span></code> and just change the <code class="docutils literal notranslate"><span class="pre">Bext</span></code> attribute for every field value and store everything in a 2D array.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create numpy arrays n0 and decay0 for all fields and k-vectors defined in B and kxi</span>
+<span class="n">n0</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#initialize list of arrays</span>
+<span class="n">decay0</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#initialize list of arrays</span>
+<span class="n">sl</span> <span class="o">=</span> <span class="n">SWT</span><span class="o">.</span><span class="n">SingleLayer</span><span class="p">(</span><span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mat</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">boundary_cond</span><span class="o">=</span><span class="n">bc</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">Bext</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">Bext</span> <span class="o">=</span> <span class="n">Bext</span> <span class="c1"># set external field</span>
+    <span class="n">n0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">GetDispersion</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mf">1e-9</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="c1">#Fundamental mode frequency in GHz</span>
+    <span class="n">decay0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">GetDecLen</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mf">1e6</span><span class="p">)</span> <span class="c1">#Fundamental mode decay length in um</span>
+<span class="n">n0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n0</span><span class="p">)</span> <span class="c1"># create 2D array from list of arrays</span>
+<span class="n">decay0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">decay0</span><span class="p">)</span> <span class="c1"># create 2D array from list of arrays</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plot-the-data-#1">
+<h2>Plot the data #1<a class="headerlink" href="#Plot-the-data-#1" title="Link to this heading">#</a></h2>
+<p>Now we can just slice our 2D arrays <code class="docutils literal notranslate"><span class="pre">n0</span></code> and <code class="docutils literal notranslate"><span class="pre">decay0</span></code> and plot whatever we want. Let’s start with plotting a field dependence of the fundamental mode frequency (<code class="docutils literal notranslate"><span class="pre">n0</span></code> array) for different values of the k-vector.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># print what k-values we have available in k array in index:value format, separated by |</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">val</span><span class="o">/</span><span class="mf">1e6</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0:0.0| 1:0.1| 2:0.2| 3:0.3| 4:0.4| 5:0.5| 6:0.6| 7:0.7| 8:0.8| 9:0.9| 10:1.0| 11:1.1| 12:1.2| 13:1.3| 14:1.4| 15:1.5| 16:1.6| 17:1.7| 18:1.8| 19:1.9| 20:2.0| 21:2.1| 22:2.2| 23:2.3| 24:2.4| 25:2.5| 26:2.6| 27:2.7| 28:2.8| 29:2.9| 30:3.0| 31:3.1| 32:3.2| 33:3.3| 34:3.4| 35:3.5| 36:3.6| 37:3.7| 38:3.8| 39:3.9| 40:4.0| 41:4.1| 42:4.2| 43:4.3| 44:4.4| 45:4.5| 46:4.6| 47:4.7| 48:4.8| 49:4.9| 50:5.0| 51:5.1| 52:5.2| 53:5.3| 54:5.4| 55:5.5| 56:5.6| 57:5.7| 58:5.8| 59:5.9| 60:6.0| 61:6.1| 62:6.2| 63:6.3| 64:6.4| 65:6.5| 66:6.6| 67:6.7| 68:6.8| 69:6.9| 70:7.0| 71:7.1| 72:7.2| 73:7.3| 74:7.4| 75:7.5| 76:7.6| 77:7.7| 78:7.8| 79:7.9| 80:8.0| 81:8.1| 82:8.2| 83:8.3| 84:8.4| 85:8.5| 86:8.6| 87:8.7| 88:8.8| 89:8.9| 90:9.0| 91:9.1| 92:9.2| 93:9.3| 94:9.4| 95:9.5| 96:9.6| 97:9.7| 98:9.8| 99:9.9| 100:10.0
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Choose which k-indices to plot (edit as you like, look at the k-values above)</span>
+<span class="n">k_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">ki</span> <span class="ow">in</span> <span class="n">k_indices</span><span class="p">:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">n0</span><span class="p">[:,</span> <span class="n">ki</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;$k = $</span><span class="si">{</span><span class="n">k</span><span class="p">[</span><span class="n">ki</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-6</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> rad/μm&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;magnetic field $B$ (T)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;frequency $f$ (GHz)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Field sweep: fundamental mode frequency for different k-vectors&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;wavenumber&quot;</span><span class="p">)</span>
+
+<span class="c1"># --- Info box ---</span>
+<span class="n">info_text</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;Material: $M_s$ = </span><span class="si">{:.0f}</span><span class="s2"> kA/m, $A_{{ex}}$ = </span><span class="si">{:.1f}</span><span class="s2"> pJ/m, &quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;$\alpha$ = </span><span class="si">{:.1e}</span><span class="s2">, $\gamma$ = </span><span class="si">{:.2f}</span><span class="s2"> GHz/T&quot;</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;Thickness: $d$ = </span><span class="si">{:.1f}</span><span class="s2"> nm | Angles: $\theta$ = </span><span class="si">{:.1f}</span><span class="s2">°, $\phi$ = </span><span class="si">{:.1f}</span><span class="s2">°&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">Ms</span><span class="o">/</span><span class="mf">1e3</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">Aex</span><span class="o">*</span><span class="mf">1e12</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">gamma</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">1e9</span><span class="p">),</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">d</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="mf">0.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">info_text</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/_example_nbs_dispersion_relation_fieldsweeps_7_0.png" src="../_images/_example_nbs_dispersion_relation_fieldsweeps_7_0.png" />
+</div>
+</div>
+</section>
+<section id="Plot-the-data-#2">
+<h2>Plot the data #2<a class="headerlink" href="#Plot-the-data-#2" title="Link to this heading">#</a></h2>
+<p>But we can also plot dispersion (frequency vs wavenumber) for different fields. Everything is already calculated in ndarray <code class="docutils literal notranslate"><span class="pre">n0</span></code>, we just need to plot it:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># print what B values we have available in B array in index:value format, separated by |</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">val</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">B</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0:0.0| 1:1.0| 2:2.0| 3:3.0| 4:4.0| 5:5.0| 6:6.0| 7:7.0| 8:8.0| 9:9.0| 10:10.0| 11:11.0| 12:12.0| 13:13.0| 14:14.0| 15:15.0| 16:16.0| 17:17.0| 18:18.0| 19:19.0| 20:20.0| 21:21.0| 22:22.0| 23:23.0| 24:24.0| 25:25.0| 26:26.0| 27:27.0| 28:28.0| 29:29.0| 30:30.0| 31:31.0| 32:32.0| 33:33.0| 34:34.0| 35:35.0| 36:36.0| 37:37.0| 38:38.0| 39:39.0| 40:40.0| 41:41.0| 42:42.0| 43:43.0| 44:44.0| 45:45.0| 46:46.0| 47:47.0| 48:48.0| 49:49.0| 50:50.0| 51:51.0| 52:52.0| 53:53.0| 54:54.0| 55:55.0| 56:56.0| 57:57.0| 58:58.0| 59:59.0| 60:60.0| 61:61.0| 62:62.0| 63:63.0| 64:64.0| 65:65.0| 66:66.0| 67:67.0| 68:68.0| 69:69.0| 70:70.0| 71:71.0| 72:72.0| 73:73.0| 74:74.0| 75:75.0| 76:76.0| 77:77.0| 78:78.0| 79:79.0| 80:80.0| 81:81.0| 82:82.0| 83:83.0| 84:84.0| 85:85.0| 86:86.0| 87:87.0| 88:88.0| 89:89.0| 90:90.0| 91:91.0| 92:92.0| 93:93.0| 94:94.0| 95:95.0| 96:96.0| 97:97.0| 98:98.0| 99:99.0| 100:100.0
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Choose which k-indices to plot (edit as you like, look at the B-values above)</span>
+<span class="n">B_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">99</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">Bi</span> <span class="ow">in</span> <span class="n">B_indices</span><span class="p">:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">n0</span><span class="p">[</span><span class="n">Bi</span><span class="p">,</span> <span class="p">:],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;$B = $</span><span class="si">{</span><span class="n">B</span><span class="p">[</span><span class="n">Bi</span><span class="p">]</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> mT&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;wavenumber $k$ (rad/µm)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;frequency $f$ (GHz)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Fundamental mode frequency for different fields&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;mag. field&quot;</span><span class="p">)</span>
+
+<span class="c1"># --- Info box ---</span>
+<span class="n">info_text</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;Material: $M_s$ = </span><span class="si">{:.0f}</span><span class="s2"> kA/m, $A_{{ex}}$ = </span><span class="si">{:.1f}</span><span class="s2"> pJ/m, &quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;$\alpha$ = </span><span class="si">{:.1e}</span><span class="s2">, $\gamma$ = </span><span class="si">{:.2f}</span><span class="s2"> GHz/T&quot;</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;Thickness: $d$ = </span><span class="si">{:.1f}</span><span class="s2"> nm | Angles: $\theta$ = </span><span class="si">{:.1f}</span><span class="s2">°, $\phi$ = </span><span class="si">{:.1f}</span><span class="s2">°&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">Ms</span><span class="o">/</span><span class="mf">1e3</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">Aex</span><span class="o">*</span><span class="mf">1e12</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">gamma</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">1e9</span><span class="p">),</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">d</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="mf">0.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">info_text</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/_example_nbs_dispersion_relation_fieldsweeps_10_0.png" src="../_images/_example_nbs_dispersion_relation_fieldsweeps_10_0.png" />
+</div>
+</div>
+</section>
+<section id="Plot-the-data-#3">
+<h2>Plot the data #3<a class="headerlink" href="#Plot-the-data-#3" title="Link to this heading">#</a></h2>
+<p>Because together with mode frequencies we’ve also calculated decay lenghts, now we can have a look at what is in <code class="docutils literal notranslate"><span class="pre">decay0</span></code> ndarray.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># print what k-values we have available in k array in index:value format, separated by |</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">val</span><span class="o">/</span><span class="mf">1e6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0:0.00| 1:0.10| 2:0.20| 3:0.30| 4:0.40| 5:0.50| 6:0.60| 7:0.70| 8:0.80| 9:0.90| 10:1.00| 11:1.10| 12:1.20| 13:1.30| 14:1.40| 15:1.50| 16:1.60| 17:1.70| 18:1.80| 19:1.90| 20:2.00| 21:2.10| 22:2.20| 23:2.30| 24:2.40| 25:2.50| 26:2.60| 27:2.70| 28:2.80| 29:2.90| 30:3.00| 31:3.10| 32:3.20| 33:3.30| 34:3.40| 35:3.50| 36:3.60| 37:3.70| 38:3.80| 39:3.90| 40:4.00| 41:4.10| 42:4.20| 43:4.30| 44:4.40| 45:4.50| 46:4.60| 47:4.70| 48:4.80| 49:4.90| 50:5.00| 51:5.10| 52:5.20| 53:5.30| 54:5.40| 55:5.50| 56:5.60| 57:5.70| 58:5.80| 59:5.90| 60:6.00| 61:6.10| 62:6.20| 63:6.30| 64:6.40| 65:6.50| 66:6.60| 67:6.70| 68:6.80| 69:6.90| 70:7.00| 71:7.10| 72:7.20| 73:7.30| 74:7.40| 75:7.50| 76:7.60| 77:7.70| 78:7.80| 79:7.90| 80:8.00| 81:8.10| 82:8.20| 83:8.30| 84:8.40| 85:8.50| 86:8.60| 87:8.70| 88:8.80| 89:8.90| 90:9.00| 91:9.10| 92:9.20| 93:9.30| 94:9.40| 95:9.50| 96:9.60| 97:9.70| 98:9.80| 99:9.90| 100:10.00
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Choose which k-indices to plot (edit as you like, look at the k-values above)</span>
+<span class="n">k_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">ki</span> <span class="ow">in</span> <span class="n">k_indices</span><span class="p">:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">decay0</span><span class="p">[:,</span> <span class="n">ki</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;$k = $</span><span class="si">{</span><span class="n">k</span><span class="p">[</span><span class="n">ki</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-6</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> rad/μm&quot;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;magnetic field $B$ (T)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;decay length (μm)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Field sweep: decay length for different k-vectors&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;wavenumber&quot;</span><span class="p">)</span>
+
+<span class="c1"># --- Info box ---</span>
+<span class="n">info_text</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;Material: $M_s$ = </span><span class="si">{:.0f}</span><span class="s2"> kA/m, $A_{{ex}}$ = </span><span class="si">{:.1f}</span><span class="s2"> pJ/m, &quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;$\alpha$ = </span><span class="si">{:.1e}</span><span class="s2">, $\gamma$ = </span><span class="si">{:.2f}</span><span class="s2"> GHz/T&quot;</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">r</span><span class="s2">&quot;Thickness: $d$ = </span><span class="si">{:.1f}</span><span class="s2"> nm | Angles: $\theta$ = </span><span class="si">{:.1f}</span><span class="s2">°, $\phi$ = </span><span class="si">{:.1f}</span><span class="s2">°&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">Ms</span><span class="o">/</span><span class="mf">1e3</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">Aex</span><span class="o">*</span><span class="mf">1e12</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">gamma</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">1e9</span><span class="p">),</span>
+    <span class="n">sl</span><span class="o">.</span><span class="n">d</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+    <span class="mf">0.01</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">info_text</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/_example_nbs_dispersion_relation_fieldsweeps_13_0.png" src="../_images/_example_nbs_dispersion_relation_fieldsweeps_13_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="dispersion_relation_basic.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Basic dispersion relation calculations</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="macrospin_equilibrium_histloop.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Static magnetization equilibrium and hysteresis loops</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Calculate-dispersions-for-defined-values-of-external-magnetic-field">Calculate dispersions for defined values of external magnetic field</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plot-the-data-#1">Plot the data #1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plot-the-data-#2">Plot the data #2</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plot-the-data-#3">Plot the data #3</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/_example_nbs/dispersion_relation_fieldsweeps.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, CEITECmagnonics and SpinWaveToolkit contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
