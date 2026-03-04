@@ -37,10 +37,12 @@ relevant :doc:`/examples`.
 from .greenAndFresnel import *
 from .BLSmodel import *
 from .core._class_ObjectiveLens import *
+from . import susceptibilities
 
 
 __all__ = [
     "ObjectiveLens",
     "fresnel_coefficients",
     "getBLSsignal",
+    "susceptibilities",
 ]
