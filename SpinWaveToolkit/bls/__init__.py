@@ -4,6 +4,12 @@ signal.
 
 .. currentmodule:: SpinWaveToolkit.bls
 
+Modules
+-------
+:mod:`~SpinWaveToolkit.bls.susceptibilities`
+    Module for computing the dynamic magneto-optic susceptibility tensor
+    components for a given dynamic magnetization vector.
+
 Classes
 -------
 :class:`ObjectiveLens`

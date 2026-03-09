@@ -1,6 +1,14 @@
 """
-Submodule of the bls submodule for calculations of magneto-optic
+Module of the `bls` submodule for calculations of magneto-optic
 susceptibilities used in BLS calculations.
+
+
+.. currentmodule:: SpinWaveToolkit.bls.susceptibilities
+
+.. autosummary::
+    mo_linear
+    mo_quadratic
+    mo_quadratic_yig111
 """
 
 import numpy as np
@@ -14,9 +22,11 @@ __all__ = [
 
 def mo_linear(m, Q=1.0):
     """
-    Calculates the magneto-optic Kerr (or Faraday)
-    susceptibility tensor (linear in magnetization) from a given
-    magnetization vector (constructed e.g. from Bloch functions).
+    The magneto-optic Kerr (or Faraday) susceptibility tensor (linear
+    in magnetization) for a given magnetization vector.
+
+    The dynamic magnetization vector `m` is typically constructed from
+    the Bloch functions of the corresponding spin-wave modes.
 
     The laboratory coordinate frame of reference is
     *z || to film normal* and *x || to in-plane wavevector with phi=0*.
@@ -32,6 +42,11 @@ def mo_linear(m, Q=1.0):
         () Voight (or Faraday) magneto-optic constant.  Default is 1.0.
 
 
+    See also
+    --------
+    mo_quadratic, mo_quadratic_yig111
+
+
     Returns
     -------
     chi : ndarray
@@ -45,9 +60,11 @@ def mo_linear(m, Q=1.0):
 
 def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
     """
-    Calculates the magneto-optic Cotton-Mouton (or Voight)
-    susceptibility tensor (quadratic in magnetization) from a given
-    magnetization vector (constructed e.g. from Bloch functions).
+    The magneto-optic Cotton-Mouton (or Voight) susceptibility tensor
+    (quadratic in magnetization) for a given magnetization vector.
+
+    The dynamic magnetization vector `m` is typically constructed from
+    the Bloch functions of the corresponding spin-wave modes.
 
     The laboratory coordinate frame of reference is
     *z || to film normal* and *x || to in-plane wavevector with phi=0*.
@@ -86,6 +103,11 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
         ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
         ``Nf, Nkx, Nky``.
+
+
+    See also
+    --------
+    mo_linear, mo_quadratic_yig111
 
 
     Notes
@@ -166,10 +188,12 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
 
 def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
     """
-    Calculates the magneto-optic Cotton-Mouton (or Voight)
-    susceptibility tensor (quadratic in magnetization) from a given
-    magnetization vector (constructed e.g. from Bloch functions)
+    The magneto-optic Cotton-Mouton (or Voight) susceptibility tensor
+    (quadratic in magnetization) for a given magnetization vector,
     specifically for a YIG(111) film, using the constants g11, g12, g44.
+
+    The dynamic magnetization vector `m` is typically constructed from
+    the Bloch functions of the corresponding spin-wave modes.
 
     Linearization can be performed only when the static magnetization is
     along one of the principal axes (xyz).  It is crucial to use
@@ -212,6 +236,11 @@ def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
         ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
         ``Nf, Nkx, Nky``.
+
+
+    See also
+    --------
+    mo_linear, mo_quadratic
 
 
     Notes
