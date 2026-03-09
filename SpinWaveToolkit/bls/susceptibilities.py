@@ -5,10 +5,14 @@ susceptibilities used in BLS calculations.
 
 import numpy as np
 
-__all__ = []
+__all__ = [
+    "mo_linear",
+    "mo_quadratic",
+    "mo_quadratic_yig111",
+]
 
 
-def chi_mo_kerr(m, Q=1.0):
+def mo_linear(m, Q=1.0):
     """
     Calculates the magneto-optic Kerr (or Faraday)
     susceptibility tensor (linear in magnetization) from a given
@@ -21,7 +25,7 @@ def chi_mo_kerr(m, Q=1.0):
     Parameters
     ----------
     m : tuple[ndarray]
-        () dynamic magnetization vector `(mx, my, mz)`.  ### really dynamic only?
+        () dynamic magnetization vector `(mx, my, mz)`.
         Each sub-array should have shape ``(Nf, Nkx, Nky)`` to be casted
         correctly to the BLS signal functions.
     Q : float or complex, optional
@@ -39,7 +43,7 @@ def chi_mo_kerr(m, Q=1.0):
     return Q * 1j * np.array([[zeros, m[2], -m[1]], [-m[2], zeros, m[0]], [m[1], -m[0], zeros]])
 
 
-def chi_mo_cotton_mouton_pheno(m, B1=1.0, B2=1.0, linearize_along=None):
+def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
     """
     Calculates the magneto-optic Cotton-Mouton (or Voight)
     susceptibility tensor (quadratic in magnetization) from a given
@@ -56,15 +60,21 @@ def chi_mo_cotton_mouton_pheno(m, B1=1.0, B2=1.0, linearize_along=None):
     Parameters
     ----------
     m : tuple[ndarray]
-        () dynamic magnetization vector `(mx, my, mz)`.  ### really dynamic only?
+        () dynamic magnetization vector `(mx, my, mz)`.
         Each sub-array should have the same shape, e.g.
         ``(Nf, Nkx, Nky)`` to be casted correctly to the BLS signal
         functions.
-    B1 : float or complex, optional
+    Bii : float or complex or list[float] or list[complex], optional
         () First Cotton-Mouton magneto-optic constant.  Default is 1.0.
+        If given as a list/array of length 3, it is interpreted as the
+        diagonal constants for the xx, yy, and zz components of the
+        susceptibility, respectively (see Notes below).
         This constant is not used in the linearized susceptibility.
-    B2 : float or complex, optional
+    Bij : float or complex or list[float] or list[complex], optional
         () Second Cotton-Mouton magneto-optic constant.  Default is 1.0.
+        If given as a list/array of length 3, it is interpreted as the
+        off-diagonal constants for the yz, xz, and xy components of the
+        susceptibility, respectively (see Notes below).
     linearize_along : {"x", "y", "z", None}, optional
         If not None, linearizes the susceptibility with
         magnetization assumed along given axis.  Default is None.
@@ -76,47 +86,85 @@ def chi_mo_cotton_mouton_pheno(m, B1=1.0, B2=1.0, linearize_along=None):
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
         ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
         ``Nf, Nkx, Nky``.
+
+
+    Notes
+    -----
+    The full quadratic susceptibility tensor has the form:
+
+    .. code-block:: none
+
+        [[Bii*mx^2,    Bij*2*mx*my, Bij*2*mx*mz],
+         [Bij*2*my*mx, Bii*my^2,    Bij*2*my*mz],
+         [Bij*2*mz*mx, Bij*2*mz*my, Bii*mz^2]]
+
+    where Bii and Bij are the diagonal and off-diagonal Cotton-Mouton
+    constants, respectively.  However, when given as 3-element lists/arrays, the constants can differ for each component, resulting in:
+
+    .. code-block:: none
+
+        [[Bii[0]*mx^2,    Bij[2]*2*mx*my, Bij[1]*2*mx*mz],
+         [Bij[2]*2*my*mx, Bii[1]*my^2,    Bij[0]*2*my*mz],
+         [Bij[1]*2*mz*mx, Bij[0]*2*mz*my, Bii[2]*mz^2]]
+
+    When linearization is applied along a given axis, the susceptibility
+    is simplified by assuming the static magnetization is along that
+    axis, and only the dynamic components of the magnetization (to first
+    order) contribute to the susceptibility.
+    For example, if linearizing along "x", we set ``mx**2 = 0`` for the
+    static part, and only `my` and `mz` which stand alone or multiply
+    `mx` contribute linearly.  Multiplied dynamic terms are neglected.
+    This results in a susceptibility that is linear in `my` and `mz`,
+    which is appropriate for calculating dynamic effects such as BLS
+    when the static magnetization is along the x-axis.
+
     """
     mx, my, mz = m
-    chi = np.zeros((3, 3) + mx.shape, dtype=complex)
+    zero_c = np.zeros_like(mx, dtype=complex)
 
+    # create m1, m2, ... m6 components corresponding to c1, c2, ... c6 which
+    # construct full chi as [[c1, c6, c5], [c6, c2, c4], [c5, c4, c3]]
     if linearize_along is None:
-        chi[0, 0] = B1 * mx**2
-        chi[1, 1] = B1 * my**2
-        chi[2, 2] = B1 * mz**2
-
-        chi[0, 1] = B2 * mx * my
-        chi[0, 2] = B2 * mx * mz
-        chi[1, 0] = B2 * my * mx
-        chi[1, 2] = B2 * my * mz
-        chi[2, 0] = B2 * mz * mx
-        chi[2, 1] = B2 * mz * my
-
+        m1, m2, m3 = mx**2, my**2, mz**2
+        m4, m5, m6 = 2 * my * mz, 2 * mx * mz, 2 * mx * my
     elif linearize_along == "x":
-        chi[0, 1] = B2 * my
-        chi[0, 2] = B2 * mz
-        chi[1, 0] = B2 * my
-        chi[2, 0] = B2 * mz
-
+        m1, m2, m3 = 1*0, 0, 0  # ### to get dynamic comps, 1 must be actually 0, right?
+        m4, m5, m6 = 0, 2 * mz, 2 * my
     elif linearize_along == "y":
-        chi[0, 1] = B2 * mx
-        chi[1, 0] = B2 * mx
-        chi[1, 2] = B2 * mz
-        chi[2, 1] = B2 * mz
-
+        m1, m2, m3 = 0, 1*0, 0
+        m4, m5, m6 = 2 * mz, 0, 2 * mx
     elif linearize_along == "z":
-        chi[0, 2] = B2 * mx
-        chi[1, 2] = B2 * my
-        chi[2, 0] = B2 * mx
-        chi[2, 1] = B2 * my
-
+        m1, m2, m3 = 0, 0, 1*0
+        m4, m5, m6 = 2 * my, 2 * mx, 0
     else:
         raise ValueError("Invalid value for linearize_along. Must be 'x', 'y', 'z', or None.")
 
-    return chi
+    # Normalize Bii/Bij to length-3 arrays when provided as lists/arrays.
+    if np.isscalar(Bii):
+        Bii_arr = np.array([Bii, Bii, Bii], dtype=complex)
+    else:
+        Bii_arr = np.asarray(Bii, dtype=complex)
+        if Bii_arr.shape != (3,):
+            raise ValueError("Bii must be a scalar or a length-3 sequence.")
+
+    if np.isscalar(Bij):
+        Bij_arr = np.array([Bij, Bij, Bij], dtype=complex)
+    else:
+        Bij_arr = np.asarray(Bij, dtype=complex)
+        if Bij_arr.shape != (3,):
+            raise ValueError("Bij must be a scalar or a length-3 sequence.")
+
+    c1 = Bii_arr[0] * m1
+    c2 = Bii_arr[1] * m2
+    c3 = Bii_arr[2] * m3
+    c4 = Bij_arr[0] * m4
+    c5 = Bij_arr[1] * m5
+    c6 = Bij_arr[2] * m6
+
+    return np.array([[c1, c6, c5], [c6, c2, c4], [c5, c4, c3]], dtype=complex)
 
 
-def chi_mo_cotton_mouton_yig111(m, g11, g12, g44, linearize_along=None):
+def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
     """
     Calculates the magneto-optic Cotton-Mouton (or Voight)
     susceptibility tensor (quadratic in magnetization) from a given
@@ -147,7 +195,7 @@ def chi_mo_cotton_mouton_yig111(m, g11, g12, g44, linearize_along=None):
     Parameters
     ----------
     m : tuple[ndarray]
-        () dynamic magnetization vector `(mx, my, mz)`.  ### really dynamic only?
+        () dynamic magnetization vector `(mx, my, mz)`.
         Each sub-array should have the same shape, e.g.
         ``(Nf, Nkx, Nky)`` to be casted correctly to the BLS signal
         functions.
@@ -164,6 +212,21 @@ def chi_mo_cotton_mouton_yig111(m, g11, g12, g44, linearize_along=None):
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
         ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
         ``Nf, Nkx, Nky``.
+
+
+    Notes
+    -----
+    When linearization is applied along a given axis, the susceptibility
+    is simplified by assuming the static magnetization is along that
+    axis, and only the dynamic components of the magnetization (to first
+    order) contribute to the susceptibility.
+    For example, if linearizing along "x", we set ``mx**2 = 0`` for the
+    static part, and only `my` and `mz` which stand alone or multiply
+    `mx` contribute linearly.  Multiplied dynamic terms are neglected.
+    This results in a susceptibility that is linear in `my` and `mz`,
+    which is appropriate for calculating dynamic effects such as BLS
+    when the static magnetization is along the x-axis.
+
     """
     mx, my, mz = m
     zero_c = np.zeros_like(mx, dtype=complex)
