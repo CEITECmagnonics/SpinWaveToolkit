@@ -197,13 +197,14 @@ def get_signal_RT_pupil(
     conv_method : {"fft", "direct"}, optional
         The computational method used to perform the 2D convolution.
 
-        - "fft" (default): Uses `scipy.signal.fftconvolve` (Convolution
-          Theorem).  Scales as O(N log N). Highly recommended for
-          standard or large grids.
+        - "fft" (default): Uses :func:`scipy.signal.fftconvolve`
+          (Convolution Theorem).  Scales as O(N log N). Highly
+          recommended for standard or large grids.
 
-        - "direct": Uses `scipy.signal.convolve2d` (Sliding window sum).
-          Scales as O(N^2).  Exceptionally slow for large arrays, but
-          provided as an alternative for testing or very small grids.
+        - "direct": Uses :func:`scipy.signal.convolve2d` (Sliding window
+          sum).  Scales as O(N^2).  Exceptionally slow for large arrays,
+          but provided as an alternative for testing or very small
+          grids.
 
     Returns
     -------
@@ -704,8 +705,11 @@ def getBLSsignal(*args, **kwargs):
     Alias for :func:`~get_signal_GF_focal` to maintain backward
     compatibility with older code.
 
-    This function name is deprecated and will be removed in
-    SpinWaveToolkit v1.5.  Please use `get_signal_GF_focal` instead.
+    .. deprecated:: 1.3
+
+        This function name is deprecated and will be removed in
+        :mod:`SpinWaveToolkit` v1.5.
+        Please use :func:`get_signal_GF_focal` instead.
     """
     warn("`getBLSsignal` is deprecated and will be removed in SpinWaveToolkit v1.5."
          + " Please use `get_signal_GF_focal` instead.", DeprecationWarning, stacklevel=2)

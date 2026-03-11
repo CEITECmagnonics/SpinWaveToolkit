@@ -342,11 +342,11 @@ class ObjectiveLens:
         KY : np.ndarray
             (1/m ) 2D reciprocal-space grid (ky).
         polarization_type : str, optional
-            'linear' — linearly polarized (angle set by polarization_angle_deg)
-            'radial' — radial polarization
-            'azimuthal' — azimuthal polarization
-            'rcp' — right-hand circular polarization
-            'lcp' — left-hand circular polarization
+            | 'linear' - linearly polarized (angle set by polarization_angle_deg)
+            | 'radial' - radial polarization
+            | 'azimuthal' - azimuthal polarization
+            | 'rcp' - right-hand circular polarization
+            | 'lcp' - left-hand circular polarization
         polarization_angle_deg : float, optional
             Linear polarization angle in degrees (default 0, ignored otherwise).
 
