@@ -39,6 +39,7 @@ class ObjectiveLens:
     getFocalFieldRad
     getFocalFieldAzm
     getFocalField
+    getPupilField
 
     """
 
@@ -322,7 +323,7 @@ class ObjectiveLens:
         Ezi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ez.ravel(), XI, YI)
 
         return xi, yi, Exi, Eyi, Ezi
-    
+
     def getPupilField(self, z, KX, KY, polarization_type='linear', polarization_angle_deg=0):
         """
         Computes the complex electric field distribution in reciprocal space.
