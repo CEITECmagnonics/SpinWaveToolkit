@@ -29,7 +29,7 @@ General functions
 
 .. autofunction:: cart2sphr
 
-
+.. autofunction:: rotate_field
 
 
 
