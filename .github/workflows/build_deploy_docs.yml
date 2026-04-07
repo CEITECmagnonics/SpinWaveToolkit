@@ -33,7 +33,7 @@ jobs:
       - name: Determine docs version folder
         run: |
           # ### MANUALLY SET CURRENT DOCS_VERSION HERE
-          version="v1.1"
+          version="v1.2"
           echo "DOCS_VERSION=$version" >> $GITHUB_ENV
 
       - name: Build docs
@@ -56,13 +56,13 @@ jobs:
           rm -rf site/$DOCS_VERSION
           mkdir -p site/$DOCS_VERSION
           cp -r docs/build/html/* site/$DOCS_VERSION/
-          
+
           # Save curated versions.json
           cp docs/source/versions.json site/
-          
+
           # Copy redirect file (index0.html -> index.html)
           cp docs/source/index0.html site/index.html
-          
+
           # Update 'stable' alias
           rm -rf site/stable
           cp -r docs/build/html site/stable

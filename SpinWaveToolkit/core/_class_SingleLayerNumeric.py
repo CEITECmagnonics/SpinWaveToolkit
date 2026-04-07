@@ -4,7 +4,7 @@ Core (private) file for the `SingleLayerNumeric` class.
 
 import numpy as np
 from numpy import linalg
-from SpinWaveToolkit.helpers import MU0, roots
+from SpinWaveToolkit.helpers import MU0, roots, distBE
 
 __all__ = ["SingleLayerNumeric"]
 
@@ -80,13 +80,13 @@ class SingleLayerNumeric:
     mu0dH0 : float
         (T ) inhomogeneous broadening.
     w0 : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``w0 = MU0*gamma*Hext``
     wM : float
-        (rad*Hz) parameter in Slavin-Kalinikos equation.
+        (rad*Hz) parameter in Kalinikos-Slavin equation.
         ``wM = MU0*gamma*Ms``
     A : float
-        (m^2) parameter in Slavin-Kalinikos equation.
+        (m^2) parameter in Kalinikos-Slavin equation.
         ``A = Aex*2/(Ms**2*MU0)``
     wU : float
         (rad*Hz) circular frequency of OOP anisotropy field,
@@ -161,7 +161,7 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
-        if (theta + 1e-4) % np.pi / 2 > 1e-3:
+        if (theta + 1e-6) % (np.pi / 2) > 1e-3:
             print(
                 "WARNING: theta is not a multiple of pi/2. The results might be misleading!"
             )
@@ -173,7 +173,7 @@ class SingleLayerNumeric:
         self.dp = dp
         self.alpha = material.alpha
         self.mu0dH0 = material.mu0dH0
-        # Compute Slavin-Kalinikos parameters wM, w0, A
+        # Compute Kalinikos-Slavin parameters wM, w0, A
         self.wM = self.Ms * self.gamma * MU0
         self.w0 = self.gamma * Bext
         self.wU = self.gamma * 2 * self.KuOOP / self.Ms  # only for Tacchi
@@ -556,7 +556,8 @@ class SingleLayerNumeric:
         return C
 
     def GetDispersion(self):
-        """Gives frequencies for defined k (Dispersion relation).
+        """Gives frequencies for defined k (dispersion relation).
+
         Based on the model in:
         https://doi.org/10.1103/PhysRevB.100.104406
 
@@ -702,8 +703,9 @@ class SingleLayerNumeric:
         """
         return 1 / self.GetGroupVelocity(n=n)
 
-    def GetBlochFunction(self, n=0, Nf=200):
-        """Give Bloch function for given mode.
+    def GetBlochFunction(self, n=0, Nf=200, temp=None, mu=None):
+        """Gives Bloch function for given mode.
+
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
@@ -715,13 +717,20 @@ class SingleLayerNumeric:
             Default is 0.
         Nf : int, optional
             Number of frequency levels for the Bloch function.
+        temp : float or None, optional
+            (K ) temperature for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
+        mu : float or None, optional
+            (J ) chemical potential for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
 
         Returns
         -------
         w : ndarray
             (rad*Hz) frequency axis for the 2D Bloch function.
         blochFunc : ndarray
-            () 2D Bloch function for given kxi and w.
+            () 2D Bloch function for given `w` and `kxi` with shape
+            ``(Nf, kxi.shape[0])``.
         """
         w, _ = self.GetDispersion()
         lifeTime = self.GetLifetime(n=n)
@@ -734,6 +743,9 @@ class SingleLayerNumeric:
         )
         wMat = np.tile(w, (len(lifeTime), 1)).T
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        if temp is not None and mu is not None:
+            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
 
         return w, blochFunc
 

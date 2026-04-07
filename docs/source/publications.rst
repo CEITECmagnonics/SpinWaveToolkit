@@ -23,6 +23,7 @@ These works have directly cited the `SpinWaveToolkit` or used its `unstable pred
 
 .. create a list of citing publications
 
+#. Krčma *et al.* "Mie-enhanced microfocused Brillouin light scattering for full wave vector resolution of nanoscale spin waves" `Science Advances 11, eady8833 (2025) <https://doi.org/10.1126/sciadv.ady8833>`_
 #. Wojewoda *et al.* "Modeling of microfocused Brillouin light scattering spectra" `Physical Review B 110 224428 (2024) <https://doi.org/10.1103/PhysRevB.110.224428>`_
 #. Wojewoda *et al.* "Unidirectional propagation of zero-momentum magnons" `Applied Physics Letters 125, 132401 (2024) <https://doi.org/10.1063/5.0218478>`_
 #. Wojewoda, Ondřej. "Brillouin light scattering characterization of nanoscale spin waves" `PhD thesis, CEITEC BUT (2024) <https://www.vut.cz/en/students/final-thesis/detail/161360>`_

@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayerSCcoupled` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0
+from SpinWaveToolkit.helpers import MU0, distBE
 
 __all__ = ["SingleLayerSCcoupled"]
 
@@ -538,6 +538,9 @@ class SingleLayerSCcoupled:
         Decay length is computed as lambda = v_g*tau.
         The result is given in m.
 
+        .. warning::
+            Works only when ``kxi.shape[0] >= 2``.
+
         Parameters
         ----------
         model : {"original", "approx0", "approx1"}, optional
@@ -579,6 +582,9 @@ class SingleLayerSCcoupled:
         Output is density of states in 1D for given dispersion
         characteristics.
 
+        .. warning::
+            Works only when ``kxi.shape[0] >= 2``.
+
         Parameters
         ----------
         model : {"original", "approx0", "approx1"}, optional
@@ -612,8 +618,9 @@ class SingleLayerSCcoupled:
         """
         return 1 / self.GetGroupVelocity(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
 
-    def GetBlochFunction(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0, Nf=200):
-        """Give Bloch function for given mode.
+    def GetBlochFunction(self, model="original", tol=1e-5, d_sc=np.inf, d_is=0, Nf=200, temp=None, mu=None):
+        """Gives Bloch function for given mode.
+
         Bloch function is calculated with margin of 10% of
         the lowest and the highest frequency (including
         Gilbert broadening).
@@ -645,13 +652,20 @@ class SingleLayerSCcoupled:
             the approximate models.  Default is 0.
         Nf : int, optional
             Number of frequency levels for the Bloch function.
+        temp : float or None, optional
+            (K ) temperature for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
+        mu : float or None, optional
+            (J ) chemical potential for the Bose-Einstein distribution.
+            If `temp` or `mu` is None, no distribution is applied.
 
         Returns
         -------
         w : ndarray
             (rad*Hz) frequency axis for the 2D Bloch function.
         blochFunc : ndarray
-            () 2D Bloch function for given kxi and w.
+            () 2D Bloch function for given `w` and `kxi` with shape
+            ``(Nf, kxi.shape[0])``.
         """
         w00 = self.GetDispersion(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
         lifeTime = self.GetLifetime(model=model, tol=tol, d_sc=d_sc, d_is=d_is)
@@ -663,5 +677,8 @@ class SingleLayerSCcoupled:
         )
         wMat = np.tile(w, (len(lifeTime), 1)).T
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
+
+        if temp is not None and mu is not None:
+            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
 
         return w, blochFunc

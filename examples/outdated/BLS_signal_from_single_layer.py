@@ -35,7 +35,7 @@ Bloch2D = np.zeros((Nf_common, Nk, Nk), dtype=complex)
 
 # We will also store the common frequency axis.
 w_common = np.linspace(2*np.pi*3e9, 2*np.pi*18e9, Nf_common)
-print("Preparing Bloch functions in 3D (f,kx,ky) using Slavin-Kalinikos model...")
+print("Preparing Bloch functions in 3D (f,kx,ky) using Kalinikos-Slavin model...")
 # Loop over all grid points in the Kx,Ky plane.
 for i in range(Nk):
     for j in range(Nk):
@@ -66,7 +66,7 @@ for i in range(Nk):
 Bloch3 = [Bloch2D, np.zeros((Nf_common, Nk, Nk), dtype=complex), Bloch2D*1j]
 
 
-print("Computing BLS signal from Slavin-Kalinikos model...")
+print("Computing BLS signal from Kalinikos-Slavin model...")
 # Compute the BLS signal using the Bloch functions and the electric field.
 Ex, Ey = SWT.getBLSsignal(SweepBloch=w_common, KxKyBloch=[kx_grid, ky_grid], Bloch=np.array(Bloch3),
                           Exy=Exy, E=E, Nq=50, DF=[1, -8.1653 + 1j*15.348, 17.237 + 1j*0.43004],
@@ -76,7 +76,7 @@ Ex, Ey = SWT.getBLSsignal(SweepBloch=w_common, KxKyBloch=[kx_grid, ky_grid], Blo
 
 # Plot the BLS signal
 plt.figure()
-plt.plot(w_common/2/np.pi/1e9, np.abs(Ey*np.conj(Ey)), label='Slavin-Kalinikos model')
+plt.plot(w_common/2/np.pi/1e9, np.abs(Ey*np.conj(Ey)), label='Kalinikos-Slavin model')
 plt.xlabel('f (GHz)')
 plt.ylabel('Intensity (a.u.)')
 plt.title('BLS signal')

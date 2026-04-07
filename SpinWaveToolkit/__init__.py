@@ -27,8 +27,9 @@ Classes
     Compute spin-wave characteristics in dependance to k-vector for
     a single ferromagnetic layer dipolarly coupled to a superconductor
     using a semi-analytical model of Zhou et al.
-:class:`~ProgressBar`
-    Simple progress bar printed in terminal.
+:class:`~BulkPolariton`
+    Compute wave characteristic in dependance to k-vector for the
+    magnon-polariton in a bulk ferromagnet/thin film.
 
 Constants
 ---------
@@ -38,6 +39,8 @@ C : float
     (m/s) speed of free-space light.
 KB : float
     (J/K) Boltzmann constant.
+H : float
+    (J s) Planck constant.
 HBAR : float
     (J s) reduced Planck constant.
 NiFe : Material
@@ -105,7 +108,7 @@ from .core._class_MacrospinEquilibrium import *
 from . import bls
 
 
-__version__ = "1.1.1dev"
+__version__ = "1.2.1"
 __all__ = [
     "helpers",
     *core._class_Material.__all__,
