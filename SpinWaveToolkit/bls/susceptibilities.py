@@ -51,8 +51,8 @@ def mo_linear(m, Q=1.0):
     -------
     chi : ndarray
         () magneto-optic Kerr susceptibility tensor with shape
-        ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
-        ``Nf, Nkx, Nky``.
+        ``(3, 3, ...)``, where ``...`` is the shape of arrays in `m`,
+        usually ``Nf, Nkx, Nky``.
     """
     zeros = np.zeros_like(m[0], dtype=complex)
     return Q * 1j * np.array([[zeros, m[2], -m[1]], [-m[2], zeros, m[0]], [m[1], -m[0], zeros]])
@@ -101,8 +101,8 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
     -------
     chi : ndarray
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
-        ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
-        ``Nf, Nkx, Nky``.
+        ``(3, 3, ...)``, where ``...`` is the shape of arrays in `m`,
+        usually ``Nf, Nkx, Nky``.
 
 
     See also
@@ -234,8 +234,8 @@ def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
     -------
     chi : ndarray
         () magneto-optic Cotton-Mouton susceptibility tensor with shape
-        ``(3, 3, ...)``, where ``...`` is the shape of `m`, usually
-        ``Nf, Nkx, Nky``.
+        ``(3, 3, ...)``, where ``...`` is the shape of arrays in `m`,
+        usually ``Nf, Nkx, Nky``.
 
 
     See also

@@ -15,9 +15,8 @@ class ObjectiveLens:
     Represents an objective lens with specific optical parameters.
 
     Module for calculating the electric field focused by an objective
-    lens.  Calculations follows the method presented in book of Novotny
+    lens.  Calculations follow the method presented in book of Novotny
     and Hecht.
-
 
     Parameters
     ----------
@@ -68,6 +67,9 @@ class ObjectiveLens:
     def getFocalField(self, z, rho_max, N):
         """
         Compute the focal field using a general formulation.
+
+        The field incident onto the objective is assumed to be linearly
+        polarized along the x axis.
 
         Parameters
         ----------
@@ -169,6 +171,9 @@ class ObjectiveLens:
         """
         Compute the focal field using a radial formulation.
 
+        The field incident onto the objective is assumed to be radially
+        polarized.
+
         Parameters
         ----------
         z : float
@@ -255,6 +260,9 @@ class ObjectiveLens:
         Compute the focal field using an azimuthal formulation
         (``E_z = 0``).
 
+        The field incident onto the objective is assumed to be
+        azimuthally polarized.
+
         Parameters
         ----------
         z : float
@@ -326,33 +334,37 @@ class ObjectiveLens:
 
     def getPupilField(self, z, KX, KY, polarization_type='linear', polarization_angle_deg=0):
         """
-        Computes the complex electric field distribution in reciprocal space.
+        Computes the complex electric field distribution in reciprocal
+        space.
 
         This represents the field near the focus of a high-NA objective
-        lens—including amplitude apodization, polarization transformation,
-        and defocus phase, projected onto the kx-ky plane. This is the
-        integrand for the vectorial Debye diffraction integral.
+        lens—including amplitude apodization, polarization
+        transformation, and defocus phase, projected onto the kx-ky
+        plane.  This is the integrand for the vectorial Debye
+        diffraction integral.
 
         Parameters
         ----------
         z : float
             (m ) defocus distance along optical axis.
-        KX : np.ndarray
-            (1/m ) 2D reciprocal-space grid (kx).
-        KY : np.ndarray
-            (1/m ) 2D reciprocal-space grid (ky).
+        KX : ndarray
+            (rad/m) 2D reciprocal-space grid (kx).
+        KY : ndarray
+            (rad/m) 2D reciprocal-space grid (ky).
         polarization_type : str, optional
-            | 'linear' - linearly polarized (angle set by polarization_angle_deg)
-            | 'radial' - radial polarization
-            | 'azimuthal' - azimuthal polarization
-            | 'rcp' - right-hand circular polarization
-            | 'lcp' - left-hand circular polarization
+            | "linear" - linearly polarized (angle set by
+            |            `polarization_angle_deg`)
+            | "radial" - radial polarization
+            | "azimuthal" - azimuthal polarization
+            | "rcp" - right-hand circular polarization
+            | "lcp" - left-hand circular polarization
         polarization_angle_deg : float, optional
-            Linear polarization angle in degrees (default 0, ignored otherwise).
+            (deg) linear polarization angle.  Default is 0.
+            Ignored when `polarization_type` is other than "linear".
 
         Returns
         -------
-        Ex_k, Ey_k, Ez_k : np.ndarray
+        Ex_k, Ey_k, Ez_k : ndarray
             Complex electric field components in k-space (2D arrays).
         """
 
@@ -396,7 +408,7 @@ class ObjectiveLens:
         propagator = np.exp(1j * k0 * z * cos_theta)
 
         # --- POLARIZATION BASIS TRANSFORMATION ---
-        if polarization_type == 'linear':
+        if polarization_type == "linear":
             # Linear polarization at arbitrary angle in the pupil plane
             angle_rad = np.deg2rad(polarization_angle_deg)
 
@@ -410,19 +422,19 @@ class ObjectiveLens:
                + (cos_theta * sin_phi**2 + cos_phi**2) * e_in[1]
             ez = -sin_theta * (cos_phi * e_in[0] + sin_phi * e_in[1])
 
-        elif polarization_type == 'radial':
+        elif polarization_type == "radial":
             ex = sin_theta * cos_phi
             ey = sin_theta * sin_phi
             ez = cos_theta
 
-        elif polarization_type == 'azimuthal':
+        elif polarization_type == "azimuthal":
             ex = -sin_phi
             ey = cos_phi
             ez = np.zeros_like(ex)
 
-        elif polarization_type in ['rcp', 'lcp']:
+        elif polarization_type in ["rcp", "lcp"]:
             # Right/left circular polarization (RCP = +, LCP = -)
-            sign = +1 if polarization_type == 'rcp' else -1
+            sign = +1 if polarization_type == "rcp" else -1
 
             # Local transverse basis
             e_theta = np.array([cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta])

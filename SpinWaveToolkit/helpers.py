@@ -466,7 +466,7 @@ def rotate_field(Ei_fields, x, y, angle_deg):
 
     Returns
     -------
-    Ei_rot : list of ndarray
+    Ei_rot : list[ndarray]
         (V/m) List of the three rotated spatial components
         `[Ex_rot, Ey_rot, Ez_rot]`, each with shape ``(Nx, Ny)``.
     """
