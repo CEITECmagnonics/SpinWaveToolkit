@@ -1,8 +1,14 @@
 [
     {
-        "name": "v1.2 (stable)",
-        "version": "1.2",
+        "name": "v1.3 (stable)",
+        "version": "1.3",
         "url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/",
+        "preferred": true
+    },
+    {
+        "name": "v1.2",
+        "version": "1.2",
+        "url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/v1.2/",
         "preferred": true
     },
     {

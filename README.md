@@ -78,27 +78,27 @@ For more examples (with images) look [here](https://ceitecmagnonics.github.io/Sp
 If you use SpinWaveToolkit in your work, please cite it as follows:
 
 [1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" (2026) [arXiv:2601.23227 [cond-mat.mes-hall]](https://doi.org/10.48550/arXiv.2601.23227)
-[2] Wojewoda, O., & Klíma, J. "SpinWaveToolkit: Set of tools useful in spin wave research." GitHub, 2026. [https://github.com/CEITECmagnonics/SpinWaveToolkit]()
+[2] Klíma, J., Krčma, J., & Wojewoda, O.  "SpinWaveToolkit: Set of tools useful in spin wave research." GitHub, 2026. [https://github.com/CEITECmagnonics/SpinWaveToolkit]()
 
 
 BibTeX entry:
 ``` BibTeX
 @misc{klima2026,
-    title={{SpinWaveToolkit}: {Python} package for (semi-)analytical calculations in the field of spin-wave physics}, 
+    title={{SpinWaveToolkit}: {Python} package for (semi-)analytical calculations in the field of spin-wave physics},
     author={Klíma, Jan and Wojewoda, Ondřej and Krčma, Jakub and Hrtoň, Martin and Pavelka, Dominik and Holobrádek, Jakub and Urbánek, Michal},
     year={2026},
     eprint={2601.23227},
     archivePrefix={arXiv},
     primaryClass={cond-mat.mes-hall},
-    url={https://arxiv.org/abs/2601.23227}, 
+    url={https://arxiv.org/abs/2601.23227},
 }
 
 @online{swt,
-    author = {Wojewoda, Ondřej and Klíma, Jan},
+    author = {Klíma, Jan and Krčma, Jakub and Wojewoda, Ondřej},
     title = {SpinWaveToolkit: Set of tools useful in spin wave research},
     year = {2026},
     publisher = {GitHub},
-    version = {1.2.1},
+    version = {1.3.0},
     url = {https://github.com/CEITECmagnonics/SpinWaveToolkit},
     language = {en},
 }

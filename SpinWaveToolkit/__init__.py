@@ -108,7 +108,7 @@ from .core._class_MacrospinEquilibrium import *
 from . import bls
 
 
-__version__ = "1.2.1"
+__version__ = "1.3.0.alpha"
 __all__ = [
     "helpers",
     *core._class_Material.__all__,
