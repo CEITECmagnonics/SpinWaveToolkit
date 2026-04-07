@@ -141,7 +141,7 @@ dev_doc = [  # for development and documentation build
     "pylint",
     "pytest",
     "matplotlib",
-    "sphinx",
+    "sphinx<=8.2.3",  # for documentation build (latest version with correct handling of many things, e.g. # to avoid sphinx crash with autodoc and sphinx-toolbox - see https://github.com/sphinx-toolbox/sphinx-toolbox/issues/201) ### version may be removed once the issue is resolved - must be tested
     "pydata-sphinx-theme==0.16.0", # ### remove after sourcelink bug fixed on pydata-sphinx-theme 1.16.1 (see https://github.com/pydata/pydata-sphinx-theme/issues/2088)
     "numpydoc",
     "nbsphinx<=0.9.6",  # for ipynb files in sphinx documentation  # ### check their docs if sphinx<8.2 still applies for 0.9.7
@@ -153,7 +153,7 @@ dev_doc = [  # for development and documentation build
     "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
 deploy = [  # for automated build and deployment of documentation to GH Pages
-    "sphinx",
+    "sphinx<=8.2.3",  # for documentation build (latest version with correct handling of many things, e.g. # to avoid sphinx crash with autodoc and sphinx-toolbox - see https://github.com/sphinx-toolbox/sphinx-toolbox/issues/201) ### version may be removed once the issue is resolved - must be tested
     "pydata-sphinx-theme==0.16.0", # ### remove after sourcelink bug fixed on pydata-sphinx-theme 1.16.1 (see https://github.com/pydata/pydata-sphinx-theme/issues/2088)
     "numpydoc",
     "nbsphinx<=0.9.6",  # for ipynb files in sphinx documentation  # ### check their docs if sphinx<8.2 still applies for 0.9.7

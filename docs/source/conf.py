@@ -88,7 +88,6 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 # -- Extension configuration -------------------------------------------------
 
 autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
-autodoc_use_legacy_class_based = True  # to avoid sphinx crash with sphinx>=9 (see https://github.com/sphinx-toolbox/sphinx-toolbox/issues/201) ### may be removed once the issue is resolved - must be tested
 numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
 numpydoc_xref_ignore = {"type", "optional", "default", "or", "of"}
 numpydoc_xref_aliases = {  # Mappings to fully qualified paths (or correct ReST references) for the aliases/shortcuts used when specifying the types of parameters.
