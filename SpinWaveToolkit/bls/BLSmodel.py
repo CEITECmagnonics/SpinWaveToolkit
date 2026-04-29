@@ -78,6 +78,12 @@ def get_signal_RT_focal_3d(
         () transfer function of the system. Array with shape
         ``(3, 3, Nkx, Nky, Nz)``.  Uses the same coordinates as the
         susceptibility tensor (`KxKyChi`).
+
+    See also
+    --------
+    get_signal_RT_focal : A similar function without z-resolution.
+    get_signal_RT_pupil, get_signal_GF_focal
+
     """
     warn("`get_signal_RT_focal_3d` is an experimental function and may be subject to change."
          + " Please verify results carefully.", UserWarning, stacklevel=2)
@@ -214,6 +220,11 @@ def get_signal_RT_pupil(
         () transfer function of the system. Array with shape
         ``(3, 3, Nkx, Nky)``.  Uses the same coordinates as the
         electric fields and susceptibility tensor (`KxKy`).
+
+    See also
+    --------
+    get_signal_RT_focal, get_signal_GF_focal
+
     """
     if conv_method not in ['fft', 'direct']:
         raise ValueError("Invalid conv_method. Expected 'fft' or 'direct'.")
@@ -330,6 +341,11 @@ def get_signal_RT_focal(
         () transfer function of the system.  Array with shape
         ``(3, 3, Nkx, Nky)``.  Uses the same coordinates as the
         susceptibility tensor (`KxKyChi`).
+
+    See also
+    --------
+    get_signal_RT_pupil, get_signal_GF_focal
+
     """
     # --- Axis and Grid ---
     x, y = Exy
@@ -478,6 +494,11 @@ def get_signal_GF_focal(
     Qx, Qy : ndarray
         (rad/m) k-space grids for polarizations `Px`, `Py`, `Pz`.
         Each array has shape ``(2*Nq-1, 2*Nq-1)``.
+
+    See also
+    --------
+    get_signal_RT_focal, get_signal_RT_pupil
+
     """
     warn("`get_signal_GF_focal` is an experimental function and may be subject to change."
          + " Please verify results carefully.", UserWarning, stacklevel=2)
@@ -801,6 +822,11 @@ def getBLSsignal(
     Qx, Qy : ndarray
         (rad/m) k-space grids for polarizations `Px`, `Py`, `Pz`.
         Each array has shape ``(2*Nq-1, 2*Nq-1)``.
+
+    See also
+    --------
+    get_signal_GF_focal : Replacement for this deprecated function.
+    get_signal_RT_focal, get_signal_RT_pupil
     """
     warn("`getBLSsignal` is deprecated and will be removed in SpinWaveToolkit v1.5."
          + " Please use `get_signal_GF_focal` instead.", DeprecationWarning, stacklevel=2)

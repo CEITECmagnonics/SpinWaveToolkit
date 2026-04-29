@@ -279,6 +279,11 @@ def sphr2cart(theta, phi, r=1.0):
     -------
     xyz : ndarray
         (length unit) vector of shape ``(3, ...)`` as for (x, y, z).
+
+    See also
+    --------
+    cart2sphr : Convert cartesian coordinates to spherical.
+
     """
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
@@ -305,6 +310,11 @@ def cart2sphr(x, y, z):
         (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
     r : float or ndarray
         (length unit) radial distance.
+
+    See also
+    --------
+    sphr2cart : Convert spherical coordinates to cartesian.
+
     """
     x = np.array(x, dtype=np.float64)
     y = np.array(y, dtype=np.float64)
@@ -353,6 +363,11 @@ def rotate_field(Ei_fields, x, y, angle_deg):
     Ei_rot : list[ndarray]
         (V/m) List of the three rotated spatial components
         `[Ex_rot, Ey_rot, Ez_rot]`, each with shape ``(Nx, Ny)``.
+
+    See also
+    --------
+    bls.ObjectiveLens : Class for calculations of objective electric
+        fields.
     """
     Ex, Ey, Ez = Ei_fields
 

@@ -39,7 +39,7 @@ def mo_linear(m, Q=1.0):
         Each sub-array should have shape ``(Nf, Nkx, Nky)`` to be casted
         correctly to the BLS signal functions.
     Q : float or complex, optional
-        () Voight (or Faraday) magneto-optic constant.  Default is 1.0.
+        () Voigt (or Faraday) magneto-optic constant.  Default is 1.0.
 
 
     See also
@@ -60,7 +60,7 @@ def mo_linear(m, Q=1.0):
 
 def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
     """
-    The magneto-optic Cotton-Mouton (or Voight) susceptibility tensor
+    The magneto-optic Cotton-Mouton (or Voigt) susceptibility tensor
     (quadratic in magnetization) for a given magnetization vector.
 
     The dynamic magnetization vector `m` is typically constructed from
@@ -188,7 +188,7 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
 
 def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
     """
-    The magneto-optic Cotton-Mouton (or Voight) susceptibility tensor
+    The magneto-optic Cotton-Mouton (or Voigt) susceptibility tensor
     (quadratic in magnetization) for a given magnetization vector,
     specifically for a YIG(111) film, using the constants g11, g12, g44.
 

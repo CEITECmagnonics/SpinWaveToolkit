@@ -40,6 +40,14 @@ class ObjectiveLens:
     getFocalField
     getPupilField
 
+    See also
+    --------
+    get_signal_GF_focal, get_signal_RT_focal, get_signal_RT_pupil :
+        Functions that use the electric fields for BLS signal
+        calculations.
+    SpinWaveToolkit.rotate_field :
+        Function for rotating the vectorial electric field in xy plane.
+
     """
 
     def __init__(self, wavelength, NA, f0, f):
