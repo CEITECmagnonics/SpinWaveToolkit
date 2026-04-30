@@ -378,10 +378,10 @@ def rotate_field(Ei_fields, x, y, angle_deg):
     # 1. Rotate the polarization vectors (Active CCW rotation)
     Ejx = cos_t * Ex - sin_t * Ey
     Ejy = sin_t * Ex + cos_t * Ey
-    Ejz = Ez.copy() # Z-polarization is invariant under 2D in-plane rotation
+    Ejz = Ez.copy()  # Z-polarization is invariant under 2D in-plane rotation
 
     # 2. Create the target meshgrid for the physical coordinates
-    X, Y = np.meshgrid(x, y, indexing='ij')
+    X, Y = np.meshgrid(x, y, indexing="ij")
 
     # Calculate the corresponding coordinates in the original unrotated frame.
     # (This uses the inverse/passive rotation matrix)
@@ -398,8 +398,8 @@ def rotate_field(Ei_fields, x, y, angle_deg):
 
     # 4. Interpolate the rotated polarization components onto the original grid
     # (map_coordinates natively supports complex arrays in modern SciPy)
-    Ex_rot = map_coordinates(Ejx, coords, order=1, mode='constant', cval=0.0)
-    Ey_rot = map_coordinates(Ejy, coords, order=1, mode='constant', cval=0.0)
-    Ez_rot = map_coordinates(Ejz, coords, order=1, mode='constant', cval=0.0)
+    Ex_rot = map_coordinates(Ejx, coords, order=1, mode="constant", cval=0.0)
+    Ey_rot = map_coordinates(Ejy, coords, order=1, mode="constant", cval=0.0)
+    Ez_rot = map_coordinates(Ejz, coords, order=1, mode="constant", cval=0.0)
 
     return [Ex_rot, Ey_rot, Ez_rot]

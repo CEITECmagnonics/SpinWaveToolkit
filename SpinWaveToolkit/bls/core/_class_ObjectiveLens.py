@@ -340,7 +340,9 @@ class ObjectiveLens:
 
         return xi, yi, Exi, Eyi, Ezi
 
-    def getPupilField(self, z, KX, KY, polarization_type='linear', polarization_angle_deg=0):
+    def getPupilField(
+        self, z, KX, KY, polarization_type="linear", polarization_angle_deg=0
+    ):
         """
         Computes the complex electric field distribution in reciprocal
         space.
@@ -379,7 +381,7 @@ class ObjectiveLens:
         # --- CONSTANTS & PRELIMINARIES ---
         n = 1  # Refractive index (air or vacuum)
         k0 = 2 * np.pi * n / self.wavelength  # Wave number
-        theta_max = np.arcsin(self.NA / n)   # Max focusing angle from NA
+        theta_max = np.arcsin(self.NA / n)  # Max focusing angle from NA
 
         # Radial k-vector and pupil mask (defines the aperture)
         K_rho = np.sqrt(KX**2 + KY**2)
@@ -409,7 +411,7 @@ class ObjectiveLens:
         # --- APODIZATION (ILLUMINATION PROFILE) ---
         # Gaussian amplitude weighting (filling factor f0) and
         # cosine factor accounting for obliquity (from Debye theory)
-        fw = np.exp(- (sin_theta / np.sin(theta_max))**2 / self.f0**2)
+        fw = np.exp(-((sin_theta / np.sin(theta_max)) ** 2) / self.f0**2)
         amplitude_factor = fw / np.sqrt(cos_theta)
 
         # Defocus propagator (phase term for defocus z)
@@ -424,10 +426,12 @@ class ObjectiveLens:
             e_in = np.array([np.cos(angle_rad), np.sin(angle_rad), 0])
 
             # Transformation according to Richards & Wolf (1959)
-            ex = (cos_theta * cos_phi**2 + sin_phi**2) * e_in[0] \
-               + (cos_theta - 1) * cos_phi * sin_phi * e_in[1]
-            ey = (cos_theta - 1) * cos_phi * sin_phi * e_in[0] \
-               + (cos_theta * sin_phi**2 + cos_phi**2) * e_in[1]
+            ex = (cos_theta * cos_phi**2 + sin_phi**2) * e_in[0] + (
+                cos_theta - 1
+            ) * cos_phi * sin_phi * e_in[1]
+            ey = (cos_theta - 1) * cos_phi * sin_phi * e_in[0] + (
+                cos_theta * sin_phi**2 + cos_phi**2
+            ) * e_in[1]
             ez = -sin_theta * (cos_phi * e_in[0] + sin_phi * e_in[1])
 
         elif polarization_type == "radial":
@@ -454,8 +458,10 @@ class ObjectiveLens:
             ez = (e_theta[2] + sign * 1j * e_phi[2]) / np.sqrt(2)
 
         else:
-            raise ValueError(f"Polarization type '{polarization_type}' not recognized. "
-                             "Use 'linear', 'radial', 'azimuthal', 'rcp', or 'lcp'.")
+            raise ValueError(
+                f"Polarization type '{polarization_type}' not recognized. "
+                "Use 'linear', 'radial', 'azimuthal', 'rcp', or 'lcp'."
+            )
 
         # --- ASSEMBLE FINAL FIELD IN K-SPACE ---
         E0 = 1.0  # Input amplitude normalization

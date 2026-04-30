@@ -73,7 +73,11 @@ def mo_linear(m, Q=1.0):
         usually ``Nf, Nkx, Nky``.
     """
     zeros = np.zeros_like(m[0], dtype=complex)
-    return Q * 1j * np.array([[zeros, m[2], -m[1]], [-m[2], zeros, m[0]], [m[1], -m[0], zeros]])
+    return (
+        Q
+        * 1j
+        * np.array([[zeros, m[2], -m[1]], [-m[2], zeros, m[0]], [m[1], -m[0], zeros]])
+    )
 
 
 def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
@@ -168,16 +172,19 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
         m1, m2, m3 = mx**2, my**2, mz**2
         m4, m5, m6 = 2 * my * mz, 2 * mx * mz, 2 * mx * my
     elif linearize_along == "x":
-        m1, m2, m3 = 1*0, 0, 0  # ### to get dynamic comps, 1 must be actually 0, right?
+        # ### to get dynamic comps, 1 must be actually 0, right?
+        m1, m2, m3 = 1 * 0, 0, 0
         m4, m5, m6 = 0, 2 * mz, 2 * my
     elif linearize_along == "y":
-        m1, m2, m3 = 0, 1*0, 0
+        m1, m2, m3 = 0, 1 * 0, 0
         m4, m5, m6 = 2 * mz, 0, 2 * mx
     elif linearize_along == "z":
-        m1, m2, m3 = 0, 0, 1*0
+        m1, m2, m3 = 0, 0, 1 * 0
         m4, m5, m6 = 2 * my, 2 * mx, 0
     else:
-        raise ValueError("Invalid value for linearize_along. Must be 'x', 'y', 'z', or None.")
+        raise ValueError(
+            "Invalid value for linearize_along. Must be 'x', 'y', 'z', or None."
+        )
 
     # Normalize Bii/Bij to length-3 arrays when provided as lists/arrays.
     if np.isscalar(Bii):
@@ -285,31 +292,34 @@ def mo_quadratic_yig111(m, g11, g12, g44, linearize_along=None):
         m1, m2, m3 = mx**2, my**2, mz**2
         m4, m5, m6 = 2 * my * mz, 2 * mx * mz, 2 * mx * my
     elif linearize_along == "x":
-        m1, m2, m3 = 1*0, 0, 0  # ### to get dynamic comps, 1 must be actually 0, right?
+        # ### to get dynamic comps, 1 must be actually 0, right?
+        m1, m2, m3 = 1 * 0, 0, 0
         m4, m5, m6 = 0, 2 * mz, 2 * my
     elif linearize_along == "y":
-        m1, m2, m3 = 0, 1*0, 0
+        m1, m2, m3 = 0, 1 * 0, 0
         m4, m5, m6 = 2 * mz, 0, 2 * mx
     elif linearize_along == "z":
-        m1, m2, m3 = 0, 0, 1*0
+        m1, m2, m3 = 0, 0, 1 * 0
         m4, m5, m6 = 2 * my, 2 * mx, 0
     else:
-        raise ValueError("Invalid value for linearize_along. Must be 'x', 'y', 'z', or None.")
+        raise ValueError(
+            "Invalid value for linearize_along. Must be 'x', 'y', 'z', or None."
+        )
     # matrix in eq. (20) has 8 unique elements, after transformation given as:
-    h1 = g11 - dg/2
-    h2 = g11 - dg/3
-    h3 = g11 - 2*dg/3
-    h4 = g12 + dg/3
-    h5 = g12 + dg/6
-    h6 = g44 + dg/3
-    h7 = g44 + dg/6
-    h8 = dg/(3*np.sqrt(2))
+    h1 = g11 - dg / 2
+    h2 = g11 - dg / 3
+    h3 = g11 - 2 * dg / 3
+    h4 = g12 + dg / 3
+    h5 = g12 + dg / 6
+    h6 = g44 + dg / 3
+    h7 = g44 + dg / 6
+    h8 = dg / (3 * np.sqrt(2))
     # all c's must be of shape as mx, my, mz, therefore the `zero_c` is used
-    c1 = zero_c + h1*m1 + h5*m2 + h4*m3 - h8*m5
-    c2 = zero_c + h5*m1 + h2*m2 + h4*m3 + h8*m5
-    c3 = zero_c + h4*m1 + h4*m2 + h3*m3
-    c4 = zero_c + h6*m4 + h8*m6
-    c5 = zero_c - h8*m1 + h8*m2 + h6*m5
-    c6 = zero_c + h8*m4 + h7*m6
+    c1 = zero_c + h1 * m1 + h5 * m2 + h4 * m3 - h8 * m5
+    c2 = zero_c + h5 * m1 + h2 * m2 + h4 * m3 + h8 * m5
+    c3 = zero_c + h4 * m1 + h4 * m2 + h3 * m3
+    c4 = zero_c + h6 * m4 + h8 * m6
+    c5 = zero_c - h8 * m1 + h8 * m2 + h6 * m5
+    c6 = zero_c + h8 * m4 + h7 * m6
 
     return np.array([[c1, c6, c5], [c6, c2, c4], [c5, c4, c3]], dtype=complex)

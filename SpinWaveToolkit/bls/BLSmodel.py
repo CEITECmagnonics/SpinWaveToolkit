@@ -15,18 +15,11 @@ __all__ = [
     "get_signal_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_GF_focal",
-    "getBLSsignal"
+    "getBLSsignal",
 ]
 
 
-def get_signal_RT_focal_3d(
-    Exy,
-    Ei_fields,
-    Ej_fields,
-    KxKyChi,
-    Chi,
-    coherent_exc=False
-):
+def get_signal_RT_focal_3d(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc=False):
     """
     Compute Brillouin light scattering (BLS) spectrum using the
     reciprocity theorem, evaluating signal contribution from multiple
@@ -85,8 +78,12 @@ def get_signal_RT_focal_3d(
     get_signal_RT_pupil, get_signal_GF_focal
 
     """
-    warn("`get_signal_RT_focal_3d` is an experimental function and may be subject to change."
-         + " Please verify results carefully.", UserWarning, stacklevel=2)
+    warn(
+        "`get_signal_RT_focal_3d` is an experimental function and may be subject to change."
+        + " Please verify results carefully.",
+        UserWarning,
+        stacklevel=2,
+    )
 
     # --- Axis and Grid Weights ---
     x, y = Exy
@@ -104,7 +101,7 @@ def get_signal_RT_focal_3d(
 
     Ei = np.stack([ensure_3d(f) for f in Ei_fields], axis=-1)
     Ej = np.stack([ensure_3d(f) for f in Ej_fields], axis=-1)
-    Nx, Ny, Nz, _ = Ei.shape
+    _, _, Nz, _ = Ei.shape
 
     # Ensure Chi has the depth dimension (Nz, 3, 3, Nf, Nkx, Nky)
     if Chi.ndim == 5:
@@ -138,29 +135,24 @@ def get_signal_RT_focal_3d(
             # (Nkx, Nx) @ (Nx, Nz, Nky) -> (Nkx, Nz, Nky)
             M = np.tensordot(ExFac, B, axes=([1], [0]))
 
-            qmEiEj[u, v] = np.transpose(M, (0, 2, 1)) # To (Nkx, Nky, Nz)
+            qmEiEj[u, v] = np.transpose(M, (0, 2, 1))  # To (Nkx, Nky, Nz)
 
     # --- BLS Spectrum Assembly via Einstein Summation ---
     if coherent_exc:
         # Sum amplitudes over tensor (uv), k-space (xy), and depth (z), then square
         # Weight by dK inside the square for coherent integration
-        tmp = np.einsum('uvxyz,zuvfxy->f', qmEiEj, Chi)
-        sigma = np.abs(tmp * dK)**2
+        tmp = np.einsum("uvxyz,zuvfxy->f", qmEiEj, Chi)
+        sigma = np.abs(tmp * dK) ** 2
     else:
         # Sum amplitudes over tensor (uv) and depth (z), square, then integrate intensities over k-space (xy)
-        tmp = np.einsum('uvxyz,zuvfxy->fxy', qmEiEj, Chi)
-        sigma = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
+        tmp = np.einsum("uvxyz,zuvfxy->fxy", qmEiEj, Chi)
+        sigma = np.sum(np.abs(tmp) ** 2, axis=(1, 2)) * dK
 
     return sigma, qmEiEj
 
 
 def get_signal_RT_pupil(
-    KxKy,
-    Ei_fields,
-    Ej_fields,
-    Chi,
-    coherent_exc=False,
-    conv_method='fft'
+    KxKy, Ei_fields, Ej_fields, Chi, coherent_exc=False, conv_method="fft"
 ):
     """
     Compute Brillouin light scattering (BLS) spectrum using the
@@ -226,7 +218,7 @@ def get_signal_RT_pupil(
     get_signal_RT_focal, get_signal_GF_focal
 
     """
-    if conv_method not in ['fft', 'direct']:
+    if conv_method not in ["fft", "direct"]:
         raise ValueError("Invalid conv_method. Expected 'fft' or 'direct'.")
 
     # --- K-space coordinates ---
@@ -236,13 +228,17 @@ def get_signal_RT_pupil(
     # --- Validation: Ensure grid is equidistant ---
     # (Required by FFT, and physically required by direct discrete convolution)
     if Nkx > 1 and not np.allclose(np.diff(kx), kx[1] - kx[0]):
-        raise ValueError("The kx grid must be strictly equidistant for valid discrete convolution.")
+        raise ValueError(
+            "The kx grid must be strictly equidistant for valid discrete convolution."
+        )
     if Nky > 1 and not np.allclose(np.diff(ky), ky[1] - ky[0]):
-        raise ValueError("The ky grid must be strictly equidistant for valid discrete convolution.")
+        raise ValueError(
+            "The ky grid must be strictly equidistant for valid discrete convolution."
+        )
 
     # --- Stack fields ---
-    Ei_k = np.stack(Ei_fields, axis=-1) # Shape (Nkx, Nky, 3)
-    Ej_k = np.stack(Ej_fields, axis=-1) # Shape (Nkx, Nky, 3)
+    Ei_k = np.stack(Ei_fields, axis=-1)  # Shape (Nkx, Nky, 3)
+    Ej_k = np.stack(Ej_fields, axis=-1)  # Shape (Nkx, Nky, 3)
 
     # --- K-space grid spacings ---
     dkx = kx[1] - kx[0] if Nkx > 1 else 1.0
@@ -250,7 +246,7 @@ def get_signal_RT_pupil(
     dK = dkx * dky
 
     # Normalization factor for continuous convolution approximation
-    normalization = dK / (2 * np.pi)**2
+    normalization = dK / (2 * np.pi) ** 2
 
     # --- Calculate Transfer Function qmEiEj ---
     qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
@@ -262,43 +258,28 @@ def get_signal_RT_pupil(
                 continue
 
             # Select and perform the convolution method
-            if conv_method == 'fft':
-                conv = fftconvolve(
-                    Ej_k[..., u],
-                    Ei_k[..., v],
-                    mode='same'
-                )
-            else: # conv_method == 'direct'
-                conv = convolve2d(
-                    Ej_k[..., u],
-                    Ei_k[..., v],
-                    mode='same'
-                )
+            if conv_method == "fft":
+                conv = fftconvolve(Ej_k[..., u], Ei_k[..., v], mode="same")
+            else:  # conv_method == 'direct'
+                conv = convolve2d(Ej_k[..., u], Ei_k[..., v], mode="same")
 
             qmEiEj[u, v] = normalization * conv
 
     # --- Assemble BLS spectrum ---
     if coherent_exc:
         # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
-        tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
-        sigma = np.abs(tmp * dK)**2
+        tmp = np.einsum("uvxy,uvfxy->f", qmEiEj, Chi)
+        sigma = np.abs(tmp * dK) ** 2
 
     else:
         # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
-        tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
-        sigma = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
+        tmp = np.einsum("uvxy,uvfxy->fxy", qmEiEj, Chi)
+        sigma = np.sum(np.abs(tmp) ** 2, axis=(1, 2)) * dK
 
     return sigma, qmEiEj
 
 
-def get_signal_RT_focal(
-    Exy,
-    Ei_fields,
-    Ej_fields,
-    KxKyChi,
-    Chi,
-    coherent_exc=False
-):
+def get_signal_RT_focal(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc=False):
     """
     Compute Brillouin light scattering (BLS) spectrum using the
     reciprocity theorem.
@@ -391,16 +372,16 @@ def get_signal_RT_focal(
         # 'uvxy' are qmEiEj dims (3, 3, Nkx, Nky)
         # 'uvfxy' are Chi dims (3, 3, Nf, Nkx, Nky)
         # einsum sums over u,v,x,y, leaving just 'f'
-        tmp = np.einsum('uvxy,uvfxy->f', qmEiEj, Chi)
-        sigma = np.abs(tmp * dK)**2
+        tmp = np.einsum("uvxy,uvfxy->f", qmEiEj, Chi)
+        sigma = np.abs(tmp * dK) ** 2
 
     else:
         # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
         # einsum sums over u,v, leaving 'f,x,y'
-        tmp = np.einsum('uvxy,uvfxy->fxy', qmEiEj, Chi)
+        tmp = np.einsum("uvxy,uvfxy->fxy", qmEiEj, Chi)
 
         # Sum over k-space (x and y axes)
-        sigma = np.sum(np.abs(tmp)**2, axis=(1, 2)) * dK
+        sigma = np.sum(np.abs(tmp) ** 2, axis=(1, 2)) * dK
 
     return sigma, qmEiEj
 
@@ -500,8 +481,12 @@ def get_signal_GF_focal(
     get_signal_RT_focal, get_signal_RT_pupil
 
     """
-    warn("`get_signal_GF_focal` is an experimental function and may be subject to change."
-         + " Please verify results carefully.", UserWarning, stacklevel=2)
+    warn(
+        "`get_signal_GF_focal` is an experimental function and may be subject to change."
+        + " Please verify results carefully.",
+        UserWarning,
+        stacklevel=2,
+    )
 
     k0 = 2 * np.pi / wavelength
 
@@ -613,7 +598,7 @@ def get_signal_GF_focal(
     Px = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
     Py = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
     Pz = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-    for i, s in enumerate(SweepBloch):
+    for i, _ in enumerate(SweepBloch):
         # --- Interpolate Bloch function components onto the Qx-Qy grid ---
         # We assume Bloch has shape (3, Nf, Nkx, Nky)
         interp_Mx = RegularGridInterpolator(
@@ -722,7 +707,16 @@ def get_signal_GF_focal(
             EyS = dxi * dyi * np.sum(Ey_real)
             sigma[i] = ExS.real**2 + ExS.imag**2 + EyS.real**2 + EyS.imag**2
         else:
-            sigma[i] = dxi * dyi * np.sum(Ex_real.real**2 + Ex_real.imag**2 + Ey_real.real**2 + Ey_real.imag**2)
+            sigma[i] = (
+                dxi
+                * dyi
+                * np.sum(
+                    Ex_real.real**2
+                    + Ex_real.imag**2
+                    + Ey_real.real**2
+                    + Ey_real.imag**2
+                )
+            )
 
     # Return the computed scattering cross-section (1D array over sweep)
     # and the polarization currents in the magnetic layer [three 3D arrays of shape
@@ -828,8 +822,12 @@ def getBLSsignal(
     get_signal_GF_focal : Replacement for this deprecated function.
     get_signal_RT_focal, get_signal_RT_pupil
     """
-    warn("`getBLSsignal` is deprecated and will be removed in SpinWaveToolkit v1.5."
-         + " Please use `get_signal_GF_focal` instead.", DeprecationWarning, stacklevel=2)
+    warn(
+        "`getBLSsignal` is deprecated and will be removed in SpinWaveToolkit v1.5."
+        + " Please use `get_signal_GF_focal` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     k0 = 2 * np.pi / wavelength
 
@@ -942,7 +940,7 @@ def getBLSsignal(
     Px = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
     Py = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
     Pz = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-    for i, s in enumerate(SweepBloch):
+    for i, _ in enumerate(SweepBloch):
         # --- Interpolate Bloch function components onto the Qx-Qy grid ---
         # We assume Bloch has shape (3, Nf, Nkx, Nky)
         interp_Mx = RegularGridInterpolator(
