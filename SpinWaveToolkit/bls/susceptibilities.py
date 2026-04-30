@@ -1,6 +1,24 @@
 """
 Module of the `bls` submodule for calculations of magneto-optic
-susceptibilities used in BLS calculations.
+susceptibilities used in (but not limited to) BLS calculations.
+
+The magneto-optic (MO) susceptibility tensors can also be used for
+static calculations, such as Kerr microscopy, but the linearized
+versions are particularly important for dynamic effects like BLS,
+where the static magnetization is along a principal axis and only the
+dynamic magnetization components contribute to the
+(frequency-dependent) susceptibility.
+
+If these functions are used for fitting experimental BLS data, note that
+sometimes the MO constants are coupled, meaning that the number of
+independent constants is reduced. This is because in ferromagnetic
+materials, the magnitude of magnetization is constant. For further
+discussion of this, see, e.g.,
+`Hamrlova et al. JMMM 420, 142-151 (2016)
+<http://doi.org/10.1016/j.jmmm.2016.07.020>`_
+or
+`Hamrlova et al. PSSB 250(10), 2194-2205 (2013)
+<https://doi.org/10.1002/pssb.201349031>`_.
 
 
 .. currentmodule:: SpinWaveToolkit.bls.susceptibilities
@@ -176,12 +194,12 @@ def mo_quadratic(m, Bii=1.0, Bij=1.0, linearize_along=None):
         if Bij_arr.shape != (3,):
             raise ValueError("Bij must be a scalar or a length-3 sequence.")
 
-    c1 = Bii_arr[0] * m1
-    c2 = Bii_arr[1] * m2
-    c3 = Bii_arr[2] * m3
-    c4 = Bij_arr[0] * m4
-    c5 = Bij_arr[1] * m5
-    c6 = Bij_arr[2] * m6
+    c1 = zero_c + Bii_arr[0] * m1
+    c2 = zero_c + Bii_arr[1] * m2
+    c3 = zero_c + Bii_arr[2] * m3
+    c4 = zero_c + Bij_arr[0] * m4
+    c5 = zero_c + Bij_arr[1] * m5
+    c6 = zero_c + Bij_arr[2] * m6
 
     return np.array([[c1, c6, c5], [c6, c2, c4], [c5, c4, c3]], dtype=complex)
 

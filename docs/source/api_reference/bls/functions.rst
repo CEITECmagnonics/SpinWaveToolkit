@@ -18,6 +18,8 @@ The Green function method (:func:`~get_signal_GF_focal` function) takes into acc
 
 Currently, the fastest approach is via the Reciprocity Theorem with electric fields input in the reciprocal space (:func:`~get_signal_RT_pupil`), which is the **recommended approach** for most cases. The other functions are suitable for comparison and validation purposes. The ``get_signal_...`` functions use the electic fields given by the respective method of the :class:`~ObjectiveLens` class, i.e. :py:meth:`GetFocalField` or :meth:`GetPupilField` for the electric field in the real or reciprocal space, respectively. (The correct space is also indicated by the suffix of the ``get_signal_...`` function name.)
 
+|
+
 .. autofunction:: get_signal_GF_focal
 
 .. autofunction:: getBLSsignal
