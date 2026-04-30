@@ -8,7 +8,7 @@ Release Notes
 
 Version 1.3.0
 -------------
-`2026-04-??`
+`2026-04-30`
 
 Minor release intoducing an overhaul of the `bls` module, especially the addition of the reciprocity theorem approach for calculating the BLS signal.
 
