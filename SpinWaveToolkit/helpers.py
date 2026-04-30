@@ -3,6 +3,7 @@ Place for all helping functions and constants in this module.
 """
 
 import numpy as np
+from scipy.ndimage import map_coordinates
 
 __all__ = [
     "MU0",
@@ -19,6 +20,7 @@ __all__ = [
     "rootsearch",
     "sphr2cart",
     "cart2sphr",
+    "rotate_field",
 ]
 
 MU0 = 1.25663706127e-6  #: (N/A^2) permeability of vacuum
@@ -277,6 +279,11 @@ def sphr2cart(theta, phi, r=1.0):
     -------
     xyz : ndarray
         (length unit) vector of shape ``(3, ...)`` as for (x, y, z).
+
+    See also
+    --------
+    cart2sphr : Convert cartesian coordinates to spherical.
+
     """
     st, ct = np.sin(theta), np.cos(theta)
     cp, sp = np.cos(phi), np.sin(phi)
@@ -303,6 +310,11 @@ def cart2sphr(x, y, z):
         (rad) azimuthal angle (from principal in-plane axis, e.g. x or projection of M to film plane).
     r : float or ndarray
         (length unit) radial distance.
+
+    See also
+    --------
+    sphr2cart : Convert spherical coordinates to cartesian.
+
     """
     x = np.array(x, dtype=np.float64)
     y = np.array(y, dtype=np.float64)
@@ -311,3 +323,83 @@ def cart2sphr(x, y, z):
     theta = np.arccos(z / r)
     phi = np.arctan2(y, x)
     return theta, phi, r
+
+
+def rotate_field(Ei_fields, x, y, angle_deg):
+    """
+    Rotate both the polarization vectors and the spatial distribution of
+    an electric field in 2D plane.
+
+    The rotation is an active, counter-clockwise rotation of the field
+    itself.  It applies a 2D rotation matrix to the [Ex, Ey]
+    polarization components, and applies an inverse rotation to the
+    coordinate grid to sample the interpolated spatial distribution
+    correctly.
+
+    Works best for `angle_deg` values that are multiples of 90 degrees,
+    but should work for any angle.  Note that for other angles, the
+    interpolation step may introduce some irregularities.
+
+    Uses the :func:`scipy.ndimage.map_coordinates` function with
+    ``order=1`` (linear interpolation).
+
+    Parameters
+    ----------
+    Ei_fields : list[ndarray]
+        (V/m) List of the three spatial components `[Ex, Ey, Ez]` of the
+        electric field.  Each component must be a 2D complex array of
+        shape ``(Nx, Ny)``.
+    x : ndarray
+        (m ) 1D array of length ``Nx`` containing the spatial
+        x-coordinates.  Assumed to be strictly equidistant.
+    y : ndarray
+        (m ) 1D array of length ``Ny`` containing the spatial
+        y-coordinates.  Assumed to be strictly equidistant.
+    angle_deg : float
+        (deg) The counter-clockwise rotation angle in degrees.
+
+    Returns
+    -------
+    Ei_rot : list[ndarray]
+        (V/m) List of the three rotated spatial components
+        `[Ex_rot, Ey_rot, Ez_rot]`, each with shape ``(Nx, Ny)``.
+
+    See also
+    --------
+    bls.ObjectiveLens : Class for calculations of objective electric
+        fields.
+    """
+    Ex, Ey, Ez = Ei_fields
+
+    # Convert angle to radians
+    theta = np.deg2rad(angle_deg)
+    cos_t, sin_t = np.cos(theta), np.sin(theta)
+
+    # 1. Rotate the polarization vectors (Active CCW rotation)
+    Ejx = cos_t * Ex - sin_t * Ey
+    Ejy = sin_t * Ex + cos_t * Ey
+    Ejz = Ez.copy()  # Z-polarization is invariant under 2D in-plane rotation
+
+    # 2. Create the target meshgrid for the physical coordinates
+    X, Y = np.meshgrid(x, y, indexing="ij")
+
+    # Calculate the corresponding coordinates in the original unrotated frame.
+    # (This uses the inverse/passive rotation matrix)
+    Xr = cos_t * X + sin_t * Y
+    Yr = -sin_t * X + cos_t * Y
+
+    # 3. Convert physical coordinates to normalized index coordinates
+    dx = x[1] - x[0] if len(x) > 1 else 1.0
+    dy = y[1] - y[0] if len(y) > 1 else 1.0
+
+    idx_X = (Xr - x[0]) / dx
+    idx_Y = (Yr - y[0]) / dy
+    coords = [idx_X, idx_Y]
+
+    # 4. Interpolate the rotated polarization components onto the original grid
+    # (map_coordinates natively supports complex arrays in modern SciPy)
+    Ex_rot = map_coordinates(Ejx, coords, order=1, mode="constant", cval=0.0)
+    Ey_rot = map_coordinates(Ejy, coords, order=1, mode="constant", cval=0.0)
+    Ez_rot = map_coordinates(Ejz, coords, order=1, mode="constant", cval=0.0)
+
+    return [Ex_rot, Ey_rot, Ez_rot]

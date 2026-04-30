@@ -1,18 +1,21 @@
 # This CITATION.cff file was generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
 
-cff-version: 1.2.1
+cff-version: 1.3.0
 title: SpinWaveToolkit
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
 authors:
-  - given-names: Ondřej
-    family-names: Wojewoda
-    orcid: "https://orcid.org/0000-0002-4276-520X"
   - given-names: Jan
     family-names: Klíma
     orcid: "https://orcid.org/0009-0002-1838-5546"
+  - given-names: Jakub
+    family-names: Krčma
+    orcid: "https://orcid.org/0009-0001-8647-1692"
+  - given-names: Ondřej
+    family-names: Wojewoda
+    orcid: "https://orcid.org/0000-0002-4276-520X"
 repository-code: 'https://github.com/CEITECmagnonics/SpinWaveToolkit'
-date-released: '2026-02-23'
+date-released: '2026-04-30'

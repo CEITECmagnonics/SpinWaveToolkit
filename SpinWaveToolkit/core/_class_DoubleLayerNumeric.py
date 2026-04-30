@@ -171,7 +171,7 @@ class DoubleLayerNumeric:
         self._Ku2 = Ku if Ku2 is None else Ku2
 
         self.kxi = np.array(kxi)
-        if abs(theta - np.pi / 2) > 1e-4:
+        if (abs(theta - np.pi / 2) % np.pi) > 1e-4:
             print("WARNING: theta other than pi/2 might give misleading results.")
         self.theta = theta
         self.phi = phi
@@ -533,11 +533,11 @@ class DoubleLayerNumeric:
         )
 
         Eaniso1 = (
-            -(2 * np.pi * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
+            -(MU0 / 2 * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
             - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis1)) ** 2
         )
         Eaniso2 = (
-            -(2 * np.pi * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
+            -(MU0 / 2 * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
             - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis2)) ** 2
         )
 

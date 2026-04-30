@@ -15,6 +15,7 @@ The following publications were used in the development of the `SpinWaveToolkit`
 .. [T4] Zhou *et al.* "Giant enhancement of magnon transport by superconductor Meissner screening" `Physical Review B, 110, L020404 (2024) <https://doi.org/10.1103/PhysRevB.110.L020404>`_
 .. [T5] Gurevich and Melkov. "Magnetization Oscillations and Waves." CRC Press, 1996.
 .. [T6] Cottam (ed.). "Linear and nonlinear spin waves in magnetic films and superlattices." World Scientific Publishing Company, 1994.
+.. [T7] Prokhorov *et al.* "Optical phenomena in thin-film magnetic waveguides and their technical application." `Soviet Physics Uspekhi 27, 339 (1984) <https://iopscience.iop.org/article/10.1070/PU1984v027n05ABEH004292>`_
 
 Works using/citing SpinWaveToolkit
 ----------------------------------

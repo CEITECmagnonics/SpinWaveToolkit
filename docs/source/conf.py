@@ -77,6 +77,7 @@ html_theme_options = {
         "json_url": "https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json",  # use URL to actual site and (also in the json file)
         "version_match": release if release == "dev" else ".".join(release.strip("v").split(".")[:2]),  # use major.minor version for the switcher
     },
+    "show_version_warning_banner": True,
     # ### update after stable state of documentation is reached
     "announcement": "https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_templates/announcement_banner.html",
     "pygments_light_style": "friendly",

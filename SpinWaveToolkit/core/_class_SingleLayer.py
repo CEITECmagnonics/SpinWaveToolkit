@@ -1034,7 +1034,9 @@ class SingleLayer:
         ellipticity : ndarray
             () ellipticity for all `kxi`.
         """
-        return (self.__GetAk() - np.abs(self.__GetBk())) / (self.__GetAk() + np.abs(self.__GetBk()))
+        return (self.__GetAk() - np.abs(self.__GetBk())) / (
+            self.__GetAk() + np.abs(self.__GetBk())
+        )
 
     def GetCouplingParam(self):
         """Calculate coupling parameter of the parallel pumped

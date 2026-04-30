@@ -6,6 +6,28 @@ Release Notes
     For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
 
 
+Version 1.3.0
+-------------
+`2026-04-30`
+
+Minor release intoducing an overhaul of the `bls` module, especially the addition of the reciprocity theorem approach for calculating the BLS signal.
+
+What's new
+^^^^^^^^^^
+- :mod:`.bls` module now includes functions for calculating the BLS signal using the reciprocity theorem, which is less computationally demanding than the Green function approach. New example notebooks :doc:`_example_nbs/BLS_signal_from_RT_focal` and :doc:`_example_nbs/BLS_signal_from_RT_pupil` were prepared for demonstration of the new functions.
+- :func:`.bls.getBLSsignal` is marked as deprecated and will be removed in SWT 1.5.0, since it does not comply with the new API of the BLS module. A replacement for this function was added as :func:`.bls.get_signal_GF_focal`, which is the same function but with a new name and a slightly changed API (see the docstring for details); it is also flagged as experimental for now, since we want to improve its implementation and performance, and clarify the API before making it a standard part of the module. Calling the old function is still possible, but doing so will raise a deprecation warning.
+- :mod:`.bls` module now includes a sub-module :mod:`.bls.susceptibilities` with functions for calculating the magneto-optical electric susceptibility tensors, which are used in the BLS signal calculations. Linear and quadratic magneto-optical effects are supported and can be used also for static magneto-optical characterization. The quadratic ones also offer linearization in simple geometries (advantageous for dynamic magnetization with small precession amplitudes, typically for BLS calculations).
+- A better description of the :mod:`.bls` module was prepared in the documentation.
+- :class:`.bls.ObjectiveLens` class now includes a method :meth:`~.bls.ObjectiveLens.getPupilField` for calculating the electric field distribution directly in the reciprocal space.
+- Added a :func:`.rotate_field` function for rotating a vectorial field distribution (e.g. the electric polarization) in the 2D plane of the sample, i.e. around z axis. This is useful, e.g., for calculating the BLS signal for different in-plane orientations of the sample without the need to recalculate the dispersion relation and Bloch functions for each orientation.
+
+Fixes
+^^^^^
+- Docstring fixes and minor improvements.
+- Documentation improvements.
+- Instructions in ``CONTRIBUTING.md`` updated.
+
+
 Version 1.2.1
 -------------
 `2026-02-23`

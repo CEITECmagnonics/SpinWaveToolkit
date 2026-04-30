@@ -1,5 +1,5 @@
-:mod:`SpinWaveToolkit.bls`
-==========================
+:mod:`SpinWaveToolkit.bls.susceptibilities`
+===========================================
 
 Below you will find links to detailed documentation of the classes, functions, etc. of this submodule.
 
@@ -7,8 +7,6 @@ Below you will find links to detailed documentation of the classes, functions, e
    :maxdepth: 2
    :caption: Submodule parts
 
-   classes
    functions
-   submodules
 
-.. automodule:: SpinWaveToolkit.bls
+.. automodule:: SpinWaveToolkit.bls.susceptibilities
