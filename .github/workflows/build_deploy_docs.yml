@@ -33,7 +33,7 @@ jobs:
       - name: Determine docs version folder
         run: |
           # ### MANUALLY SET CURRENT DOCS_VERSION HERE
-          version="v1.2"
+          version="v1.3"
           echo "DOCS_VERSION=$version" >> $GITHUB_ENV
 
       - name: Build docs

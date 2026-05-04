@@ -36,13 +36,17 @@ This module implements:
 
 import numpy as np
 
-__all__ = ["fresnel_coefficients", "sph_green_function"]
+__all__ = [
+    "fresnel_coefficients",
+    "sph_green_function",
+]
 
 
 def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_index):
     """
-    Compute Fresnel coefficients for p- and s-polarized waves as a
-    function of lateral wavevector q.
+    Create functions, `htp` and `hts`, that compute the Fresnel
+    transmission coefficients for p- and s-polarized light,
+    respectively, for a given lateral wavevector q.
 
     Parameters
     ----------

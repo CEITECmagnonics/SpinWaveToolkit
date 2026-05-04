@@ -2,7 +2,18 @@
 This submodule focuses on modelling the Brillouin light scattering
 signal.
 
+To get more insight, consult the relevant documentation pages.
+For example, see :doc:`/api_reference/bls/functions` for the explanation
+of differences between the available functions that calculate BLS
+spectra.
+
 .. currentmodule:: SpinWaveToolkit.bls
+
+Modules
+-------
+:mod:`~SpinWaveToolkit.bls.susceptibilities`
+    Module for computing the dynamic magneto-optic susceptibility tensor
+    components for a given dynamic magnetization vector.
 
 Classes
 -------
@@ -11,20 +22,15 @@ Classes
 
 Functions
 ---------
-:func:`fresnel_coefficients`
-    Compute Fresnel reflection and transmission coefficients.
-htp
-    Compute p-polarized Fresnel coefficients for a given lateral
-    wavevector q.  Returned by :func:`fresnel_coefficients`.
-hts
-    Compute s-polarized Fresnel coefficients for a given lateral
-    wavevector q.  Returned by :func:`fresnel_coefficients`.
-:func:`sph_green_function`
-    Compute the spherical Green's functions for p- and s-polarized
-    fields.
-:func:`getBLSsignal`
-    Compute the Brillouin light scattering signal using Green's
-    functions formalism.
+
+.. autosummary::
+    get_signal_GF_focal
+    getBLSsignal
+    get_signal_RT_pupil
+    get_signal_RT_focal
+    get_signal_RT_focal_3d
+    fresnel_coefficients
+    sph_green_function
 
 Example
 -------
@@ -37,10 +43,17 @@ relevant :doc:`/examples`.
 from .greenAndFresnel import *
 from .BLSmodel import *
 from .core._class_ObjectiveLens import *
+from . import susceptibilities
 
 
 __all__ = [
     "ObjectiveLens",
-    "fresnel_coefficients",
+    "get_signal_GF_focal",
     "getBLSsignal",
+    "get_signal_RT_pupil",
+    "get_signal_RT_focal",
+    "get_signal_RT_focal_3d",
+    "fresnel_coefficients",
+    "sph_green_function",
+    "susceptibilities",
 ]
