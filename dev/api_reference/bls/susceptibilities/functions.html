@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Functions &#8212; SpinWaveToolkit dev documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../../../_static/documentation_options.js?v=3ce10a4d"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_reference/bls/susceptibilities/functions';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = true;
+        </script>
+    <link rel="icon" href="../../../_static/logo.svg"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Release Notes" href="../../../release_notes.html" />
+    <link rel="prev" title="SpinWaveToolkit.bls.susceptibilities" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+  <aside class="bd-header-announcement d-print-none d-none" aria-label="Announcement" data-pst-announcement-url="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_templates/announcement_banner.html"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../../_static/logo.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">SpinWaveToolkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../publications.html">
+    Publications
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../publications.html">
+    Publications
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">API Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../constants.html">Constants</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/Material.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/MacrospinEquilibrium.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.MacrospinEquilibrium</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/SingleLayer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/SingleLayerNumeric.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/DoubleLayerNumeric.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/SingleLayerSCcoupled.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../classes/BulkPolariton.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.BulkPolariton</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../functions.html">Functions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../submodules.html">Submodules</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../classes/ObjectiveLens.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls.ObjectiveLens</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../functions.html">Functions</a></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../submodules.html">Submodules</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls.susceptibilities</span></code></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../submodules.html" class="nav-link">Submodules</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls</span></code></a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../submodules.html" class="nav-link">Submodules</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls.susceptibilities</span></code></a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Functions</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="SpinWaveToolkit.bls.susceptibilities.mo_linear">
+<span class="sig-prename descclassname"><span class="pre">SpinWaveToolkit.bls.susceptibilities.</span></span><span class="sig-name descname"><span class="pre">mo_linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.bls.susceptibilities.mo_linear" title="Link to this definition">#</a></dt>
+<dd><p>The magneto-optic Kerr (or Faraday) susceptibility tensor (linear
+in magnetization) for a given magnetization vector.</p>
+<p>The dynamic magnetization vector <cite>m</cite> is typically constructed from
+the Bloch functions of the corresponding spin-wave modes.</p>
+<p>The laboratory coordinate frame of reference is
+<em>z || to film normal</em> and <em>x || to in-plane wavevector with phi=0</em>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>m</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a>]</span></dt><dd><p>() dynamic magnetization vector <cite>(mx, my, mz)</cite>.
+Each sub-array should have shape <code class="docutils literal notranslate"><span class="pre">(Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky)</span></code> to be casted
+correctly to the BLS signal functions.</p>
+</dd>
+<dt><strong>Q</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a>, optional</span></dt><dd><p>() Voigt (or Faraday) magneto-optic constant.  Default is 1.0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>chi</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>() magneto-optic Kerr susceptibility tensor with shape
+<code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">...)</span></code>, where <code class="docutils literal notranslate"><span class="pre">...</span></code> is the shape of arrays in <cite>m</cite>,
+usually <code class="docutils literal notranslate"><span class="pre">Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic" title="SpinWaveToolkit.bls.susceptibilities.mo_quadratic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_quadratic</span></code></a>, <a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111" title="SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_quadratic_yig111</span></code></a></dt><dd></dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SpinWaveToolkit.bls.susceptibilities.mo_quadratic">
+<span class="sig-prename descclassname"><span class="pre">SpinWaveToolkit.bls.susceptibilities.</span></span><span class="sig-name descname"><span class="pre">mo_quadratic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bij</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearize_along</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic" title="Link to this definition">#</a></dt>
+<dd><p>The magneto-optic Cotton-Mouton (or Voigt) susceptibility tensor
+(quadratic in magnetization) for a given magnetization vector.</p>
+<p>The dynamic magnetization vector <cite>m</cite> is typically constructed from
+the Bloch functions of the corresponding spin-wave modes.</p>
+<p>The laboratory coordinate frame of reference is
+<em>z || to film normal</em> and <em>x || to in-plane wavevector with phi=0</em>.</p>
+<p>Linearization can be performed only when the static magnetization is
+along one of the principal axes (xyz).  It is crucial to use
+linearization for dynamic effects, such as BLS.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>m</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a>]</span></dt><dd><p>() dynamic magnetization vector <cite>(mx, my, mz)</cite>.
+Each sub-array should have the same shape, e.g.
+<code class="docutils literal notranslate"><span class="pre">(Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky)</span></code> to be casted correctly to the BLS signal
+functions.</p>
+</dd>
+<dt><strong>Bii</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>] or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a>], optional</span></dt><dd><p>() First Cotton-Mouton magneto-optic constant.  Default is 1.0.
+If given as a list/array of length 3, it is interpreted as the
+diagonal constants for the xx, yy, and zz components of the
+susceptibility, respectively (see Notes below).
+This constant is not used in the linearized susceptibility.</p>
+</dd>
+<dt><strong>Bij</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>] or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a>], optional</span></dt><dd><p>() Second Cotton-Mouton magneto-optic constant.  Default is 1.0.
+If given as a list/array of length 3, it is interpreted as the
+off-diagonal constants for the yz, xz, and xy components of the
+susceptibility, respectively (see Notes below).</p>
+</dd>
+<dt><strong>linearize_along</strong><span class="classifier">{“x”, “y”, “z”, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>}, optional</span></dt><dd><p>If not None, linearizes the susceptibility with
+magnetization assumed along given axis.  Default is None.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>chi</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>() magneto-optic Cotton-Mouton susceptibility tensor with shape
+<code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">...)</span></code>, where <code class="docutils literal notranslate"><span class="pre">...</span></code> is the shape of arrays in <cite>m</cite>,
+usually <code class="docutils literal notranslate"><span class="pre">Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_linear" title="SpinWaveToolkit.bls.susceptibilities.mo_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_linear</span></code></a>, <a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111" title="SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_quadratic_yig111</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The full quadratic susceptibility tensor has the form:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[[Bii*mx^2,    Bij*2*mx*my, Bij*2*mx*mz],
+ [Bij*2*my*mx, Bii*my^2,    Bij*2*my*mz],
+ [Bij*2*mz*mx, Bij*2*mz*my, Bii*mz^2]]
+</pre></div>
+</div>
+<p>where Bii and Bij are the diagonal and off-diagonal Cotton-Mouton
+constants, respectively.  However, when given as 3-element lists/arrays, the constants can differ for each component, resulting in:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[[Bii[0]*mx^2,    Bij[2]*2*mx*my, Bij[1]*2*mx*mz],
+ [Bij[2]*2*my*mx, Bii[1]*my^2,    Bij[0]*2*my*mz],
+ [Bij[1]*2*mz*mx, Bij[0]*2*mz*my, Bii[2]*mz^2]]
+</pre></div>
+</div>
+<p>When linearization is applied along a given axis, the susceptibility
+is simplified by assuming the static magnetization is along that
+axis, and only the dynamic components of the magnetization (to first
+order) contribute to the susceptibility.
+For example, if linearizing along “x”, we set <code class="docutils literal notranslate"><span class="pre">mx**2</span> <span class="pre">=</span> <span class="pre">0</span></code> for the
+static part, and only <cite>my</cite> and <cite>mz</cite> which stand alone or multiply
+<cite>mx</cite> contribute linearly.  Multiplied dynamic terms are neglected.
+This results in a susceptibility that is linear in <cite>my</cite> and <cite>mz</cite>,
+which is appropriate for calculating dynamic effects such as BLS
+when the static magnetization is along the x-axis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111">
+<span class="sig-prename descclassname"><span class="pre">SpinWaveToolkit.bls.susceptibilities.</span></span><span class="sig-name descname"><span class="pre">mo_quadratic_yig111</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearize_along</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111" title="Link to this definition">#</a></dt>
+<dd><p>The magneto-optic Cotton-Mouton (or Voigt) susceptibility tensor
+(quadratic in magnetization) for a given magnetization vector,
+specifically for a YIG(111) film, using the constants g11, g12, g44.</p>
+<p>The dynamic magnetization vector <cite>m</cite> is typically constructed from
+the Bloch functions of the corresponding spin-wave modes.</p>
+<p>Linearization can be performed only when the static magnetization is
+along one of the principal axes (xyz).  It is crucial to use
+linearization for dynamic effects, such as BLS.</p>
+<p>The laboratory coordinate frame of reference is
+<em>z || to film normal</em> and <em>x || to in-plane wavevector with phi=0</em>.
+It relates to the cubic axes of YIG as follows:
+<em>x || [11-2], y || [-110], z || [111]</em>.</p>
+<p>For more information on the coordinate system and constants used,
+see:
+D. D. Stancil &amp; A. Prabhakar. <em>Spin waves: theory and applications.</em>
+Springer, 2009.
+or
+A. M. Prokhorov, G. A. Smolenskii, and A. N. Ageev,
+<em>Sov. Phys. Usp.</em>, vol. 27, p. 339, 1984.
+<a class="reference external" href="https://doi.org/10.1070/PU1984v027n05ABEH004292">https://doi.org/10.1070/PU1984v027n05ABEH004292</a>
+(Note that the tensor in eq. (20) therein had to be transformed to
+our lab frame.)</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>m</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a>]</span></dt><dd><p>() dynamic magnetization vector <cite>(mx, my, mz)</cite>.
+Each sub-array should have the same shape, e.g.
+<code class="docutils literal notranslate"><span class="pre">(Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky)</span></code> to be casted correctly to the BLS signal
+functions.</p>
+</dd>
+<dt><strong>g11, g12, g44</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complex</span></code></a></span></dt><dd><p>() Phenomenological Cotton-Mouton magneto-optical constants.</p>
+</dd>
+<dt><strong>linearize_along</strong><span class="classifier">{“x”, “y”, “z”, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>}, optional</span></dt><dd><p>If not None, linearizes the susceptibility with
+magnetization assumed along given axis.  Default is None.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>chi</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>() magneto-optic Cotton-Mouton susceptibility tensor with shape
+<code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">...)</span></code>, where <code class="docutils literal notranslate"><span class="pre">...</span></code> is the shape of arrays in <cite>m</cite>,
+usually <code class="docutils literal notranslate"><span class="pre">Nf,</span> <span class="pre">Nkx,</span> <span class="pre">Nky</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_linear" title="SpinWaveToolkit.bls.susceptibilities.mo_linear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_linear</span></code></a>, <a class="reference internal" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic" title="SpinWaveToolkit.bls.susceptibilities.mo_quadratic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mo_quadratic</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>When linearization is applied along a given axis, the susceptibility
+is simplified by assuming the static magnetization is along that
+axis, and only the dynamic components of the magnetization (to first
+order) contribute to the susceptibility.
+For example, if linearizing along “x”, we set <code class="docutils literal notranslate"><span class="pre">mx**2</span> <span class="pre">=</span> <span class="pre">0</span></code> for the
+static part, and only <cite>my</cite> and <cite>mz</cite> which stand alone or multiply
+<cite>mx</cite> contribute linearly.  Multiplied dynamic terms are neglected.
+This results in a susceptibility that is linear in <cite>my</cite> and <cite>mz</cite>,
+which is appropriate for calculating dynamic effects such as BLS
+when the static magnetization is along the x-axis.</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls.susceptibilities</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../../release_notes.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Release Notes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.bls.susceptibilities.mo_linear"><code class="docutils literal notranslate"><span class="pre">mo_linear()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic"><code class="docutils literal notranslate"><span class="pre">mo_quadratic()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.bls.susceptibilities.mo_quadratic_yig111"><code class="docutils literal notranslate"><span class="pre">mo_quadratic_yig111()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../_sources/api_reference/bls/susceptibilities/functions.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, CEITECmagnonics and SpinWaveToolkit contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
