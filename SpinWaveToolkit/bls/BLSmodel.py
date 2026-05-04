@@ -634,12 +634,11 @@ def get_signal_GF_focal(
     xi = np.linspace(-(Nxi - 1) / 2, (Nxi - 1) / 2, Nxi) * dxi
     yi = np.linspace(-(Nyi - 1) / 2, (Nyi - 1) / 2, Nyi) * dyi
     Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-    PSFFilter = np.exp(-(Xi**2 + Yi**2) / (2 * np.pi**2 * collectionSpot**2))# Create a mask for Q values within k0*NA.
+    PSFFilter = np.exp(-(Xi**2 + Yi**2) / (2 * np.pi**2 * collectionSpot**2))
+    # Create a mask for Q values within k0*NA.
     mask = (Q <= k0 * NA).astype(float)
     # Compute a common scaling factor (note: np.size returns the total number of elements).
-    factor_fft = (
-        (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
-    )
+    factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
     # -------------------------------------------------------------
     # --- Pre-compute analyzer coefficients on the real-space grid ---
     if callable(output_analyzer):
@@ -720,22 +719,22 @@ def get_signal_GF_focal(
         Ep = pGF[0][0] * Px_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[0][
             1
         ] * Px_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[
+        Ep += pGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[1][
             1
-        ][1] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[
-            2
-        ][1] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Ep += pGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[2][
+            1
+        ] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
 
         Es = sGF[0][0] * Px_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[0][
             1
         ] * Px_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[
+        Es += sGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[1][
             1
-        ][1] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[
-            2
-        ][1] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
+        ] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
+        Es += sGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[2][
+            1
+        ] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
         # -------------------------------------------------------------
 
         # --- Convert to X and Y components in the laboratory frame ---
