@@ -341,7 +341,7 @@ class ObjectiveLens:
         return xi, yi, Exi, Eyi, Ezi
 
     def getPupilField(
-        self, z, KX, KY, polarization_type="linear", polarization_angle_deg=0
+        self, z, KX, KY, polarization_type="linear", polarization_angle_deg=0, minor_axis=1, qwp=False, qwp_angle_deg=0
     ):
         """
         Computes the complex electric field distribution in reciprocal
@@ -418,50 +418,53 @@ class ObjectiveLens:
         propagator = np.exp(1j * k0 * z * cos_theta)
 
         # --- POLARIZATION BASIS TRANSFORMATION ---
+        # Linear polarization at arbitrary angle in the pupil plane
+        # Angle of the major axis for elliptical polarization
+        angle_rad = np.deg2rad(polarization_angle_deg)
+
+        # Jones vector in the entrance pupil (before focusing)
         if polarization_type == "linear":
-            # Linear polarization at arbitrary angle in the pupil plane
-            angle_rad = np.deg2rad(polarization_angle_deg)
-
-            # Jones vector in the entrance pupil (before focusing)
-            e_in = np.array([np.cos(angle_rad), np.sin(angle_rad), 0])
-
-            # Transformation according to Richards & Wolf (1959)
-            ex = (cos_theta * cos_phi**2 + sin_phi**2) * e_in[0] + (
-                cos_theta - 1
-            ) * cos_phi * sin_phi * e_in[1]
-            ey = (cos_theta - 1) * cos_phi * sin_phi * e_in[0] + (
-                cos_theta * sin_phi**2 + cos_phi**2
-            ) * e_in[1]
-            ez = -sin_theta * (cos_phi * e_in[0] + sin_phi * e_in[1])
-
+            e_in = np.array([np.cos(angle_rad), np.sin(angle_rad)])
+        elif polarization_type == "rcp":
+            e_in = np.array([1, -1j])/np.sqrt(2)
+        elif polarization_type == "lcp":
+            e_in = np.array([1, 1j])/np.sqrt(2)
         elif polarization_type == "radial":
-            ex = sin_theta * cos_phi
-            ey = sin_theta * sin_phi
-            ez = cos_theta
-
+            e_in = np.array([cos_phi, sin_phi])
         elif polarization_type == "azimuthal":
-            ex = -sin_phi
-            ey = cos_phi
-            ez = np.zeros_like(ex)
-
-        elif polarization_type in ["rcp", "lcp"]:
-            # Right/left circular polarization (RCP = +, LCP = -)
-            sign = +1 if polarization_type == "rcp" else -1
-
-            # Local transverse basis
-            e_theta = np.array([cos_theta * cos_phi, cos_theta * sin_phi, -sin_theta])
-            e_phi = np.array([-sin_phi, cos_phi, np.zeros_like(sin_phi)])
-
-            # Superposition of theta and phi unit vectors with ±i phase
-            ex = (e_theta[0] + sign * 1j * e_phi[0]) / np.sqrt(2)
-            ey = (e_theta[1] + sign * 1j * e_phi[1]) / np.sqrt(2)
-            ez = (e_theta[2] + sign * 1j * e_phi[2]) / np.sqrt(2)
+            e_in = np.array([-sin_phi, cos_phi])
+        elif polarization_type == "elliptical":
+            e_in = np.array(
+                [np.cos(angle_rad) - 1j*minor_axis*np.sin(angle_rad),
+                 np.sin(angle_rad) + 1j*minor_axis*np.cos(angle_rad)]
+            )*(1+minor_axis**2)**(-1/2)
 
         else:
             raise ValueError(
                 f"Polarization type '{polarization_type}' not recognized. "
                 "Use 'linear', 'radial', 'azimuthal', 'rcp', or 'lcp'."
             )
+
+        if qwp:
+            qwp_an = np.deg2rad(qwp_angle_deg)
+            e_in = np.matmul(
+                np.array(
+                [[np.cos(qwp_an)**2 + 1j*np.sin(qwp_an)**2,
+                  (1j-1) * np.sin(qwp_an) * np.cos(qwp_an)],
+                 [(1j-1) * np.sin(qwp_an) * np.cos(qwp_an),
+                  np.sin(qwp_an)**2 + 1j*np.cos(qwp_an)**2]]
+                ),
+                e_in
+            )
+
+        # Transformation according to Richards & Wolf (1959)
+        ex = (cos_theta * cos_phi**2 + sin_phi**2) * e_in[0] + (
+            cos_theta - 1
+        ) * cos_phi * sin_phi * e_in[1]
+        ey = (cos_theta - 1) * cos_phi * sin_phi * e_in[0] + (
+            cos_theta * sin_phi**2 + cos_phi**2
+        ) * e_in[1]
+        ez = -sin_theta * (cos_phi * e_in[0] + sin_phi * e_in[1])
 
         # --- ASSEMBLE FINAL FIELD IN K-SPACE ---
         E0 = 1.0  # Input amplitude normalization
@@ -471,3 +474,5 @@ class ObjectiveLens:
         Ez_k[pupil_mask] = prefactor * amplitude_factor * propagator * ez
 
         return Ex_k, Ey_k, Ez_k
+
+    
