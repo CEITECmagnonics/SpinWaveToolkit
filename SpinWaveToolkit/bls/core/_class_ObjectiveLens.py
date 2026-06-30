@@ -341,16 +341,15 @@ class ObjectiveLens:
         return xi, yi, Exi, Eyi, Ezi
 
     def getPupilField(
-        self, z, KX, KY, polarization_type="linear", polarization_angle_deg=0, minor_axis=1, qwp=False, qwp_angle_deg=0
+        self, z, KX, KY, n=1.0, pol_type="linear", pol_angle=0, axis_ratio=1.0
     ):
         """
-        Computes the complex electric field distribution in reciprocal
-        space.
+        Computes the complex electric field distribution in reciprocal space.
 
         This represents the field near the focus of a high-NA objective
         lens—including amplitude apodization, polarization
         transformation, and defocus phase, projected onto the kx-ky
-        plane.  This is the integrand for the vectorial Debye
+        plane. This is the integrand for the vectorial Debye
         diffraction integral.
 
         Parameters
@@ -361,16 +360,26 @@ class ObjectiveLens:
             (rad/m) 2D reciprocal-space grid (kx).
         KY : ndarray
             (rad/m) 2D reciprocal-space grid (ky).
-        polarization_type : str, optional
-            | "linear" - linearly polarized (angle set by
-            |            `polarization_angle_deg`)
+        n : float, optional
+            Refractive index of the focusing medium. 
+            Default is 1.0 (air/vacuum).
+        pol_type : str, optional
+            | "linear" - linearly polarized (angle set by `pol_angle`)
             | "radial" - radial polarization
             | "azimuthal" - azimuthal polarization
             | "rcp" - right-hand circular polarization
             | "lcp" - left-hand circular polarization
-        polarization_angle_deg : float, optional
-            (deg) linear polarization angle.  Default is 0.
-            Ignored when `polarization_type` is other than "linear".
+            | "elliptical" - elliptically polarized (uses `axis_ratio`
+            |                and `pol_angle`)
+            Default is "linear".
+        pol_angle : float, optional
+            (deg) angle of linear polarization or the major axis of 
+            elliptical polarization. Default is 0.
+        axis_ratio : float, optional
+            Ratio of the minor axis to the major axis for elliptical 
+            polarization. Can be positive or negative to dictate 
+            handedness. Default is 1.0. Ignored if `pol_type` 
+            is not "elliptical".
 
         Returns
         -------
@@ -379,13 +388,20 @@ class ObjectiveLens:
         """
 
         # --- CONSTANTS & PRELIMINARIES ---
-        n = 1  # Refractive index (air or vacuum)
-        k0 = 2 * np.pi * n / self.wavelength  # Wave number
-        theta_max = np.arcsin(self.NA / n)  # Max focusing angle from NA
+        # Prevent math domain errors (arcsin(x) where x > 1)
+        if self.NA > n:
+            raise ValueError(
+                f"Numerical aperture (NA={self.NA}) cannot exceed the "
+                f"refractive index of the medium (n={n})."
+            )
 
-        # Radial k-vector and pupil mask (defines the aperture)
+        k_vac = 2 * np.pi / self.wavelength     # Vacuum wave number
+        k_medium = k_vac * n                    # Medium wave number
+        theta_max = np.arcsin(self.NA / n)      # Max focusing angle
+
+        # Radial k-vector and pupil mask (defines the physical aperture limit)
         K_rho = np.sqrt(KX**2 + KY**2)
-        pupil_mask = K_rho <= k0 * self.NA
+        pupil_mask = K_rho <= (k_vac * self.NA)
 
         # Initialize output fields (complex)
         Ex_k = np.zeros_like(KX, dtype=complex)
@@ -398,7 +414,8 @@ class ObjectiveLens:
         kx = KX[pupil_mask]
         ky = KY[pupil_mask]
 
-        sin_theta = np.clip(k_rho / k0, -1, 1)
+        # Map transverse wavevectors to spherical angles inside the medium
+        sin_theta = np.clip(k_rho / k_medium, -1, 1)
         cos_theta = np.sqrt(1 - sin_theta**2)
 
         # Avoid division by zero at k_rho = 0
@@ -410,51 +427,44 @@ class ObjectiveLens:
 
         # --- APODIZATION (ILLUMINATION PROFILE) ---
         # Gaussian amplitude weighting (filling factor f0) and
-        # cosine factor accounting for obliquity (from Debye theory)
+        # 1/sqrt(cos) factor (sine condition + Cartesian Jacobian mapping)
         fw = np.exp(-((sin_theta / np.sin(theta_max)) ** 2) / self.f0**2)
         amplitude_factor = fw / np.sqrt(cos_theta)
 
-        # Defocus propagator (phase term for defocus z)
-        propagator = np.exp(1j * k0 * z * cos_theta)
+        # Defocus propagator (phase term for defocus z in the medium)
+        propagator = np.exp(1j * k_medium * z * cos_theta)
 
         # --- POLARIZATION BASIS TRANSFORMATION ---
-        # Linear polarization at arbitrary angle in the pupil plane
-        # Angle of the major axis for elliptical polarization
-        angle_rad = np.deg2rad(polarization_angle_deg)
+        angle_rad = np.deg2rad(pol_angle)
 
         # Jones vector in the entrance pupil (before focusing)
-        if polarization_type == "linear":
+        if pol_type == "linear":
             e_in = np.array([np.cos(angle_rad), np.sin(angle_rad)])
-        elif polarization_type == "rcp":
-            e_in = np.array([1, -1j])/np.sqrt(2)
-        elif polarization_type == "lcp":
-            e_in = np.array([1, 1j])/np.sqrt(2)
-        elif polarization_type == "radial":
+        elif pol_type == "rcp":
+            e_in = np.array([1, -1j]) / np.sqrt(2)
+        elif pol_type == "lcp":
+            e_in = np.array([1, 1j]) / np.sqrt(2)
+        elif pol_type == "radial":
             e_in = np.array([cos_phi, sin_phi])
-        elif polarization_type == "azimuthal":
+        elif pol_type == "azimuthal":
             e_in = np.array([-sin_phi, cos_phi])
-        elif polarization_type == "elliptical":
-            e_in = np.array(
-                [np.cos(angle_rad) - 1j*minor_axis*np.sin(angle_rad),
-                 np.sin(angle_rad) + 1j*minor_axis*np.cos(angle_rad)]
-            )*(1+minor_axis**2)**(-1/2)
-
+        elif pol_type == "elliptical":
+            # Canonical ellipse aligned with X-axis
+            norm = 1.0 / np.sqrt(1 + axis_ratio**2)
+            e_base = norm * np.array([1, 1j * axis_ratio])
+            
+            # Standard 2D rotation matrix
+            R = np.array([
+                [np.cos(angle_rad), -np.sin(angle_rad)],
+                [np.sin(angle_rad),  np.cos(angle_rad)]
+            ])
+            
+            # Rotate the ellipse to the desired angle
+            e_in = np.matmul(R, e_base)
         else:
             raise ValueError(
-                f"Polarization type '{polarization_type}' not recognized. "
-                "Use 'linear', 'radial', 'azimuthal', 'rcp', or 'lcp'."
-            )
-
-        if qwp:
-            qwp_an = np.deg2rad(qwp_angle_deg)
-            e_in = np.matmul(
-                np.array(
-                [[np.cos(qwp_an)**2 + 1j*np.sin(qwp_an)**2,
-                  (1j-1) * np.sin(qwp_an) * np.cos(qwp_an)],
-                 [(1j-1) * np.sin(qwp_an) * np.cos(qwp_an),
-                  np.sin(qwp_an)**2 + 1j*np.cos(qwp_an)**2]]
-                ),
-                e_in
+                f"Polarization type '{pol_type}' not recognized. "
+                "Use 'linear', 'radial', 'azimuthal', 'rcp', 'lcp', or 'elliptical'."
             )
 
         # Transformation according to Richards & Wolf (1959)
@@ -468,11 +478,10 @@ class ObjectiveLens:
 
         # --- ASSEMBLE FINAL FIELD IN K-SPACE ---
         E0 = 1.0  # Input amplitude normalization
-        prefactor = E0 * self.f
+        prefactor = 1j * E0 * self.f / (2 * np.pi * k_medium)
+        
         Ex_k[pupil_mask] = prefactor * amplitude_factor * propagator * ex
         Ey_k[pupil_mask] = prefactor * amplitude_factor * propagator * ey
         Ez_k[pupil_mask] = prefactor * amplitude_factor * propagator * ez
 
         return Ex_k, Ey_k, Ez_k
-
-    
