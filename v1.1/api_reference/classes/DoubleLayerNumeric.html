@@ -1,0 +1,1105 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SpinWaveToolkit.DoubleLayerNumeric &#8212; SpinWaveToolkit v1.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../../_static/documentation_options.js?v=45183d27"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_reference/classes/DoubleLayerNumeric';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v1.1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = false;
+        </script>
+    <link rel="icon" href="../../_static/logo.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="SpinWaveToolkit.SingleLayerSCcoupled" href="SingleLayerSCcoupled.html" />
+    <link rel="prev" title="SpinWaveToolkit.SingleLayerNumeric" href="SingleLayerNumeric.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">This site is currently under <b>intensive construction</b>. Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for your comments.</i></div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/logo.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">SpinWaveToolkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../publications.html">
+    Publications
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../publications.html">
+    Publications
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">API Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../constants.html">Constants</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../classes.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Material.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayer.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayerNumeric.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayerSCcoupled.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="BulkPolariton.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.BulkPolariton</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="spinwavetoolkit-doublelayernumeric">
+<h1><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code><a class="headerlink" href="#spinwavetoolkit-doublelayernumeric" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SpinWaveToolkit.</span></span><span class="sig-name descname"><span class="pre">DoubleLayerNumeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Bext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kxi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([1.00000000e-12,</span> <span class="pre">1.25628141e+05,</span> <span class="pre">2.51256281e+05,</span> <span class="pre">3.76884422e+05,</span> <span class="pre">5.02512563e+05,</span> <span class="pre">6.28140704e+05,</span> <span class="pre">7.53768844e+05,</span> <span class="pre">8.79396985e+05,</span> <span class="pre">1.00502513e+06,</span> <span class="pre">1.13065327e+06,</span> <span class="pre">1.25628141e+06,</span> <span class="pre">1.38190955e+06,</span> <span class="pre">1.50753769e+06,</span> <span class="pre">1.63316583e+06,</span> <span class="pre">1.75879397e+06,</span> <span class="pre">1.88442211e+06,</span> <span class="pre">2.01005025e+06,</span> <span class="pre">2.13567839e+06,</span> <span class="pre">2.26130653e+06,</span> <span class="pre">2.38693467e+06,</span> <span class="pre">2.51256281e+06,</span> <span class="pre">2.63819095e+06,</span> <span class="pre">2.76381910e+06,</span> <span class="pre">2.88944724e+06,</span> <span class="pre">3.01507538e+06,</span> <span class="pre">3.14070352e+06,</span> <span class="pre">3.26633166e+06,</span> <span class="pre">3.39195980e+06,</span> <span class="pre">3.51758794e+06,</span> <span class="pre">3.64321608e+06,</span> <span class="pre">3.76884422e+06,</span> <span class="pre">3.89447236e+06,</span> <span class="pre">4.02010050e+06,</span> <span class="pre">4.14572864e+06,</span> <span class="pre">4.27135678e+06,</span> <span class="pre">4.39698492e+06,</span> <span class="pre">4.52261307e+06,</span> <span class="pre">4.64824121e+06,</span> <span class="pre">4.77386935e+06,</span> <span class="pre">4.89949749e+06,</span> <span class="pre">5.02512563e+06,</span> <span class="pre">5.15075377e+06,</span> <span class="pre">5.27638191e+06,</span> <span class="pre">5.40201005e+06,</span> <span class="pre">5.52763819e+06,</span> <span class="pre">5.65326633e+06,</span> <span class="pre">5.77889447e+06,</span> <span class="pre">5.90452261e+06,</span> <span class="pre">6.03015075e+06,</span> <span class="pre">6.15577889e+06,</span> <span class="pre">6.28140704e+06,</span> <span class="pre">6.40703518e+06,</span> <span class="pre">6.53266332e+06,</span> <span class="pre">6.65829146e+06,</span> <span class="pre">6.78391960e+06,</span> <span class="pre">6.90954774e+06,</span> <span class="pre">7.03517588e+06,</span> <span class="pre">7.16080402e+06,</span> <span class="pre">7.28643216e+06,</span> <span class="pre">7.41206030e+06,</span> <span class="pre">7.53768844e+06,</span> <span class="pre">7.66331658e+06,</span> <span class="pre">7.78894472e+06,</span> <span class="pre">7.91457286e+06,</span> <span class="pre">8.04020101e+06,</span> <span class="pre">8.16582915e+06,</span> <span class="pre">8.29145729e+06,</span> <span class="pre">8.41708543e+06,</span> <span class="pre">8.54271357e+06,</span> <span class="pre">8.66834171e+06,</span> <span class="pre">8.79396985e+06,</span> <span class="pre">8.91959799e+06,</span> <span class="pre">9.04522613e+06,</span> <span class="pre">9.17085427e+06,</span> <span class="pre">9.29648241e+06,</span> <span class="pre">9.42211055e+06,</span> <span class="pre">9.54773869e+06,</span> <span class="pre">9.67336683e+06,</span> <span class="pre">9.79899497e+06,</span> <span class="pre">9.92462312e+06,</span> <span class="pre">1.00502513e+07,</span> <span class="pre">1.01758794e+07,</span> <span class="pre">1.03015075e+07,</span> <span class="pre">1.04271357e+07,</span> <span class="pre">1.05527638e+07,</span> <span class="pre">1.06783920e+07,</span> <span class="pre">1.08040201e+07,</span> <span class="pre">1.09296482e+07,</span> <span class="pre">1.10552764e+07,</span> <span class="pre">1.11809045e+07,</span> <span class="pre">1.13065327e+07,</span> <span class="pre">1.14321608e+07,</span> <span class="pre">1.15577889e+07,</span> <span class="pre">1.16834171e+07,</span> <span class="pre">1.18090452e+07,</span> <span class="pre">1.19346734e+07,</span> <span class="pre">1.20603015e+07,</span> <span class="pre">1.21859296e+07,</span> <span class="pre">1.23115578e+07,</span> <span class="pre">1.24371859e+07,</span> <span class="pre">1.25628141e+07,</span> <span class="pre">1.26884422e+07,</span> <span class="pre">1.28140704e+07,</span> <span class="pre">1.29396985e+07,</span> <span class="pre">1.30653266e+07,</span> <span class="pre">1.31909548e+07,</span> <span class="pre">1.33165829e+07,</span> <span class="pre">1.34422111e+07,</span> <span class="pre">1.35678392e+07,</span> <span class="pre">1.36934673e+07,</span> <span class="pre">1.38190955e+07,</span> <span class="pre">1.39447236e+07,</span> <span class="pre">1.40703518e+07,</span> <span class="pre">1.41959799e+07,</span> <span class="pre">1.43216080e+07,</span> <span class="pre">1.44472362e+07,</span> <span class="pre">1.45728643e+07,</span> <span class="pre">1.46984925e+07,</span> <span class="pre">1.48241206e+07,</span> <span class="pre">1.49497487e+07,</span> <span class="pre">1.50753769e+07,</span> <span class="pre">1.52010050e+07,</span> <span class="pre">1.53266332e+07,</span> <span class="pre">1.54522613e+07,</span> <span class="pre">1.55778894e+07,</span> <span class="pre">1.57035176e+07,</span> <span class="pre">1.58291457e+07,</span> <span class="pre">1.59547739e+07,</span> <span class="pre">1.60804020e+07,</span> <span class="pre">1.62060302e+07,</span> <span class="pre">1.63316583e+07,</span> <span class="pre">1.64572864e+07,</span> <span class="pre">1.65829146e+07,</span> <span class="pre">1.67085427e+07,</span> <span class="pre">1.68341709e+07,</span> <span class="pre">1.69597990e+07,</span> <span class="pre">1.70854271e+07,</span> <span class="pre">1.72110553e+07,</span> <span class="pre">1.73366834e+07,</span> <span class="pre">1.74623116e+07,</span> <span class="pre">1.75879397e+07,</span> <span class="pre">1.77135678e+07,</span> <span class="pre">1.78391960e+07,</span> <span class="pre">1.79648241e+07,</span> <span class="pre">1.80904523e+07,</span> <span class="pre">1.82160804e+07,</span> <span class="pre">1.83417085e+07,</span> <span class="pre">1.84673367e+07,</span> <span class="pre">1.85929648e+07,</span> <span class="pre">1.87185930e+07,</span> <span class="pre">1.88442211e+07,</span> <span class="pre">1.89698492e+07,</span> <span class="pre">1.90954774e+07,</span> <span class="pre">1.92211055e+07,</span> <span class="pre">1.93467337e+07,</span> <span class="pre">1.94723618e+07,</span> <span class="pre">1.95979899e+07,</span> <span class="pre">1.97236181e+07,</span> <span class="pre">1.98492462e+07,</span> <span class="pre">1.99748744e+07,</span> <span class="pre">2.01005025e+07,</span> <span class="pre">2.02261307e+07,</span> <span class="pre">2.03517588e+07,</span> <span class="pre">2.04773869e+07,</span> <span class="pre">2.06030151e+07,</span> <span class="pre">2.07286432e+07,</span> <span class="pre">2.08542714e+07,</span> <span class="pre">2.09798995e+07,</span> <span class="pre">2.11055276e+07,</span> <span class="pre">2.12311558e+07,</span> <span class="pre">2.13567839e+07,</span> <span class="pre">2.14824121e+07,</span> <span class="pre">2.16080402e+07,</span> <span class="pre">2.17336683e+07,</span> <span class="pre">2.18592965e+07,</span> <span class="pre">2.19849246e+07,</span> <span class="pre">2.21105528e+07,</span> <span class="pre">2.22361809e+07,</span> <span class="pre">2.23618090e+07,</span> <span class="pre">2.24874372e+07,</span> <span class="pre">2.26130653e+07,</span> <span class="pre">2.27386935e+07,</span> <span class="pre">2.28643216e+07,</span> <span class="pre">2.29899497e+07,</span> <span class="pre">2.31155779e+07,</span> <span class="pre">2.32412060e+07,</span> <span class="pre">2.33668342e+07,</span> <span class="pre">2.34924623e+07,</span> <span class="pre">2.36180905e+07,</span> <span class="pre">2.37437186e+07,</span> <span class="pre">2.38693467e+07,</span> <span class="pre">2.39949749e+07,</span> <span class="pre">2.41206030e+07,</span> <span class="pre">2.42462312e+07,</span> <span class="pre">2.43718593e+07,</span> <span class="pre">2.44974874e+07,</span> <span class="pre">2.46231156e+07,</span> <span class="pre">2.47487437e+07,</span> <span class="pre">2.48743719e+07,</span> <span class="pre">2.50000000e+07])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ku</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ku2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Jbl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Jbq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">JblDyn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">JbqDyn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiAnis1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiAnis2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiInit1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiInit2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.5707963267948966</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric" title="Link to this definition">#</a></dt>
+<dd><p>Compute spin wave characteristic in dependance to k-vector
+(wavenumber) such as frequency, group velocity, lifetime and
+propagation length.</p>
+<p>The dispersion model uses the approach of Gallardo et al., see:
+<a class="reference external" href="https://doi.org/10.1103/PhysRevApplied.12.034012">https://doi.org/10.1103/PhysRevApplied.12.034012</a></p>
+<p>Most parameters can be specified as vectors (1d numpy arrays)
+of the same shape. This functionality is not guaranteed.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>Bext</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="upperalpha simple" start="20">
+<li><p>external magnetic field.</p></li>
+</ol>
+</dd>
+<dt><strong>material</strong><span class="classifier"><a class="reference internal" href="Material.html#SpinWaveToolkit.Material" title="SpinWaveToolkit.Material"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Material</span></code></a></span></dt><dd><p>Instance of <cite>Material</cite> describing the magnetic layer material.
+Its properties are saved as attributes, but this object is not.</p>
+</dd>
+<dt><strong>d</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="loweralpha simple" start="13">
+<li><p>layer thickness (in z direction).</p></li>
+</ol>
+</dd>
+<dt><strong>kxi</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(rad/m) k-vector (wavenumber), usually a vector.</p>
+</dd>
+<dt><strong>theta</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(rad) out of plane angle of Bext, pi/2 is totally in-plane
+magnetization.</p>
+</dd>
+<dt><strong>phi</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(rad) in-plane angle of kxi from Bext, pi/2 is DE geometry.</p>
+</dd>
+<dt><strong>Ku</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(J/m^3) uniaxial anisotropy strength.</p>
+</dd>
+<dt><strong>Ku2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(J/m^3) uniaxial anisotropy strength of the second layer.</p>
+</dd>
+<dt><strong>Jbl</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(J/m^2) bilinear RKKY coupling parameter.</p>
+</dd>
+<dt><strong>Jbq</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(J/m^2) biquadratic RKKY coupling parameter.</p>
+</dd>
+<dt><strong>s</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><ol class="loweralpha simple" start="13">
+<li><p>spacing layer thickness.</p></li>
+</ol>
+</dd>
+<dt><strong>d2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a></span></dt><dd><p>(m) thickness of the second magnetic layer, if None,
+same as <cite>d</cite>.</p>
+</dd>
+<dt><strong>material2</strong><span class="classifier"><a class="reference internal" href="Material.html#SpinWaveToolkit.Material" title="SpinWaveToolkit.Material"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Material</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a></span></dt><dd><p>instance of <cite>Material</cite> describing the second magnetic
+layer, if None, <cite>material</cite> parameter is used instead.
+Its properties are saved as attributes, but this object is not.</p>
+</dd>
+<dt><strong>JblDyn</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a></span></dt><dd><p>(J/m^2) dynamic bilinear RKKY coupling parameter,
+if None, same as <cite>Jbl</cite>.</p>
+</dd>
+<dt><strong>JbqDyn</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a></span></dt><dd><p>(J/m^2) dynamic biquadratic RKKY coupling parameter,
+if None, same as <cite>Jbq</cite>.</p>
+</dd>
+<dt><strong>phiAnis1, phiAnis2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(rad) uniaxial anisotropy axis in-plane angle from kxi for
+both magnetic layers.</p>
+</dd>
+<dt><strong>phiInit1, phiInit2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>(rad) initial value of magnetization in-plane angle of the
+first and second layer, used for energy minimization.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>[same as Parameters (except `material` and `material2`), plus these]</strong></dt><dd></dd>
+<dt><strong>alpha</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>() Gilbert damping.</p>
+</dd>
+<dt><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.gamma" title="SpinWaveToolkit.DoubleLayerNumeric.gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gamma</span></code></a><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>Gyromagnetic ratio (rad*Hz/T).</p>
+</dd>
+<dt><strong>mu0dH0</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="upperalpha simple" start="20">
+<li><p>inhomogeneous broadening.</p></li>
+</ol>
+</dd>
+<dt><strong>w0</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(rad*Hz) parameter in Slavin-Kalinikos equation,
+<code class="docutils literal notranslate"><span class="pre">w0</span> <span class="pre">=</span> <span class="pre">MU0*gamma*Hext</span></code>.</p>
+</dd>
+<dt><strong>wM</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(rad*Hz) parameter in Slavin-Kalinikos equation,
+<code class="docutils literal notranslate"><span class="pre">wM</span> <span class="pre">=</span> <span class="pre">MU0*gamma*Ms</span></code>.</p>
+</dd>
+<dt><strong>A, A2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(m^2) parameter in Slavin-Kalinikos equation,
+<code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">Aex*2/(Ms**2*MU0)</span></code>.</p>
+</dd>
+<dt><strong>Hani, Hani2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(A/m) uniaxial anisotropy field of corresponding Ku,
+<code class="docutils literal notranslate"><span class="pre">Hani</span> <span class="pre">=</span> <span class="pre">2*Ku/material.Ms/MU0</span></code>.</p>
+</dd>
+<dt><strong>Ms, Ms2</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(A/m) saturation magnetization.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDispersion" title="SpinWaveToolkit.DoubleLayerNumeric.GetDispersion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetDispersion</span></code></a>()</p></td>
+<td><p>Gives frequencies for defined k (Dispersion relation).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetPhis" title="SpinWaveToolkit.DoubleLayerNumeric.GetPhis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetPhis</span></code></a>()</p></td>
+<td><p>Gives angles of magnetization in both SAF layers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyIP" title="SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyIP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetFreeEnergyIP</span></code></a>(phis)</p></td>
+<td><p>Gives overall energy (density) of SAF system.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyOOP" title="SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyOOP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetFreeEnergyOOP</span></code></a>(thetas)</p></td>
+<td><p>Gives overall energy (density) of the SAF system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetGroupVelocity" title="SpinWaveToolkit.DoubleLayerNumeric.GetGroupVelocity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetGroupVelocity</span></code></a>([n])</p></td>
+<td><p>Gives (tangential) group velocities for defined k.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetLifetime" title="SpinWaveToolkit.DoubleLayerNumeric.GetLifetime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetLifetime</span></code></a>([n])</p></td>
+<td><p>Gives lifetimes for defined k.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDecLen" title="SpinWaveToolkit.DoubleLayerNumeric.GetDecLen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetDecLen</span></code></a>([n])</p></td>
+<td><p>Give decay lengths for defined k.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDensityOfStates" title="SpinWaveToolkit.DoubleLayerNumeric.GetDensityOfStates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetDensityOfStates</span></code></a>([n])</p></td>
+<td><p>Give density of states for given mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetBlochFunction" title="SpinWaveToolkit.DoubleLayerNumeric.GetBlochFunction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetBlochFunction</span></code></a>([n, Nf, lifeTime])</p></td>
+<td><p>Give Bloch function for given mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.DoubleLayerNumeric.GetExchangeLen" title="SpinWaveToolkit.DoubleLayerNumeric.GetExchangeLen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GetExchangeLen</span></code></a>()</p></td>
+<td><p>Calculate exchange length in meters from the parameter <cite>A</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="SingleLayer.html#SpinWaveToolkit.SingleLayer" title="SpinWaveToolkit.SingleLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleLayer</span></code></a>, <a class="reference internal" href="SingleLayerNumeric.html#SpinWaveToolkit.SingleLayerNumeric" title="SpinWaveToolkit.SingleLayerNumeric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleLayerNumeric</span></code></a>, <a class="reference internal" href="Material.html#SpinWaveToolkit.Material" title="SpinWaveToolkit.Material"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Material</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>Example of calculation of the dispersion relation <cite>f(k_xi)</cite>, and
+other important quantities, for the acoustic mode in a 30 nm
+thick NiFe (Permalloy) bilayer.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kxi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">150e6</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+
+<span class="n">PyChar</span> <span class="o">=</span> <span class="n">DoubleLayerNumeric</span><span class="p">(</span><span class="n">Bext</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">SWT</span><span class="o">.</span><span class="n">NiFe</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mf">30e-9</span><span class="p">,</span>
+                            <span class="n">kxi</span><span class="o">=</span><span class="n">kxi</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">Ku</span><span class="o">=</span>
+                            <span class="p">)</span>
+<span class="n">DispPy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetDispersion</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-9</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>  <span class="c1"># GHz</span>
+<span class="n">vgPy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetGroupVelocity</span><span class="p">()</span><span class="o">*</span><span class="mf">1e-3</span>  <span class="c1"># km/s</span>
+<span class="n">lifetimePy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetLifetime</span><span class="p">()</span><span class="o">*</span><span class="mf">1e9</span>  <span class="c1"># ns</span>
+<span class="n">decLen</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetDecLen</span><span class="p">()</span><span class="o">*</span><span class="mf">1e6</span>  <span class="c1"># um</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetBlochFunction">
+<span class="sig-name descname"><span class="pre">GetBlochFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lifeTime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetBlochFunction" title="Link to this definition">#</a></dt>
+<dd><p>Give Bloch function for given mode.
+Bloch function is calculated with margin of 10% of
+the lowest and the highest frequency (including
+Gilbert broadening).
+As there is problems with lifetime calculation for the
+double layers, you can set fixed one as input parameter.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>n</strong><span class="classifier">{0, 1}, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Quantization number.  The -1 value is not supported here.
+Default is 0.</p>
+</dd>
+<dt><strong>Nf</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Number of frequency points for the Bloch function.</p>
+</dd>
+<dt><strong>lifetime</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><ol class="loweralpha simple" start="19">
+<li><p>fixed lifetime to bypass its dispersion calculation.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>w</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>(rad*Hz) frequency axis for the 2D Bloch function.</p>
+</dd>
+<dt><strong>blochFunc</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>() 2D Bloch function for given kxi and w.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetDecLen">
+<span class="sig-name descname"><span class="pre">GetDecLen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDecLen" title="Link to this definition">#</a></dt>
+<dd><p>Give decay lengths for defined k.
+Decay length is computed as lambda = v_g*tau.
+Output is given in m.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Works only when <code class="docutils literal notranslate"><span class="pre">kxi.shape[0]</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code>.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>n</strong><span class="classifier">{-1, 0, 1}, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Quantization number.  If -1, data for all (positive)
+calculated modes are returned.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>declen</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><ol class="loweralpha simple" start="13">
+<li><p>decay length.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetDensityOfStates">
+<span class="sig-name descname"><span class="pre">GetDensityOfStates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDensityOfStates" title="Link to this definition">#</a></dt>
+<dd><p>Give density of states for given mode.
+Density of states is computed as DoS = 1/v_g.
+Output is density of states in 1D for given dispersion
+characteristics.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Works only when <code class="docutils literal notranslate"><span class="pre">kxi.shape[0]</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code>.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>n</strong><span class="classifier">{-1, 0, 1}, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Quantization number.  If -1, data for all (positive)
+calculated modes are returned.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>dos</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>(s/m) value proportional to density of states.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetDispersion">
+<span class="sig-name descname"><span class="pre">GetDispersion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDispersion" title="Link to this definition">#</a></dt>
+<dd><p>Gives frequencies for defined k (Dispersion relation).
+The returned value is in the rad*Hz.</p>
+<p>The model formulates a system matrix and then numerically solves
+its eigenvalues and eigenvectors. The eigenvalues represent the
+dispersion relation (as the matrix is 4x4 it has 4 eigenvalues).
+The eigen values represent the acoustic and optic spin-wave
+modes (each with negative and positive frequency).
+The eigenvectors represent the amplitude of the individual
+spin-wave modes and can be used to calculate spin-wave profile
+(see example NumericCalculationofDispersionModeProfiles.py).</p>
+<p>The returned modes are sorted from low (acoustic) to high
+(optic) frequencies, omitting the negative-frequency modes.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>wV</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>(rad*Hz) frequencies of the acoustic and optic spin-wave
+modes.  Has a shape of <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">N)</span></code>, where 
+<code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">kxi.shape[0]</span></code>.</p>
+</dd>
+<dt><strong>vV</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>Mode profiles of corresponding eigenfrequencies,
+given as Fourier coefficients for IP and OOP profiles.
+Has a shape of <code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">2,</span> <span class="pre">N)</span></code>, where <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">kxi.shape[0]</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetExchangeLen">
+<span class="sig-name descname"><span class="pre">GetExchangeLen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetExchangeLen" title="Link to this definition">#</a></dt>
+<dd><p>Calculate exchange length in meters from the parameter <cite>A</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyIP">
+<span class="sig-name descname"><span class="pre">GetFreeEnergyIP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyIP" title="Link to this definition">#</a></dt>
+<dd><p>Gives overall energy (density) of SAF system.
+The returned value is in joules.</p>
+<p>This function is used during fidning of the angles of
+magnetization.  Only works, when the out-of-plane tilt is not
+expected.  Function does not minimize the OOP angles, just
+assumes completely in-plane magnetization.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>phis</strong><span class="classifier">[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>]</span></dt><dd><p>(rad) IP magnetization angles.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>E</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="upperalpha simple" start="10">
+<li><p>energy density of the system.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyOOP">
+<span class="sig-name descname"><span class="pre">GetFreeEnergyOOP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thetas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyOOP" title="Link to this definition">#</a></dt>
+<dd><p>Gives overall energy (density) of the SAF system.
+The returned value is in joules.</p>
+<p>This function is used during fidning of the angles of
+magnetization.  This function assumes fixed in-plane angle of
+the magnetization.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>thetas</strong><span class="classifier">[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>]</span></dt><dd><p>(rad) OOP magnetization angles.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>E</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="upperalpha simple" start="10">
+<li><p>energy density of the system.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetGroupVelocity">
+<span class="sig-name descname"><span class="pre">GetGroupVelocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetGroupVelocity" title="Link to this definition">#</a></dt>
+<dd><p>Gives (tangential) group velocities for defined k.
+The group velocity is computed as vg = dw/dk.
+The result is given in m/s</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Works only when <code class="docutils literal notranslate"><span class="pre">kxi.shape[0]</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code>.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>n</strong><span class="classifier">{-1, 0, 1}, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Quantization number.  If -1, data for all (positive)
+calculated modes are returned.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>vg</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><p>(m/s) tangential group velocity.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetLifetime">
+<span class="sig-name descname"><span class="pre">GetLifetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetLifetime" title="Link to this definition">#</a></dt>
+<dd><p>Gives lifetimes for defined k.
+Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
+The output is in s.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>n</strong><span class="classifier">{-1, 0, 1}, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Quantization number.  If -1, data for all (positive)
+calculated modes are returned.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>lifetime</strong><span class="classifier"><a class="reference external" href="https://numpy.org/devdocs/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4.dev0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></dt><dd><ol class="loweralpha simple" start="19">
+<li><p>lifetime.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.GetPhis">
+<span class="sig-name descname"><span class="pre">GetPhis</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.GetPhis" title="Link to this definition">#</a></dt>
+<dd><p>Gives angles of magnetization in both SAF layers.
+The returned value is in rad.</p>
+<p>Function finds the energy minimum, assuming completely
+in-plane magnetization.
+If there are problems with energy minimalization I recomend to
+try different methods (but Nelder-Mead seems to work in most
+scenarios).</p>
+<dl class="field-list">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>phis</strong><span class="classifier">[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>]</span></dt><dd><p>(rad) equilibrium angles of magnetization.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Aex">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Aex</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Aex" title="Link to this definition">#</a></dt>
+<dd><p>Exchange stiffness constant (J/m).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Aex2">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Aex2</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Aex2" title="Link to this definition">#</a></dt>
+<dd><p>Exchange stiffness constant (J/m) of the second layer.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Bext">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Bext</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Bext" title="Link to this definition">#</a></dt>
+<dd><p>External field value (T).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Ku">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ku</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Ku" title="Link to this definition">#</a></dt>
+<dd><p>Uniaxial anisotropy strength (J/m^3).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Ku2">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ku2</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Ku2" title="Link to this definition">#</a></dt>
+<dd><p>Uniaxial anisotropy strength (J/m^3).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Ms">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ms</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Ms" title="Link to this definition">#</a></dt>
+<dd><p>Saturation magnetization (A/m).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.Ms2">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ms2</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.Ms2" title="Link to this definition">#</a></dt>
+<dd><p>Saturation magnetization (A/m) of the second layer.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SpinWaveToolkit.DoubleLayerNumeric.gamma">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gamma</span></span><a class="headerlink" href="#SpinWaveToolkit.DoubleLayerNumeric.gamma" title="Link to this definition">#</a></dt>
+<dd><p>Gyromagnetic ratio (rad*Hz/T).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="SingleLayerNumeric.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="SingleLayerSCcoupled.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetBlochFunction"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetBlochFunction()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDecLen"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetDecLen()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDensityOfStates"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetDensityOfStates()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetDispersion"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetDispersion()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetExchangeLen"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetExchangeLen()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyIP"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetFreeEnergyIP()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetFreeEnergyOOP"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetFreeEnergyOOP()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetGroupVelocity"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetGroupVelocity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetLifetime"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetLifetime()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.GetPhis"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.GetPhis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Aex"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Aex</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Aex2"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Aex2</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Bext"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Bext</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Ku"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Ku</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Ku2"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Ku2</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Ms"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Ms</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.Ms2"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.Ms2</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.DoubleLayerNumeric.gamma"><code class="docutils literal notranslate"><span class="pre">DoubleLayerNumeric.gamma</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api_reference/classes/DoubleLayerNumeric.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, CEITECmagnonics and SpinWaveToolkit contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

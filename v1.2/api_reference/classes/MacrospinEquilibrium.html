@@ -1,0 +1,952 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SpinWaveToolkit.MacrospinEquilibrium &#8212; SpinWaveToolkit v1.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../../_static/documentation_options.js?v=72e0b74d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_reference/classes/MacrospinEquilibrium';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.2';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = false;
+        </script>
+    <link rel="icon" href="../../_static/logo.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="SpinWaveToolkit.SingleLayer" href="SingleLayer.html" />
+    <link rel="prev" title="SpinWaveToolkit.Material" href="Material.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+  <aside class="bd-header-announcement d-print-none d-none" aria-label="Announcement" data-pst-announcement-url="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_templates/announcement_banner.html"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../../_static/logo.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">SpinWaveToolkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../publications.html">
+    Publications
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../publications.html">
+    Publications
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">API Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../constants.html">Constants</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../classes.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Material.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.MacrospinEquilibrium</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayer.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayerNumeric.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="DoubleLayerNumeric.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SingleLayerSCcoupled.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="BulkPolariton.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.BulkPolariton</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../submodules.html">Submodules</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../bls/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../bls/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../bls/classes/ObjectiveLens.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.bls.ObjectiveLens</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../bls/functions.html">Functions</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.MacrospinEquilibrium</span></code></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="spinwavetoolkit-macrospinequilibrium">
+<h1><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium" title="SpinWaveToolkit.MacrospinEquilibrium"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.MacrospinEquilibrium</span></code></a><a class="headerlink" href="#spinwavetoolkit-macrospinequilibrium" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SpinWaveToolkit.</span></span><span class="sig-name descname"><span class="pre">MacrospinEquilibrium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">demag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium" title="Link to this definition">#</a></dt>
+<dd><p>Compute magnetization equilibrium direction in a macrospin
+approximation.</p>
+<p>Can be used to find static equilibrium position before calculating
+the spin-wave dispersion relation in other classes.  See
+<a class="reference internal" href="../../examples.html"><span class="doc">Examples</span></a> for more.</p>
+<blockquote>
+<div><p>### update exact example (e.g. a layer with PMA)</p>
+</div></blockquote>
+<p>Usually searches for a local equilibrium based on the initial
+position.  (The equilibrium is a minimum in the energy density
+landscape.)</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>The model might get stuck in labile equilibria, therefore it is
+encouraged to slightly perturb the angles (e.g. by 1 µrad) to get
+more reliable results from the calculations.</p>
+</div>
+<p>Includes the effect of the thin film’s demagnetizing field (dipolar
+energy), external field (Zeeman energy) and any number of uniaxial
+anisotropies with arbitrary directions of the anisotropy axis.</p>
+<p>All angles are given in the laboratory (lab) frame of reference,
+i.e. <cite>z || thin film normal</cite>, and <cite>x || IP projection of spin wave
+wavevector</cite>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Cubic anisotropy is not implemented for now, as its usage is not
+very common in our experiments.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>Ms</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(A/m) saturation magnetization of the magnetic material.</p>
+</dd>
+<dt><strong>Bext</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(T ) magnitude of external field.</p>
+</dd>
+<dt><strong>theta_H, phi_H</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(rad) polar and azimuthal angles of the external field
+direction.</p>
+</dd>
+<dt><strong>theta, phi</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a></span></dt><dd><p>(rad) polar and azimuthal angle of magnetization.  Serves as the
+starting point for <code class="docutils literal notranslate"><span class="pre">minimize</span></code>.  If None, the values are
+inferred from <cite>theta_H</cite> and <cite>phi_H</cite>, respectively.  Default is
+None.</p>
+</dd>
+<dt><strong>demag</strong><span class="classifier">(3, 3) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, optional</span></dt><dd><p>The demagnetization tensor in the lab frame.  If None,
+<code class="docutils literal notranslate"><span class="pre">np.diag([0.0,</span> <span class="pre">0.0,</span> <span class="pre">1.0])</span></code> is used, which corresponds to an
+infinite thin film in the xy plane.  Default is None.</p>
+</dd>
+<dt><strong>verbose: bool, optional</strong></dt><dd><p>Additional informative output to console?  Default is True.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>Ms</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(A/m) saturation magnetization of the magnetic material.</p>
+</dd>
+<dt><strong>d</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(m ) thickness of the magnetic film.</p>
+</dd>
+<dt><strong>Bext</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a></span></dt><dd><p>Dictionary containing the spherical coordinates of the external
+magnetic field.  It has keys {“Bext”, “theta_H”, “phi_H”}.</p>
+</dd>
+<dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a></span></dt><dd><p>Dictionary containing the spherical coordinates of
+magnetization.  It has keys {“theta”, “phi”}.</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">(3,) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>Unit vector of external magnetic field.  Depends on <cite>Bext</cite>.</p>
+</dd>
+<dt><strong>demag</strong><span class="classifier">(3, 3) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>The demagnetization tensor in the lab frame.</p>
+</dd>
+<dt><strong>anis</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a></span></dt><dd><p>Dictionary of anisotropies.  Each (uniaxial) anisotropy has
+a unique name key, which can be then used to access its
+properties, which are stored as another dictionary with the
+following keys:</p>
+<ul class="simple">
+<li><p>“Ku” - uniax. anisotropy strength (J/m^3)</p></li>
+<li><p>“theta” - polar angle of anisotropy axis (rad)</p></li>
+<li><p>“phi” - azimuthal angle of anisotropy axis (rad)</p></li>
+<li><p>“Na” - corresponding tensor calculated from the three
+parameters above.</p></li>
+</ul>
+</dd>
+<dt><strong>Na_tot</strong><span class="classifier">(3, 3) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>Sum of all anisotropy tensors.  Depends on <cite>anis</cite>.</p>
+</dd>
+<dt><strong>eden_zeeman, eden_demag, eden_anis_uni</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(J/m^3) Zeeman, dipolar, and uniax. anisotropy energy density,
+respectively.  Stored as results of the last <cite>minimize()</cite> call.</p>
+</dd>
+<dt><strong>res</strong><span class="classifier"><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html#scipy.optimize.OptimizeResult" title="(in SciPy v1.17.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.optimize.OptimizeResult</span></code></a></span></dt><dd><p>Full output of the <cite>scipy.optimize.minimize</cite> function from the
+last calculation.  (That is, given as None until first run.)</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values" title="(in Python v3.14)"><span class="xref std std-ref">bool</span></a></span></dt><dd><p>Additional informative output to console?</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.add_uniaxial_anisotropy" title="SpinWaveToolkit.MacrospinEquilibrium.add_uniaxial_anisotropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_uniaxial_anisotropy</span></code></a>(name[, Ku, theta, ...])</p></td>
+<td><p>Add uniaxial anisotropy to the system.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.recalc_params" title="SpinWaveToolkit.MacrospinEquilibrium.recalc_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recalc_params</span></code></a>()</p></td>
+<td><p>Recalculate/update the values of dependent variables, e.g. field unit vector and total anistropy tensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.minimize" title="SpinWaveToolkit.MacrospinEquilibrium.minimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimize</span></code></a>([scipy_kwargs, verbose])</p></td>
+<td><p>Evaluate the minimization problem.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.eval_energy" title="SpinWaveToolkit.MacrospinEquilibrium.eval_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval_energy</span></code></a>(m[, components])</p></td>
+<td><p>Evaluate the energy density for the magnetization direction angles <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">(theta,</span> <span class="pre">phi)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.getHeff" title="SpinWaveToolkit.MacrospinEquilibrium.getHeff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getHeff</span></code></a>()</p></td>
+<td><p>Calculate effective field with the current magnetization direction.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#SpinWaveToolkit.MacrospinEquilibrium.hysteresis" title="SpinWaveToolkit.MacrospinEquilibrium.hysteresis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hysteresis</span></code></a>(Bext, theta_H, phi_H[, scipy_kwargs])</p></td>
+<td><p>Calculate a hysteresis curve from a vector of swept field values.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="SingleLayer.html#SpinWaveToolkit.SingleLayer" title="SpinWaveToolkit.SingleLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleLayer</span></code></a>, <a class="reference internal" href="SingleLayerNumeric.html#SpinWaveToolkit.SingleLayerNumeric" title="SpinWaveToolkit.SingleLayerNumeric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleLayerNumeric</span></code></a>, <a class="reference internal" href="Material.html#SpinWaveToolkit.Material" title="SpinWaveToolkit.Material"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Material</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">maceq</span> <span class="o">=</span> <span class="n">MacrospinEquilibrium</span><span class="p">(</span>
+    <span class="n">Ms</span><span class="o">=</span><span class="mf">800e3</span><span class="p">,</span> <span class="n">Bext</span><span class="o">=</span><span class="mf">150e-3</span><span class="p">,</span> <span class="n">theta_H</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="n">phi_H</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span> <span class="n">theta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">maceq</span><span class="o">.</span><span class="n">add_uniaxial_anisotropy</span><span class="p">(</span><span class="s2">&quot;uni0&quot;</span><span class="p">,</span> <span class="n">Ku</span><span class="o">=</span><span class="mf">15e3</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">maceq</span><span class="o">.</span><span class="n">add_uniaxial_anisotropy</span><span class="p">(</span><span class="s2">&quot;uni1&quot;</span><span class="p">,</span> <span class="n">Ku</span><span class="o">=</span><span class="mf">10e3</span><span class="p">,</span>
+    <span class="n">theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">70</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">maceq</span><span class="o">.</span><span class="n">minimize</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">maceq</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.add_uniaxial_anisotropy">
+<span class="sig-name descname"><span class="pre">add_uniaxial_anisotropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ku</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bani</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Na</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.add_uniaxial_anisotropy" title="Link to this definition">#</a></dt>
+<dd><p>Add uniaxial anisotropy to the system.  Only the first order
+constant is assumed.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>name</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>String name to use as key in the dictionary of anisotropies.
+If an anisotropy with the same name already exists, it is
+silently overwritten.</p>
+</dd>
+<dt><strong>Ku</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>(J/m^3) uniaxial anisotropy constant.  Easy plane anisotropy
+for Ku &lt; 0 and easy axis for Ku &gt; 0.  Unused if <cite>Na</cite> or
+<cite>Bani</cite> is specified.</p>
+</dd>
+<dt><strong>theta</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>(rad) polar angle of the anisotropy axis in the lab frame.
+Unused if <cite>Na</cite> is specified.</p>
+</dd>
+<dt><strong>phi</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>(rad) azimuthal angle of the anisotropy axis in the lab
+frame.  Unused if <cite>Na</cite> is specified.</p>
+</dd>
+<dt><strong>Bani</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>(T ) uniaxial anisotropy field.  If specified (and non-zero),
+<cite>Ku</cite> input is not used, but rather is recalculated from
+<cite>Bani</cite> as <code class="docutils literal notranslate"><span class="pre">Ku</span> <span class="pre">=</span> <span class="pre">Ms*Bani/2</span></code>.  Default is None.</p>
+</dd>
+<dt><strong>Na</strong><span class="classifier">(3, 3) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, optional</span></dt><dd><p>() uniaxial anisotropy tensor.  Can be used for direct
+assignment.  However, when used, the other parameters are
+not recalculated into the anisotropy dict.  Default is None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.eval_energy">
+<span class="sig-name descname"><span class="pre">eval_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.eval_energy" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the energy density for the magnetization direction
+angles <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">(theta,</span> <span class="pre">phi)</span></code>.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>eden</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a>]</span></dt><dd><p>(J/m^3) energy density. If <cite>components</cite> is False, given as
+a sum of all components (float). Returns a list of
+components otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.getHeff">
+<span class="sig-name descname"><span class="pre">getHeff</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.getHeff" title="Link to this definition">#</a></dt>
+<dd><p>Calculate effective field with the current magnetization
+direction.</p>
+<p>Performs a numerical derivative of the energy density wrt.
+magnetization to get the effective field vector.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>theta_Heff, phi_Heff</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>(rad) polar and azimuthal angle of the effective field
+direction.</p>
+</dd>
+<dt><strong>Heff</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><ol class="upperalpha simple" start="20">
+<li><p>effective field magnitude.</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.hysteresis">
+<span class="sig-name descname"><span class="pre">hysteresis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Bext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scipy_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.hysteresis" title="Link to this definition">#</a></dt>
+<dd><p>Calculate a hysteresis curve from a vector of swept field
+values.</p>
+<p>Any of the input (field-related) values can be swept, but the
+other two have to be either of same shape or floats.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>Bext</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or (N,) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>(T ) amplitude of external magnetic field (can be negative).</p>
+</dd>
+<dt><strong>theta_H</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or (N,) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>(rad) polar angle of external magnetic field.</p>
+</dd>
+<dt><strong>phi_H</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">float</span></code></a> or (N,) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>(rad) azimuthal angle of external magnetic field.</p>
+</dd>
+<dt><strong>scipy_kwargs</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, optional</span></dt><dd><p>Dictionary with settings passed to
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize" title="(in SciPy v1.17.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.minimize()</span></code></a>.  Cannot contain <code class="docutils literal notranslate"><span class="pre">tol</span></code>
+and <code class="docutils literal notranslate"><span class="pre">bounds</span></code> keywords, as they are fixly set here.
+If None, <code class="docutils literal notranslate"><span class="pre">{&quot;method&quot;:</span> <span class="pre">&quot;Nelder-Mead&quot;}</span></code> is used.
+Defualt is None. Try changing the
+optimization method is you have concern about the results
+(see documentation of <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize" title="(in SciPy v1.17.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.minimize()</span></code></a>).
+This is not a sweepable parameter!</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>theta, phi</strong><span class="classifier">(N,) <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></span></dt><dd><p>(rad) angles related to magnetization direction at each
+point of the sweep.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>To get a projection of magnetization in a certain direction,
+you can just put the output of this method to the <cite>sphr2cart</cite>
+function provided by <cite>SpinWaveToolkit</cite>.</p>
+<p>For sweeping other parameters, the user is encouraged to write
+their own script similarly to this method.  Currently, we
+do not plan to implement a general sweep.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.minimize">
+<span class="sig-name descname"><span class="pre">minimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scipy_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.minimize" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the minimization problem.</p>
+<p>Uses the <cite>scipy.optimize.minimize</cite> function to find the minimum
+in the 2D energy landscape E(theta, phi).</p>
+<p>Result is saved in the attributes <cite>M</cite> (just magnetization
+angles) and <cite>res</cite> (full output).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>scipy_kwargs</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, optional</span></dt><dd><p>Dictionary with settings passed to
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize" title="(in SciPy v1.17.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.minimize()</span></code></a>.  Cannot contain <code class="docutils literal notranslate"><span class="pre">tol</span></code>
+and <code class="docutils literal notranslate"><span class="pre">bounds</span></code> keywords, as they are fixly set here.
+If None, <code class="docutils literal notranslate"><span class="pre">{&quot;method&quot;:</span> <span class="pre">&quot;Nelder-Mead&quot;}</span></code> is used.
+Default is None. Try changing the
+optimization method is you have concern about the results
+(see documentation of <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize" title="(in SciPy v1.17.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.minimize()</span></code></a>).</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values" title="(in Python v3.14)"><span class="xref std std-ref">bool</span></a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, optional</span></dt><dd><p>Additional informative output to console?  If None, the
+value is inferred from the <code class="docutils literal notranslate"><span class="pre">verbose</span></code> attribute.  Default
+is None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The used minimize function usually finds a local minimum
+based on the initial conditions. This can be used for
+calculating hysteresis loops and field sweeps. For global
+minimum finding, a brute force method could be used, but it
+is not implemented here.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SpinWaveToolkit.MacrospinEquilibrium.recalc_params">
+<span class="sig-name descname"><span class="pre">recalc_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SpinWaveToolkit.MacrospinEquilibrium.recalc_params" title="Link to this definition">#</a></dt>
+<dd><p>Recalculate/update the values of dependent variables, e.g.
+field unit vector and total anistropy tensor.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="Material.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="SingleLayer.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.add_uniaxial_anisotropy"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.add_uniaxial_anisotropy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.eval_energy"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.eval_energy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.getHeff"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.getHeff()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.hysteresis"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.hysteresis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.minimize"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.minimize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SpinWaveToolkit.MacrospinEquilibrium.recalc_params"><code class="docutils literal notranslate"><span class="pre">MacrospinEquilibrium.recalc_params()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api_reference/classes/MacrospinEquilibrium.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, CEITECmagnonics and SpinWaveToolkit contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
