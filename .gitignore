@@ -24,5 +24,6 @@ ignored_folder/
 # Distribution / packaging
 dist/
 build/
+docs/source/bin/
 *.egg-info/
 
