@@ -65,6 +65,18 @@ html_theme_options = {
             "icon": "fa-brands fa-python",
             "type": "fontawesome",
         },
+        {
+            "name": "SWTweb",
+            "url": "https://ceitecmagnonics.github.io/SWTweb/",
+            "icon": "fa-classic fa-chart-line",
+            "type": "fontawesome",
+        },
+        {
+            "name": "Discussions",
+            "url": "https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions",
+            "icon": "fa-classic fa-comments",
+            "type": "fontawesome",
+        },
     ],
     "navbar_align": "left",
     # "navbar_start": ["navbar-logo", "version-switcher"],

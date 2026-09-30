@@ -106,20 +106,22 @@ Cite us
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
 
-.. [1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" (2026) `arXiv:2601.23227 [cond-mat.mes-hall] <https://doi.org/10.48550/arXiv.2601.23227>`_
+.. [1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" `Journal of Physics: Condensed Matter 38, 175802 (2026) <https://doi.org/10.1088/1361-648X/ae6430>`_
 .. [2] Klíma, J., Krčma, J., & Wojewoda, O. "SpinWaveToolkit: Set of tools useful in spin wave research." GitHub, 2026. `<https://github.com/CEITECmagnonics/SpinWaveToolkit>`_
 
 
 .. code-block:: bibtex
 
-   @misc{klima2026,
-       title={{SpinWaveToolkit}: {Python} package for (semi-)analytical calculations in the field of spin-wave physics},
-       author={Klíma, Jan and Wojewoda, Ondřej and Krčma, Jakub and Hrtoň, Martin and Pavelka, Dominik and Holobrádek, Jakub and Urbánek, Michal},
-       year={2026},
-       eprint={2601.23227},
-       archivePrefix={arXiv},
-       primaryClass={cond-mat.mes-hall},
-       url={https://arxiv.org/abs/2601.23227},
+   @article{klima2026,
+       title = {{SpinWaveToolkit}: python package for (semi-)analytical calculations in the field of spin-wave physics},
+       author = {Klíma,  Jan and Wojewoda,  Ondřej and Krčma,  Jakub and Hrtoň,  Martin and Pavelka,  Dominik and Holobrádek,  Jakub and Urbánek,  Michal},
+       journal = {Journal of Physics: Condensed Matter},
+       volume = {38},
+       number = {17},
+       pages = {175802},
+       year = {2026},
+       url = {http://dx.doi.org/10.1088/1361-648X/ae6430},
+       doi = {10.1088/1361-648x/ae6430},
    }
 
    @online{swt,
