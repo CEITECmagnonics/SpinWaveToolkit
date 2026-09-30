@@ -47,7 +47,7 @@ html_css_files = ['custom.css']  # wrt. static path
 html_logo = "_static/logo.svg"
 html_favicon = "_static/logo.svg"  # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon
 html_theme_options = {
-    "header_links_before_dropdown": 5,
+    "header_links_before_dropdown": 4,
     "logo": {
         "text": "SpinWaveToolkit",
         "image_dark": "_static/logo.svg",
