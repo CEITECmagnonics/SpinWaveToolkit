@@ -24,6 +24,8 @@ These works have directly cited the `SpinWaveToolkit` or used its `unstable pred
 
 .. create a list of citing publications
 
+#. Szulc, K. *et al.* "Polarization-resolved measurement of forward volume spin waves by micro-focused Brillouin light scattering" `Applied Physics Letters 128, 192406 (2026) <https://doi.org/10.1063/5.0329011>`_
+#. Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" `Journal of Physics: Condensed Matter 38, 175802 (2026) <https://doi.org/10.1088/1361-648X/ae6430>`_
 #. Krčma *et al.* "Mie-enhanced microfocused Brillouin light scattering for full wave vector resolution of nanoscale spin waves" `Science Advances 11, eady8833 (2025) <https://doi.org/10.1126/sciadv.ady8833>`_
 #. Wojewoda *et al.* "Modeling of microfocused Brillouin light scattering spectra" `Physical Review B 110 224428 (2024) <https://doi.org/10.1103/PhysRevB.110.224428>`_
 #. Wojewoda *et al.* "Unidirectional propagation of zero-momentum magnons" `Applied Physics Letters 125, 132401 (2024) <https://doi.org/10.1063/5.0218478>`_

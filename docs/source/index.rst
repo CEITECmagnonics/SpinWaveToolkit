@@ -7,11 +7,6 @@ SpinWaveToolkit Documentation
 =============================
 
 
-.. warning::
-   .. :collapsible:
-
-   Needs to be updated.
-
 
 .. toctree::
    :maxdepth: 2
@@ -46,21 +41,60 @@ Where to go
 -----------
 
 .. grid:: 3
+    :gutter: 3
 
-    .. grid-item-card::  :octicon:`rocket;6em;`
+    .. grid-item-card::  :octicon:`rocket;6em;sd-text-primary`
         :text-align: center
+        :link: getting_started
+        :link-type: doc
+        :link-alt: Getting Started
+        :class-card: hover-card
 
-        For a quick introduction, jump to the :doc:`getting_started` page and take a look at the provided :doc:`examples`.
+        First time? Jump to **Getting Started**.
 
-    .. grid-item-card:: :octicon:`book;6em;`
+    .. grid-item-card::  :octicon:`graph;6em;sd-text-primary`
         :text-align: center
+        :link: https://ceitecmagnonics.github.io/SWTweb/
+        :link-alt: SWTweb
+        :class-card: hover-card
 
-        More information on the usage of SpinWaveToolkit is given in the :doc:`user_guide`.
+        **SWTweb**: A fast in-browser calculator using SpinWaveToolkit — powerful, no installation, safe.
 
-    .. grid-item-card:: :octicon:`log;6em;`
+    .. grid-item-card::  :octicon:`image;4em;sd-text-primary` :octicon:`image;6em;sd-text-primary` :octicon:`image;4em;sd-text-primary`
         :text-align: center
+        :link: examples
+        :link-type: doc
+        :link-alt: Examples
+        :class-card: hover-card
 
-        Details about a specific element can be found at the :doc:`api_reference/index`.
+        Get inspiration from the provided **Examples**.
+
+    .. grid-item-card:: :octicon:`book;6em;sd-text-primary`
+        :text-align: center
+        :link: user_guide
+        :link-type: doc
+        :link-alt: User Guide
+        :class-card: hover-card
+
+        More information on the usage of SpinWaveToolkit is given in the **User Guide**.
+
+    .. grid-item-card:: :octicon:`log;6em;sd-text-primary`
+        :text-align: center
+        :link: api_reference/index
+        :link-type: doc
+        :link-alt: API Reference
+        :class-card: hover-card
+
+        Details about a specific element can be found in the **API Reference**.
+
+    .. grid-item-card:: :octicon:`mortar-board;6em;sd-text-primary`
+        :text-align: center
+        :link: publications
+        :link-type: doc
+        :link-alt: Publications
+        :class-card: hover-card
+
+        See **Publications** for published outputs and used literature.
 
 
 
@@ -72,20 +106,22 @@ Cite us
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
 
-.. [1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" (2026) `arXiv:2601.23227 [cond-mat.mes-hall] <https://doi.org/10.48550/arXiv.2601.23227>`_
+.. [1] Klíma, J. *et al.* "SpinWaveToolkit: Python package for (semi-)analytical calculations in the field of spin-wave physics" `Journal of Physics: Condensed Matter 38, 175802 (2026) <https://doi.org/10.1088/1361-648X/ae6430>`_
 .. [2] Klíma, J., Krčma, J., & Wojewoda, O. "SpinWaveToolkit: Set of tools useful in spin wave research." GitHub, 2026. `<https://github.com/CEITECmagnonics/SpinWaveToolkit>`_
 
 
 .. code-block:: bibtex
 
-   @misc{klima2026,
-       title={{SpinWaveToolkit}: {Python} package for (semi-)analytical calculations in the field of spin-wave physics},
-       author={Klíma, Jan and Wojewoda, Ondřej and Krčma, Jakub and Hrtoň, Martin and Pavelka, Dominik and Holobrádek, Jakub and Urbánek, Michal},
-       year={2026},
-       eprint={2601.23227},
-       archivePrefix={arXiv},
-       primaryClass={cond-mat.mes-hall},
-       url={https://arxiv.org/abs/2601.23227},
+   @article{klima2026,
+       title = {{SpinWaveToolkit}: python package for (semi-)analytical calculations in the field of spin-wave physics},
+       author = {Klíma,  Jan and Wojewoda,  Ondřej and Krčma,  Jakub and Hrtoň,  Martin and Pavelka,  Dominik and Holobrádek,  Jakub and Urbánek,  Michal},
+       journal = {Journal of Physics: Condensed Matter},
+       volume = {38},
+       number = {17},
+       pages = {175802},
+       year = {2026},
+       url = {http://dx.doi.org/10.1088/1361-648X/ae6430},
+       doi = {10.1088/1361-648x/ae6430},
    }
 
    @online{swt,

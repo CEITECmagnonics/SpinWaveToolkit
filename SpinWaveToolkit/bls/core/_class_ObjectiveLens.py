@@ -129,7 +129,7 @@ class ObjectiveLens:
                 * (1 + np.cos(theta))
                 * jv(0, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta)),
-                theta,
+                x=theta,
             )
             I01[i] = simpson(
                 fw
@@ -137,7 +137,7 @@ class ObjectiveLens:
                 * (np.sin(theta) ** 2)
                 * jv(1, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta)),
-                theta,
+                x=theta,
             )
             I02[i] = simpson(
                 fw
@@ -146,7 +146,7 @@ class ObjectiveLens:
                 * (1 - np.cos(theta))
                 * jv(2, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta)),
-                theta,
+                x=theta,
             )
             for j, phii in enumerate(phi):
                 common_factor = (
@@ -225,7 +225,7 @@ class ObjectiveLens:
                 * jv(1, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta))
             )
-            Irad[i] = simpson(integrand_rad, theta)
+            Irad[i] = simpson(integrand_rad, x=theta)
 
             integrand_I10 = (
                 fw
@@ -234,7 +234,7 @@ class ObjectiveLens:
                 * jv(0, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta))
             )
-            I10[i] = simpson(integrand_I10, theta)
+            I10[i] = simpson(integrand_I10, x=theta)
 
             for j, phii in enumerate(phi):
                 common_factor = (
@@ -312,7 +312,7 @@ class ObjectiveLens:
                 * jv(1, k0 * rhoi * np.sin(theta))
                 * np.exp(1j * k0 * z * np.cos(theta))
             )
-            Iazm[i] = simpson(integrand_azm, theta)
+            Iazm[i] = simpson(integrand_azm, x=theta)
             for j, phii in enumerate(phi):
                 common_factor = (
                     1j

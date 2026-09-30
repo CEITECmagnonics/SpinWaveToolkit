@@ -43,10 +43,11 @@ nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might 
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_css_files = ['custom.css']  # wrt. static path
 html_logo = "_static/logo.svg"
 html_favicon = "_static/logo.svg"  # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon
 html_theme_options = {
-    "header_links_before_dropdown": 5,
+    "header_links_before_dropdown": 4,
     "logo": {
         "text": "SpinWaveToolkit",
         "image_dark": "_static/logo.svg",
@@ -62,6 +63,18 @@ html_theme_options = {
             "name": "PyPI",
             "url": "https://pypi.org/project/SpinWaveToolkit/",
             "icon": "fa-brands fa-python",
+            "type": "fontawesome",
+        },
+        {
+            "name": "SWTweb",
+            "url": "https://ceitecmagnonics.github.io/SWTweb/",
+            "icon": "fa-classic fa-chart-line",
+            "type": "fontawesome",
+        },
+        {
+            "name": "Discussions",
+            "url": "https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions",
+            "icon": "fa-classic fa-comments",
             "type": "fontawesome",
         },
     ],
