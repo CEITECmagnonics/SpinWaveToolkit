@@ -1,0 +1,762 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>API reference &#8212; SpinWaveToolkit v1.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+
+    <script src="../_static/documentation_options.js?v=45183d27"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api_reference/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://ceitecmagnonics.github.io/SpinWaveToolkit/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v1.1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = false;
+        </script>
+    <link rel="icon" href="../_static/logo.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Constants" href="constants.html" />
+    <link rel="prev" title="1. Installation" href="../usage/installation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">This site is currently under <b>intensive construction</b>. Glitches still may occur.<br><i>Suggestions for improvements are welcome! You can use our <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/discussions">Forum</a> or <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit/issues">Issues</a> for your comments.</i></div>
+</aside>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-light" alt=""/>
+    <img src="../_static/logo.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">SpinWaveToolkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../publications.html">
+    Publications
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../release_notes.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../publications.html">
+    Publications
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/CEITECmagnonics/SpinWaveToolkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/SpinWaveToolkit/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">API Sections</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="constants.html">Constants</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/Material.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayer.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayerNumeric.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/DoubleLayerNumeric.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayerSCcoupled.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/BulkPolariton.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.BulkPolariton</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API reference</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<p>SpinWaveToolkit is an open-source Python package providing analytical tools for spin-wave physics and research.</p>
+<p>Below you will find links to detailed documentation for constants, submodules, classes, functions, and .</p>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API Sections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="constants.html">Constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#SpinWaveToolkit.helpers.MU0"><code class="docutils literal notranslate"><span class="pre">MU0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#SpinWaveToolkit.helpers.C"><code class="docutils literal notranslate"><span class="pre">C</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#SpinWaveToolkit.helpers.HBAR"><code class="docutils literal notranslate"><span class="pre">HBAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#SpinWaveToolkit.helpers.KB"><code class="docutils literal notranslate"><span class="pre">KB</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="classes.html">Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/Material.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.Material</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayer.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayerNumeric.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/DoubleLayerNumeric.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.DoubleLayerNumeric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/SingleLayerSCcoupled.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.SingleLayerSCcoupled</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="classes/BulkPolariton.html"><code class="docutils literal notranslate"><span class="pre">SpinWaveToolkit.BulkPolariton</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functions.html#general-functions">General functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html#bls-related-functions">BLS related functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p id="module-SpinWaveToolkit">This module provides analytical tools in spin-wave physics.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>SingleLayer</dt><dd><p>Compute spin-wave characteristics in dependance to k-vector for
+a single layer using an analytical model of Kalinikos and Slavin.</p>
+</dd>
+<dt>SingleLayerNumeric</dt><dd><p>Compute spin-wave characteristics in dependance to k-vector for
+a single layer using a numerical approach by Tacchi et al.</p>
+</dd>
+<dt>DoubleLayerNumeric</dt><dd><p>Compute spin-wave characteristics in dependance to k-vector for
+a double layer using a numerical model of Gallardo et al.</p>
+</dd>
+<dt>SingleLayerSCcoupled</dt><dd><p>Compute spin-wave characteristics in dependance to k-vector for
+a single ferromagnetic layer dipolarly coupled to a superconductor
+using a semi-analytical model of Zhou et al.</p>
+</dd>
+<dt>Material</dt><dd><p>Class for magnetic materials used in spin wave research.</p>
+</dd>
+<dt>ObjectiveLens</dt><dd><p>Class for calculation of the focal electric fields of given lens.</p>
+</dd>
+</dl>
+</section>
+<section id="constants">
+<h2>Constants<a class="headerlink" href="#constants" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>MU0<span class="classifier">float</span></dt><dd><p>(N/A^2) magnetic permeability of free space.</p>
+</dd>
+<dt>KB<span class="classifier">float</span></dt><dd><p>(J/K) Boltzmann constant.</p>
+</dd>
+<dt>HBAR<span class="classifier">float</span></dt><dd><p>(J s) reduced Planck constant.</p>
+</dd>
+<dt>NiFe<span class="classifier">Material</span></dt><dd><p>Predefined material NiFe (permalloy).</p>
+</dd>
+<dt>CoFeB<span class="classifier">Material</span></dt><dd><p>Predefined material CoFeB.</p>
+</dd>
+<dt>FeNi<span class="classifier">Material</span></dt><dd><p>Predefined material FeNi (metastable iron).</p>
+</dd>
+<dt>YIG<span class="classifier">Material</span></dt><dd><p>Predefined material YIG.</p>
+</dd>
+</dl>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>wavenumber2wavelength</dt><dd><p>Convert wavenumber to wavelength.</p>
+</dd>
+<dt>wavelength2wavenumber</dt><dd><p>Convert wavelength to wavenumber.</p>
+</dd>
+<dt>wrapAngle</dt><dd><p>Wrap angle in radians to range <cite>[0, 2*np.pi)</cite>.</p>
+</dd>
+<dt>rootsearch</dt><dd><p>Search for a root of a continuous function within an
+interval <cite>[a, b]</cite>.</p>
+</dd>
+<dt>bisect</dt><dd><p>Simple bisection method of root finding.</p>
+</dd>
+<dt>roots</dt><dd><p>Find all roots of a continuous function <cite>f(x, *args)</cite> within a
+given interval <cite>[a, b]</cite>.</p>
+</dd>
+<dt>distBE</dt><dd><p>Bose-Einstein distribution function.</p>
+</dd>
+<dt>fresnel_coefficients</dt><dd><p>Compute Fresnel reflection and transmission coefficients.</p>
+</dd>
+<dt>htp</dt><dd><p>Compute p-polarized Fresnel coefficients for a given lateral 
+wavevector q.  Returned by fresnel_coefficients().</p>
+</dd>
+<dt>hts</dt><dd><p>Compute s-polarized Fresnel coefficients for a given lateral 
+wavevector q.  Returned by fresnel_coefficients().</p>
+</dd>
+<dt>sph_green_function</dt><dd><p>Compute the spherical Green’s functions for p- and s-polarized 
+fields.</p>
+</dd>
+<dt>getBLSsignal</dt><dd><p>Compute the Brillouin light scattering signal using Green’s 
+functions formalism.</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Example of calculation of the dispersion relation <cite>f(k_xi)</cite>, and
+other important quantities, for the lowest-order mode in a 30 nm
+thick NiFe (Permalloy) layer.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">SpinWaveToolkit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">SWT</span>
+
+<span class="n">kxi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">150e6</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+
+<span class="n">PyChar</span> <span class="o">=</span> <span class="n">SWT</span><span class="o">.</span><span class="n">SingleLayer</span><span class="p">(</span><span class="n">Bext</span><span class="o">=</span><span class="mf">20e-3</span><span class="p">,</span> <span class="n">kxi</span><span class="o">=</span><span class="n">kxi</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+                         <span class="n">phi</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mf">30e-9</span><span class="p">,</span> <span class="n">weff</span><span class="o">=</span><span class="mf">2e-6</span><span class="p">,</span>
+                         <span class="n">boundary_cond</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">SWT</span><span class="o">.</span><span class="n">NiFe</span><span class="p">)</span>
+<span class="n">DispPy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetDispersion</span><span class="p">()</span><span class="o">*</span><span class="mf">1e-9</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>  <span class="c1"># GHz</span>
+<span class="n">vgPy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetGroupVelocity</span><span class="p">()</span><span class="o">*</span><span class="mf">1e-3</span>  <span class="c1"># km/s</span>
+<span class="n">lifetimePy</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetLifetime</span><span class="p">()</span><span class="o">*</span><span class="mf">1e9</span>  <span class="c1"># ns</span>
+<span class="n">decLen</span> <span class="o">=</span> <span class="n">PyChar</span><span class="o">.</span><span class="n">GetDecLen</span><span class="p">()</span><span class="o">*</span><span class="mf">1e6</span>  <span class="c1"># um</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>&#64;authors: </dt><dd><p>Ondrej Wojewoda, <a class="reference external" href="mailto:ondrej&#46;wojewoda&#37;&#52;&#48;ceitec&#46;vutbr&#46;cz">ondrej<span>&#46;</span>wojewoda<span>&#64;</span>ceitec<span>&#46;</span>vutbr<span>&#46;</span>cz</a>
+Jan Klima, <a class="reference external" href="mailto:jan&#46;klima4&#37;&#52;&#48;vutbr&#46;cz">jan<span>&#46;</span>klima4<span>&#64;</span>vutbr<span>&#46;</span>cz</a>
+Dominik Pavelka, <a class="reference external" href="mailto:dominik&#46;pavelka&#37;&#52;&#48;vutbr&#46;cz">dominik<span>&#46;</span>pavelka<span>&#64;</span>vutbr<span>&#46;</span>cz</a>
+Michal Urbanek,  <a class="reference external" href="mailto:michal&#46;urbanek&#37;&#52;&#48;ceitec&#46;vutbr&#46;cz">michal<span>&#46;</span>urbanek<span>&#64;</span>ceitec<span>&#46;</span>vutbr<span>&#46;</span>cz</a></p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../usage/installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">1. </span>Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="constants.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Constants</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constants">Constants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api_reference/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, CEITECmagnonics and SpinWaveToolkit contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
