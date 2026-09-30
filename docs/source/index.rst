@@ -7,11 +7,6 @@ SpinWaveToolkit Documentation
 =============================
 
 
-.. warning::
-   .. :collapsible:
-
-   Needs to be updated.
-
 
 .. toctree::
    :maxdepth: 2
@@ -46,21 +41,60 @@ Where to go
 -----------
 
 .. grid:: 3
+    :gutter: 3
 
-    .. grid-item-card::  :octicon:`rocket;6em;`
+    .. grid-item-card::  :octicon:`rocket;6em;sd-text-primary`
         :text-align: center
+        :link: getting_started
+        :link-type: doc
+        :link-alt: Getting Started
+        :class-card: hover-card
 
-        For a quick introduction, jump to the :doc:`getting_started` page and take a look at the provided :doc:`examples`.
+        First time? Jump to **Getting Started**.
 
-    .. grid-item-card:: :octicon:`book;6em;`
+    .. grid-item-card::  :octicon:`graph;6em;sd-text-primary`
         :text-align: center
+        :link: https://ceitecmagnonics.github.io/SWTweb/
+        :link-alt: SWTweb
+        :class-card: hover-card
 
-        More information on the usage of SpinWaveToolkit is given in the :doc:`user_guide`.
+        **SWTweb**: A fast in-browser calculator using SpinWaveToolkit — powerful, no installation, safe.
 
-    .. grid-item-card:: :octicon:`log;6em;`
+    .. grid-item-card::  :octicon:`image;4em;sd-text-primary` :octicon:`image;6em;sd-text-primary` :octicon:`image;4em;sd-text-primary`
         :text-align: center
+        :link: examples
+        :link-type: doc
+        :link-alt: Examples
+        :class-card: hover-card
 
-        Details about a specific element can be found at the :doc:`api_reference/index`.
+        Get inspiration from the provided **Examples**.
+
+    .. grid-item-card:: :octicon:`book;6em;sd-text-primary`
+        :text-align: center
+        :link: user_guide
+        :link-type: doc
+        :link-alt: User Guide
+        :class-card: hover-card
+
+        More information on the usage of SpinWaveToolkit is given in the **User Guide**.
+
+    .. grid-item-card:: :octicon:`log;6em;sd-text-primary`
+        :text-align: center
+        :link: api_reference/index
+        :link-type: doc
+        :link-alt: API Reference
+        :class-card: hover-card
+
+        Details about a specific element can be found in the **API Reference**.
+
+    .. grid-item-card:: :octicon:`mortar-board;6em;sd-text-primary`
+        :text-align: center
+        :link: publications
+        :link-type: doc
+        :link-alt: Publications
+        :class-card: hover-card
+
+        See **Publications** for published outputs and used literature.
 
 
 

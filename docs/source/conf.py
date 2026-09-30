@@ -43,6 +43,7 @@ nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might 
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_css_files = ['custom.css']  # wrt. static path
 html_logo = "_static/logo.svg"
 html_favicon = "_static/logo.svg"  # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_favicon
 html_theme_options = {

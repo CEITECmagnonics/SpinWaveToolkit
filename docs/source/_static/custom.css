@@ -1,0 +1,7 @@
+/* File for custom CSS styling */
+
+/* Target the sphinx-design icon inside your custom card wrapper during a hover */
+.hover-card:hover .sd-text-primary {
+    color: var(--sd-color-secondary) !important; /* Forces your theme's secondary accent/hover color */
+    /* transition: color 0.2s ease-in-out; */
+}
