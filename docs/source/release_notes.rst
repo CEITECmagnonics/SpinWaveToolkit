@@ -18,12 +18,14 @@ What's new
 
 Fixes
 ^^^^^
-- :func:`.bls.get_signal_GF_focal` and :func:`.bls.getBLSsignal`: the longitudinal wavevector in the magnetic layer was calculated from the layer thickness instead of its dielectric function.
-- :func:`.bls.get_signal_GF_focal` and :func:`.bls.getBLSsignal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
+- :func:`.bls.get_signal_GF_focal`: the longitudinal wavevector in the magnetic layer was calculated from the layer thickness instead of its dielectric function.
+- :func:`.bls.get_signal_GF_focal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
+- :func:`.bls.get_signal_GF_focal`: the incident field `E` (with shape ``(3, Ny, Nx)``) was transposed in the reciprocal space, i.e. mirrored with respect to the ``x = y`` line.
+- :func:`.bls.get_signal_GF_focal`: the Fourier transform of `E` and the convolution with the Bloch functions are now normalized as their continuous counterparts, so the signal no longer depends on the sampling of `E` or on `Nq`.
 - :func:`.bls.sph_green_function` used speed of light 3e9 m/s; now uses :data:`.C` and :data:`.MU0`.
 - :meth:`.bls.ObjectiveLens.getFocalField`: the z component of the focal field was rotated by 90 degrees.
 - :class:`.bls.ObjectiveLens`: the prefactors of all focal field methods now follow Novotny & Hecht and agree with :meth:`~.bls.ObjectiveLens.getPupilField` (including the phase). For radially and azimuthally polarized beams, the transverse components were 4 times too weak with respect to the longitudinal one.
-- ``GetBlochFunction`` methods of the dispersion classes now weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, so that the BLS intensity is proportional to the magnon occupation.
+- ``GetBlochFunction`` methods of the dispersion classes now weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, so that it complies with the PRB paper.
 
 
 Version 1.3.0

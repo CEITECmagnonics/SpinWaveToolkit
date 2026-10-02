@@ -181,9 +181,9 @@ class ObjectiveLens:
         """
         Compute the focal field using a radial formulation.
 
-        The field incident onto the objective is assumed to be a radially
-        polarized doughnut beam (superposition of Hermite-Gaussian modes
-        HG10 and HG01) with amplitude
+        The field incident onto the objective is assumed to be a
+        radially polarized doughnut beam (superposition of
+        Hermite-Gaussian modes HG10 and HG01) with amplitude
         ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``, where
         ``w0 = f0 * f * sin(theta_max)`` is the beam waist given by the
         filling factor `f0`.  (Note that "radial" polarization in
@@ -360,7 +360,8 @@ class ObjectiveLens:
         self, z, KX, KY, n=1.0, pol_type="linear", pol_angle=0, axis_ratio=1.0
     ):
         """
-        Computes the complex electric field distribution in reciprocal space.
+        Computes the complex electric field distribution in reciprocal
+        space.
 
         This represents the field near the focus of a high-NA objective
         lens—including amplitude apodization, polarization
@@ -421,8 +422,8 @@ class ObjectiveLens:
         singularity on the optical axis (e.g. directly after a q-plate),
         whereas :meth:`getFocalFieldRad` and :meth:`getFocalFieldAzm`
         assume a doughnut beam with amplitude
-        ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``.  The doughnut beam can be
-        obtained here by weighting the Jones field by ``2*rho/w0``,
+        ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``.  The doughnut beam can
+        be obtained here by weighting the Jones field by ``2*rho/w0``,
         which with the sine condition ``rho = f*sin(theta)`` and
         ``w0 = f0*f*sin(theta_max)`` reads:
 
@@ -532,7 +533,7 @@ class ObjectiveLens:
         prefactor = (
             1j * E0 * self.f / (2 * np.pi * k_medium) * np.exp(-1j * k_medium * self.f)
         )
-        
+
         Ex_k[pupil_mask] = prefactor * amplitude_factor * propagator * ex
         Ey_k[pupil_mask] = prefactor * amplitude_factor * propagator * ey
         Ez_k[pupil_mask] = prefactor * amplitude_factor * propagator * ez

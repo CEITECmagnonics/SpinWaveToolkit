@@ -627,10 +627,11 @@ def get_signal_GF_focal(
       magneto-optic (Voigt) coupling with ``Q = 1`` (see
       :func:`~SpinWaveToolkit.bls.susceptibilities.mo_linear`), the
       quadratic effects are neglected.
-    - The convolution of the electric field with the Bloch functions
-      is not normalized by the q-space grid spacing, i.e. the resulting
-      signal is in arbitrary units and its absolute value is not
-      comparable with the ``get_signal_RT_...`` functions.
+    - The Fourier transform of `E` and the convolution with the Bloch
+      functions are normalized as their continuous counterparts, so
+      the signal does not depend on the sampling of `E` or on `Nq`
+      (provided they are fine enough).  Its absolute scale is still
+      given by the (arbitrary) normalization of `E` and `Bloch`.
 
     """
     warn(
@@ -657,24 +658,26 @@ def get_signal_GF_focal(
     Kz = np.sqrt(k0**2 - Q**2 + 0j)
     # -------------------------------------------------------------
 
+    # --- Suppose Exy is given as a tuple of 1D arrays (x, y) for the spatial coordinates ---
+    EX, EY = Exy
+    # Determine grid spacings (assuming uniform spacing)
+    dx = EX[1] - EX[0]
+    dy = EY[1] - EY[0]
+    Nx = EX.shape[0]
+    Ny = EY.shape[0]
+
     # --- Compute the Fourier transform of the electric field components ---
     # We assume E has shape (3, Ny, Nx) where E[0] is the X component, etc.
+    # The factor dx*dy approximates the continuous Fourier transform
+    # E(k) = int E(r) exp(-i k.r) d^2r, making it independent of the grid.
     fftEI = np.empty_like(E, dtype=complex)
     for comp in range(3):
         # Apply ifftshift in both axes, then fft2, then fftshift back.
         temp = ifftshift(E[comp])
         temp = fft2(temp)
         temp = fftshift(temp)
-        fftEI[comp, :, :] = temp
+        fftEI[comp, :, :] = temp * dx * dy
     # -------------------------------------------------------------
-
-    # --- Suppose Exy is given as a tuple of 2D arrays (X, Y) for the spatial coordinates ---
-    EX, EY = Exy  # e.g. X, Y = np.meshgrid(x, y, indexing='ij')
-    # Determine grid spacings (assuming uniform spacing)
-    dx = EX[1] - EX[0]
-    dy = EY[1] - EY[0]
-    Nx = EX.shape[0]
-    Ny = EY.shape[0]
 
     # --- Compute the Fourier domain grid corresponding to the spatial grid ---
     # The FFT frequency bins (in radians per meter) are given by:
@@ -682,15 +685,15 @@ def get_signal_GF_focal(
     ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(Ny, d=dy))
 
     # --- Interpolate the computed FFT of the E-field onto the Qx, Qy grid ---
-    # Here fftEI has shape (3, Ny, Nx) and is defined on (KX_fft, KY_fft)
+    # Here fftEI has shape (3, Ny, Nx), i.e. it is defined on (KY_fft, KX_fft)
     interp_fftEI = np.empty((3, Qx.shape[0], Qx.shape[1]), dtype=complex)
+    # Prepare the target points as an (M,2) array where M = number of Qx points
+    points = np.stack([Qy.ravel(), Qx.ravel()], axis=-1)
     for comp in range(3):
         # Create an interpolator for each component
         interp_func = RegularGridInterpolator(
-            (kx_fft, ky_fft), fftEI[comp, :, :], bounds_error=False, fill_value=0
+            (ky_fft, kx_fft), fftEI[comp, :, :], bounds_error=False, fill_value=0
         )
-        # Prepare the target points as an (M,2) array where M = number of Qx points
-        points = np.stack([Qx.ravel(), Qy.ravel()], axis=-1)
         interp_fftEI[comp, :, :] = interp_func(points).reshape(Qx.shape)
 
     # --- Prepare for frequency loop ---
@@ -706,8 +709,10 @@ def get_signal_GF_focal(
     Volume = np.exp(-2 * ExtinCoefMagLayer * k0 * zs)
     VolumeFac = trapezoid(Volume, zs)
 
-    # Multiply the electric field by the volume factor
-    interp_fftEI *= VolumeFac
+    # Multiply the electric field by the volume factor and by the q-space
+    # measure dqx*dqy/(2*pi)**2, so that the discrete convolutions below
+    # approximate the continuous ones, eq. (18)
+    interp_fftEI *= VolumeFac * (qx[1] - qx[0]) * (qy[1] - qy[0]) / (2 * np.pi) ** 2
 
     # Prepare arrays to store the results for each frequency
     Nf = len(SweepBloch)
@@ -996,9 +1001,8 @@ def getBLSsignal(
     wavelength : float, optional
         (m ) wavelength of the light.  Default is 532e-9.
     collectionSpot : float, optional
-        (m ) waist of the Gaussian collection spot in the sample plane,
-        i.e. the filter is h = exp(-(x**2 + y**2)/collectionSpot**2)
-        in amplitude (1/e**2 radius in intensity).  Default is 1e-6.
+        (m ) collection spot size - used here as the beam waist.  Default
+        is 1e-6.
     focalLength : float, optional
         (m ) focal length of the lens.  Default is 1e-3.
 
@@ -1049,7 +1053,7 @@ def getBLSsignal(
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
     Q = np.sqrt(Qx**2 + Qy**2)
     # Use complex square root to avoid NaNs for negative arguments
-    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
+    Kzs = np.sqrt(d[source_layer_index - 1] * k0**2 - Q**2 + 0j)
     Kz = np.sqrt(k0**2 - Q**2 + 0j)
     # -------------------------------------------------------------
 
@@ -1093,13 +1097,12 @@ def getBLSsignal(
     # Get the kx, ky grid for Bloch functions (assumed to be 1D arrays)
     kx_grid, ky_grid = KxKyBloch
 
-    # Compute a volume factor by integrating an exponential decay over the layer
-    # thickness (both incident and scattered fields are attenuated), eq. (32)
+    # Compute a volume factor by integrating an exponential decay over the layer thickness
     zs = np.linspace(0, d[source_layer_index - 1], 100)
     ExtinCoefMagLayer = np.sqrt(
         (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
     )
-    Volume = np.exp(-2 * ExtinCoefMagLayer * k0 * zs)
+    Volume = np.exp(-ExtinCoefMagLayer * k0 * zs)
     VolumeFac = trapezoid(Volume, zs)
 
     # Multiply the electric field by the volume factor
@@ -1230,7 +1233,7 @@ def getBLSsignal(
         xi = np.linspace(-(Nxi - 1) / 2, (Nxi - 1) / 2, Nxi) * dxi
         yi = np.linspace(-(Nyi - 1) / 2, (Nyi - 1) / 2, Nyi) * dyi
         Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-        PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
+        PSFFilter = np.exp(-(Xi**2 + Yi**2) / (2 * np.pi**2 * collectionSpot**2))
         # -------------------------------------------------------------
 
         # --- Transform back to real space with an applied numerical aperture mask ---
