@@ -5,6 +5,7 @@ Submodule for calculations regarding the BLS signal model.
 from warnings import warn
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
+import scipy.fft as spfft
 from scipy.signal import convolve2d, fftconvolve
 from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
@@ -17,6 +18,7 @@ __all__ = [
     "get_transfer_function_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_GF_focal",
+    "get_signal_GF_focal_v",
     "getBLSsignal",
 ]
 
@@ -896,6 +898,234 @@ def get_signal_GF_focal(
         return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
     else:
         return sigma
+
+
+def get_signal_GF_focal_v(
+    SweepBloch,
+    KxKyBloch,
+    Bloch,
+    Exy,
+    E,
+    DF,
+    PM,
+    d,
+    NA,
+    Nq=30,
+    source_layer_index=1,
+    output_layer_index=0,
+    wavelength=532e-9,
+    collectionSpot=1e-6,
+    focalLength=1e-3,
+    coherent_exc=False,
+    output_analyzer="none",
+    output_analyzer_angle_deg=0,
+    output_analyzer_axis_ratio=1.0,
+    full_output=False,
+):
+    """
+    Compute Brillouin light scattering (BLS) spectrum using the
+    Green function formalism (vectorized version).
+
+    This function gives the same results as :func:`get_signal_GF_focal`
+    (up to numerical precision), but the convolutions are computed using
+    the convolution theorem (zero-padded FFTs) and all quantities that
+    do not depend on frequency are precomputed, which is considerably
+    faster (typically by one to two orders of magnitude, increasing with
+    `Nq`).
+
+    .. warning::
+
+       This is an experimental function. Syntax and behavior may change
+       in future releases. Please verify the results carefully.
+
+    Source paper: https://doi.org/10.1103/PhysRevB.110.224428
+
+    Parameters
+    ----------
+    SweepBloch, KxKyBloch, Bloch, Exy, E, DF, PM, d, NA
+        See :func:`get_signal_GF_focal`.
+    Nq, source_layer_index, output_layer_index, wavelength, \
+    collectionSpot, focalLength, coherent_exc, output_analyzer, \
+    output_analyzer_angle_deg, output_analyzer_axis_ratio, full_output
+        Optional, see :func:`get_signal_GF_focal`.
+
+    Returns
+    -------
+    sigma : ndarray
+        () calculated BLS spectrum.  1D array with shape ``(Nf,)``.
+        (Unlike :func:`get_signal_GF_focal`, it is real-valued.)
+    Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, x_scat, y_scat : ndarray
+        Returned only if `full_output` is True.  See
+        :func:`get_signal_GF_focal`.
+
+    See also
+    --------
+    get_signal_GF_focal, get_signal_RT_focal, get_signal_RT_pupil
+
+    Notes
+    -----
+    The same physical assumptions as in :func:`get_signal_GF_focal`
+    apply, see its Notes section.
+
+    """
+    warn(
+        "`get_signal_GF_focal_v` is an experimental function and may be subject to"
+        + " change. Please verify results carefully.",
+        UserWarning,
+        stacklevel=2,
+    )
+
+    k0 = 2 * np.pi / wavelength
+    Nf = len(SweepBloch)
+
+    # --- Set up q-space grid (qx and qy), ndgrid convention ---
+    qxHalf = np.linspace(0, 1.1, Nq) * k0
+    qx = np.concatenate((-qxHalf[1:][::-1], qxHalf))
+    qy = qx.copy()
+    Nqg = len(qx)  # = 2*Nq - 1
+    dkx, dky = qx[1] - qx[0], qy[1] - qy[0]
+    Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
+    Q = np.sqrt(Qx**2 + Qy**2)
+    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
+    Kz = np.sqrt(k0**2 - Q**2 + 0j)
+    points = np.stack([Qx.ravel(), Qy.ravel()], axis=-1)
+
+    # --- Continuous Fourier transform of the incident field ---
+    # E has shape (3, Ny, Nx), i.e. it is defined on (KY_fft, KX_fft)
+    EX, EY = Exy
+    dx, dy = EX[1] - EX[0], EY[1] - EY[0]
+    E = np.asarray(E)
+    fftEI = fftshift(
+        spfft.fft2(ifftshift(E, axes=(-2, -1)), axes=(-2, -1)),
+        axes=(-2, -1),
+    ) * (dx * dy)
+    kx_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EX), d=dx))
+    ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EY), d=dy))
+    interp_func = RegularGridInterpolator(
+        (ky_fft, kx_fft),
+        np.moveaxis(fftEI, 0, -1),  # (Ny, Nx, 3)
+        bounds_error=False,
+        fill_value=0,
+    )
+    E_q = np.moveaxis(interp_func(points[:, ::-1]), -1, 0).reshape(3, Nqg, Nqg)
+
+    # Volume factor, eq. (32), and the q-space measure of the convolution
+    zs = np.linspace(0, d[source_layer_index - 1], 100)
+    ExtinCoefMagLayer = np.sqrt(
+        (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
+    )
+    VolumeFac = trapezoid(np.exp(-2 * ExtinCoefMagLayer * k0 * zs), zs)
+    E_q *= VolumeFac * dkx * dky / (2 * np.pi) ** 2
+
+    # --- Convolution via the convolution theorem (zero-padded FFTs) ---
+    M = 2 * Nqg - 1  # size of the full linear convolution
+    fast_M = spfft.next_fast_len(M)
+    start = (Nqg - 1) // 2  # offset of the "same" part (as in convolve2d)
+    E_r = spfft.fft2(E_q, s=(fast_M, fast_M), axes=(-2, -1))
+
+    # --- Green functions and optics, collapsed to transfer terms ---
+    htp, hts = fresnel_coefficients(
+        lambda_=wavelength,
+        DF=DF,
+        PM=PM,
+        d=d,
+        source_layer_index=source_layer_index,
+        output_layer_index=output_layer_index,
+    )
+    tp = np.nan_to_num(htp(Q), nan=0)
+    ts = np.nan_to_num(hts(Q), nan=0)
+    pGF, sGF = sph_green_function(
+        Kx=Qx,
+        Ky=Qy,
+        DFMagLayer=DF[source_layer_index],
+        wavelength=wavelength,
+        tp=tp,
+        ts=ts,
+    )
+    exp_minus = np.exp(-1j * Kzs * d[source_layer_index - 1])
+    exp_plus = np.exp(1j * Kzs * d[source_layer_index - 1])
+    cosPhi = np.divide(Qx, Q, out=np.ones_like(Qx), where=Q != 0)
+    sinPhi = np.divide(Qy, Q, out=np.zeros_like(Qy), where=Q != 0)
+    mask = (Q <= k0 * NA).astype(float)
+    Factor = (
+        (-2j * np.pi * np.sqrt(Kz * k0)) * np.exp(1j * k0 * focalLength) / focalLength
+    )
+    p_terms = np.array([pGF[c][0] * exp_minus + pGF[c][1] * exp_plus for c in range(3)])
+    s_terms = np.array([sGF[c][0] * exp_minus + sGF[c][1] * exp_plus for c in range(3)])
+    # E_field_x,y = sum_c P_c * T_c (lab frame, including far-field factor and NA)
+    Tx = (p_terms * cosPhi - s_terms * sinPhi) * Factor * mask
+    Ty = (p_terms * sinPhi + s_terms * cosPhi) * Factor * mask
+
+    # --- Real-space grid, collection filter and analyzer ---
+    dxi = (2 * np.pi / dkx) / Nqg
+    dyi = (2 * np.pi / dky) / Nqg
+    xi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dxi
+    yi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dyi
+    Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
+    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
+    factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
+    real_factor = factor_fft * PSFFilter
+    ax, ay = _analyzer_coefficients(
+        output_analyzer, output_analyzer_angle_deg, output_analyzer_axis_ratio, Xi, Yi
+    )
+
+    kx_grid, ky_grid = KxKyBloch
+    Bloch = np.asarray(Bloch)
+
+    sigma = np.empty(Nf)
+    if full_output:
+        P = np.empty((3, Nf, Nqg, Nqg), dtype=complex)
+        Ex_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
+        Ey_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
+
+    for i in range(Nf):
+        # --- Interpolate Bloch functions onto the q-grid -> (3, Nq, Nq) ---
+        interp_B = RegularGridInterpolator(
+            (kx_grid, ky_grid),
+            np.moveaxis(Bloch[:, i], 0, -1),  # (Nkx, Nky, 3)
+            bounds_error=False,
+            fill_value=0,
+        )
+        B_q = np.moveaxis(interp_B(points), -1, 0).reshape(3, Nqg, Nqg)
+        B_r = spfft.fft2(B_q, s=(fast_M, fast_M), axes=(-2, -1))
+
+        # --- Polarization P = i (E x M) (linear Voigt, Q = 1), eq. (18) ---
+        P_r = 1j * np.array(
+            [
+                E_r[2] * B_r[1] - E_r[1] * B_r[2],
+                E_r[0] * B_r[2] - E_r[2] * B_r[0],
+                E_r[1] * B_r[0] - E_r[0] * B_r[1],
+            ]
+        )
+        P_i = spfft.ifft2(P_r, axes=(-2, -1))[
+            :, start : start + Nqg, start : start + Nqg
+        ]
+
+        # --- Emitted far field in the lab frame and back to real space ---
+        Ex_real = real_factor * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * Tx, axis=0)))
+        )
+        Ey_real = real_factor * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * Ty, axis=0)))
+        )
+        if full_output:
+            P[:, i] = P_i
+            Ex_scat[i], Ey_scat[i] = Ex_real, Ey_real
+
+        # --- Output analyzer and detection ---
+        if ax is not None:
+            Ex_real = ax * Ex_real + ay * Ey_real
+            Ey_real = np.zeros_like(Ex_real)
+        if coherent_exc:
+            ExS = dxi * dyi * np.sum(Ex_real)
+            EyS = dxi * dyi * np.sum(Ey_real)
+            sigma[i] = abs(ExS) ** 2 + abs(EyS) ** 2
+        else:
+            sigma[i] = dxi * dyi * np.sum(np.abs(Ex_real) ** 2 + np.abs(Ey_real) ** 2)
+
+    if full_output:
+        return sigma, P[0], P[1], P[2], Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
+    return sigma
 
 
 def _analyzer_coefficients(output_analyzer, angle, axis_ratio, Xi, Yi):
