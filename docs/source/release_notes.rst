@@ -6,6 +6,26 @@ Release Notes
     For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
 
 
+Unreleased
+----------
+
+What's new
+^^^^^^^^^^
+- New sub-module :mod:`.bls.polarization` for describing the polarization of light with the Jones calculus, including wave plates, linear polarizers, spiral phase plates and q-plates.
+- :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
+- The `output_analyzer` of :func:`.bls.get_signal_GF_focal` now also accepts a Jones vector or field of the transmitted polarization. Its string values are unified with :func:`.bls.polarization.jones_vector` and :meth:`.bls.ObjectiveLens.getPupilField`, i.e. ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``, and ``"elliptical"`` was added (with the new `output_analyzer_axis_ratio` parameter).
+- New function :func:`.bls.get_transfer_function_RT_pupil` for calculating only the transfer function of the reciprocity theorem approach, which can be reused for different susceptibility tensors.
+
+Fixes
+^^^^^
+- :func:`.bls.get_signal_GF_focal` and :func:`.bls.getBLSsignal`: the longitudinal wavevector in the magnetic layer was calculated from the layer thickness instead of its dielectric function.
+- :func:`.bls.get_signal_GF_focal` and :func:`.bls.getBLSsignal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
+- :func:`.bls.sph_green_function` used speed of light 3e9 m/s; now uses :data:`.C` and :data:`.MU0`.
+- :meth:`.bls.ObjectiveLens.getFocalField`: the z component of the focal field was rotated by 90 degrees.
+- :class:`.bls.ObjectiveLens`: the prefactors of all focal field methods now follow Novotny & Hecht and agree with :meth:`~.bls.ObjectiveLens.getPupilField` (including the phase). For radially and azimuthally polarized beams, the transverse components were 4 times too weak with respect to the longitudinal one.
+- ``GetBlochFunction`` methods of the dispersion classes now weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, so that the BLS intensity is proportional to the magnon occupation.
+
+
 Version 1.3.0
 -------------
 `2026-05-04`

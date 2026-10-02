@@ -35,6 +35,7 @@ This module implements:
 """
 
 import numpy as np
+from SpinWaveToolkit.helpers import C, MU0
 
 __all__ = [
     "fresnel_coefficients",
@@ -469,12 +470,8 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
         A 3×2 list containing the s-polarized Green's function
         components.
     """
-    # Constants
-    c = 3e9
-    mu0 = 4 * np.pi * 1e-7
-
     k0 = 2 * np.pi / wavelength
-    w = c * k0
+    w = C * k0
     ks = k0 * np.sqrt(DFMagLayer)
 
     # Initialize Green's function containers as 3x2 lists.
@@ -492,21 +489,21 @@ def sph_green_function(Kx, Ky, DFMagLayer, wavelength, tp, ts):
     Kzs = np.sqrt(DFMagLayer * k0**2 - Kr**2) + np.finfo(float).eps
 
     # --- s-polarized Green's functions ---
-    sGF[0][0] = -1j * w**2 * mu0 / 2 * sinPhi * ts[0] / Kzs
-    sGF[1][0] = 1j * w**2 * mu0 / 2 * cosPhi * ts[0] / Kzs
+    sGF[0][0] = -1j * w**2 * MU0 / 2 * sinPhi * ts[0] / Kzs
+    sGF[1][0] = 1j * w**2 * MU0 / 2 * cosPhi * ts[0] / Kzs
     sGF[2][0] = np.zeros_like(Kr)
 
-    sGF[0][1] = -1j * w**2 * mu0 / 2 * sinPhi * ts[1] / Kzs
-    sGF[1][1] = 1j * w**2 * mu0 / 2 * cosPhi * ts[1] / Kzs
+    sGF[0][1] = -1j * w**2 * MU0 / 2 * sinPhi * ts[1] / Kzs
+    sGF[1][1] = 1j * w**2 * MU0 / 2 * cosPhi * ts[1] / Kzs
     sGF[2][1] = np.zeros_like(Kr)
 
     # --- p-polarized Green's functions ---
-    pGF[0][0] = 1j * w**2 * mu0 / 2 * cosPhi * tp[0] / ks
-    pGF[1][0] = 1j * w**2 * mu0 / 2 * sinPhi * tp[0] / ks
-    pGF[2][0] = -1j * w**2 * mu0 / 2 * tp[0] * Kr / (Kzs * ks)
+    pGF[0][0] = 1j * w**2 * MU0 / 2 * cosPhi * tp[0] / ks
+    pGF[1][0] = 1j * w**2 * MU0 / 2 * sinPhi * tp[0] / ks
+    pGF[2][0] = -1j * w**2 * MU0 / 2 * tp[0] * Kr / (Kzs * ks)
 
-    pGF[0][1] = -1j * w**2 * mu0 / 2 * cosPhi * tp[1] / ks
-    pGF[1][1] = -1j * w**2 * mu0 / 2 * sinPhi * tp[1] / ks
-    pGF[2][1] = -1j * w**2 * mu0 / 2 * tp[1] * Kr / (Kzs * ks)
+    pGF[0][1] = -1j * w**2 * MU0 / 2 * cosPhi * tp[1] / ks
+    pGF[1][1] = -1j * w**2 * MU0 / 2 * sinPhi * tp[1] / ks
+    pGF[2][1] = -1j * w**2 * MU0 / 2 * tp[1] * Kr / (Kzs * ks)
 
     return pGF, sGF

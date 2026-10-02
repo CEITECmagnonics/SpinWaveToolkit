@@ -964,6 +964,9 @@ class SingleLayer:
         mu : float or None, optional
             (J ) chemical potential for the Bose-Einstein distribution.
             If `temp` or `mu` is None, no distribution is applied.
+            Otherwise, the Bloch function is weighted by
+            ``sqrt(2*n_BE)``, where ``n_BE`` is the Bose-Einstein
+            distribution (see :func:`~SpinWaveToolkit.distBE`).
 
         Returns
         -------
@@ -985,7 +988,8 @@ class SingleLayer:
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
 
         if temp is not None and mu is not None:
-            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
+            # amplitude ~ sqrt(2*n_BE), i.e. BLS intensity ~ n_BE
+            blochFunc *= np.sqrt(2 * distBE(w, temp=temp, mu=mu))[:, np.newaxis]
 
         return w, blochFunc
 

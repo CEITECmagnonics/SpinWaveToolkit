@@ -26,6 +26,8 @@ Currently, the fastest approach is via the Reciprocity Theorem with electric fie
 
 .. autofunction:: get_signal_RT_pupil
 
+.. autofunction:: get_transfer_function_RT_pupil
+
 .. autofunction:: get_signal_RT_focal
 
 .. autofunction:: get_signal_RT_focal_3d

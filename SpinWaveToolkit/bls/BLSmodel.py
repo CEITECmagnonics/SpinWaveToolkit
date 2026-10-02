@@ -9,10 +9,12 @@ from scipy.signal import convolve2d, fftconvolve
 from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import trapezoid
 from SpinWaveToolkit.bls.greenAndFresnel import *
+from SpinWaveToolkit.bls.polarization import jones_vector
 
 __all__ = [
     "get_signal_RT_focal_3d",
     "get_signal_RT_pupil",
+    "get_transfer_function_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_GF_focal",
     "getBLSsignal",
@@ -215,11 +217,96 @@ def get_signal_RT_pupil(
 
     See also
     --------
-    get_signal_RT_focal, get_signal_GF_focal
+    get_transfer_function_RT_pupil, get_signal_RT_focal, get_signal_GF_focal
+
+    """
+    # --- Calculate Transfer Function qmEiEj ---
+    # Skip components where susceptibility is zero
+    mask = np.any(Chi, axis=tuple(range(2, np.ndim(Chi))))
+    qmEiEj = get_transfer_function_RT_pupil(
+        KxKy, Ei_fields, Ej_fields, conv_method=conv_method, mask=mask
+    )
+
+    # --- K-space grid spacings ---
+    kx, ky = KxKy
+    dkx = kx[1] - kx[0] if len(kx) > 1 else 1.0
+    dky = ky[1] - ky[0] if len(ky) > 1 else 1.0
+    dK = dkx * dky
+
+    # --- Assemble BLS spectrum ---
+    if coherent_exc:
+        # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
+        tmp = np.einsum("uvxy,uvfxy->f", qmEiEj, Chi)
+        sigma = np.abs(tmp * dK) ** 2
+
+    else:
+        # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
+        tmp = np.einsum("uvxy,uvfxy->fxy", qmEiEj, Chi)
+        sigma = np.sum(np.abs(tmp) ** 2, axis=(1, 2)) * dK
+
+    return sigma, qmEiEj
+
+
+def get_transfer_function_RT_pupil(
+    KxKy, Ei_fields, Ej_fields, conv_method="fft", mask=None
+):
+    """
+    Compute the transfer function of the BLS system using the
+    reciprocity theorem, starting directly from the electric fields in
+    reciprocal (k) space.
+
+    The transfer function `qmEiEj` is given by the convolution of the
+    k-space fields: `qmEiEj = FT(Ej) * FT(Ei)`.  It does not depend on
+    the magnetization dynamics and can therefore be reused for
+    calculation of BLS spectra for different susceptibility tensors,
+    see :func:`get_signal_RT_pupil`.
+
+    .. important::
+
+       To maintain a valid physical representation of the convolution
+       integral, the input k-space grid (`KxKy`) MUST be strictly
+       equidistant.
+
+    Source paper: https://doi.org/10.1126/sciadv.ady8833
+
+    Parameters
+    ----------
+    KxKy : list[ndarray]
+        (rad/m) list of two 1D arrays `(kx, ky)` with shapes ``(Nkx,)``
+        and ``(Nky,)`` containing the reciprocal space coordinates.
+        Must be a uniform/equidistant grid.
+    Ei_fields : list[ndarray]
+        (V/m) list of the three reciprocal pupil field components
+        `[Ekx, Eky, Ekz]` corresponding to the driving field E_dr
+        (incident laser). Each must have shape ``(Nkx, Nky)``.
+    Ej_fields : list[ndarray]
+        (V/m) list of the three reciprocal pupil field components
+        `[Ekx, Eky, Ekz]` corresponding to the virtual field E_v
+        (detector side). Each must have shape ``(Nkx, Nky)``.
+    conv_method : {"fft", "direct"}, optional
+        The computational method used to perform the 2D convolution.
+        See :func:`get_signal_RT_pupil`.  Default is "fft".
+    mask : array_like or None, optional
+        Boolean array with shape ``(3, 3)``.  Components `qmEiEj[u, v]`
+        where `mask[u, v]` is False are not calculated and left zero.
+        If None (default), all components are calculated.
+
+    Returns
+    -------
+    qmEiEj : ndarray
+        () transfer function of the system.  Array with shape
+        ``(3, 3, Nkx, Nky)``.  Uses the same coordinates as the
+        electric fields (`KxKy`).
+
+    See also
+    --------
+    get_signal_RT_pupil
 
     """
     if conv_method not in ["fft", "direct"]:
         raise ValueError("Invalid conv_method. Expected 'fft' or 'direct'.")
+    if mask is None:
+        mask = np.ones((3, 3), dtype=bool)
 
     # --- K-space coordinates ---
     kx, ky = KxKy
@@ -253,8 +340,7 @@ def get_signal_RT_pupil(
 
     for u in range(3):
         for v in range(3):
-            # Skip components where susceptibility is zero
-            if not np.any(Chi[u, v]):
+            if not mask[u, v]:
                 continue
 
             # Select and perform the convolution method
@@ -265,18 +351,7 @@ def get_signal_RT_pupil(
 
             qmEiEj[u, v] = normalization * conv
 
-    # --- Assemble BLS spectrum ---
-    if coherent_exc:
-        # Coherent sum: | Sum_k( Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) ) |^2
-        tmp = np.einsum("uvxy,uvfxy->f", qmEiEj, Chi)
-        sigma = np.abs(tmp * dK) ** 2
-
-    else:
-        # Thermal sum: Sum_k( | Sum_uv( qm[u,v,k] * Chi[u,v,f,k] ) |^2 )
-        tmp = np.einsum("uvxy,uvfxy->fxy", qmEiEj, Chi)
-        sigma = np.sum(np.abs(tmp) ** 2, axis=(1, 2)) * dK
-
-    return sigma, qmEiEj
+    return qmEiEj
 
 
 def get_signal_RT_focal(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc=False):
@@ -405,6 +480,7 @@ def get_signal_GF_focal(
     coherent_exc=False,
     output_analyzer="none",
     output_analyzer_angle_deg=0,
+    output_analyzer_axis_ratio=1.0,
     full_output=False,
 ):
     """
@@ -458,33 +534,60 @@ def get_signal_GF_focal(
     wavelength : float, optional
         (m ) wavelength of the light.  Default is 532e-9.
     collectionSpot : float, optional
-        (m ) collection spot size - used here as the beam waist.  Default
-        is 1e-6.
+        (m ) waist of the Gaussian collection spot in the sample plane,
+        i.e. the filter is ``h = exp(-(x**2 + y**2)/collectionSpot**2)``
+        in amplitude (``1/e**2`` radius in intensity).  Default is 1e-6.
     focalLength : float, optional
         (m ) focal length of the lens.  Default is 1e-3.
     coherent_exc : bool, optional
         If True, calculates the coherent BLS signal (amplitudes sum
         first).  If False (default), calculates the non-coherent/thermal
         BLS signal (intensities sum first).
-    output_analyzer : {"none", "linear", "circular_r", "circular_l", \
-            "radial", "azimuthal"} or callable, optional
+    output_analyzer : {"none", "linear", "rcp", "lcp", "elliptical", \
+            "radial", "azimuthal"}, array_like or callable, optional
         Output polarization analyzer applied in real space before the
-        detector.
+        detector.  The polarization types are the same as in
+        :func:`~SpinWaveToolkit.bls.polarization.jones_vector` and
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField`, and
+        the analyzer transmits the given polarization state.
 
         - ``"none"`` (default): no analyzer (keeps both Ex and Ey).
         - ``"linear"``: linear analyzer at `output_analyzer_angle_deg`.
-        - ``"circular_r"``: right-circular analyzer.
-        - ``"circular_l"``: left-circular analyzer.
+        - ``"rcp"``: right-hand circular analyzer.
+        - ``"lcp"``: left-hand circular analyzer.
+        - ``"elliptical"``: elliptical analyzer with major axis at
+          `output_analyzer_angle_deg` and axis ratio
+          `output_analyzer_axis_ratio`.
         - ``"radial"``: spatially varying radial analyzer.
         - ``"azimuthal"``: spatially varying azimuthal analyzer.
+
+        If an array is provided, it is the Jones vector with shape
+        ``(2,)``, or the Jones field with shape ``(2, 2*Nq-1, 2*Nq-1)``
+        defined on the real-space grid (see `x_scat`, `y_scat` in
+        Returns), of the polarization transmitted by the analyzer.  The
+        detected field is then ``conj(e[0])*Ex + conj(e[1])*Ey``.  Such
+        arrays can be prepared using the
+        :mod:`~SpinWaveToolkit.bls.polarization` module.  Note that
+        optics with Jones matrix ``M`` followed by a polarizer
+        transmitting ``e_p`` is equivalent to an analyzer transmitting
+        ``e = M^H e_p`` (``M^H`` is the conjugate transpose of ``M``).
+        The array is not normalized, i.e. it can also be used for
+        amplitude masking.
 
         If a callable is provided, it must have signature
         ``f(x_scat, y_scat) -> (ax, ay)`` and return analyzer
         coefficients broadcastable to the shape of ``x_scat`` and
-        ``y_scat`` (real space meshgrids - see Returns section).
+        ``y_scat`` (real space meshgrids - see Returns section).  The
+        detected field is then ``ax*Ex + ay*Ey``.
     output_analyzer_angle_deg : float, optional
-        (deg) angle of the "linear" output analyzer (counter-clockwise
-        from x).  Ignored for other analyzer types.  Default is 0.
+        (deg) angle of the "linear" output analyzer or of the major axis
+        of the "elliptical" one (counter-clockwise from x).  Ignored for
+        other analyzer types.  Default is 0.
+    output_analyzer_axis_ratio : float, optional
+        () ratio of the minor axis to the major axis of the "elliptical"
+        output analyzer, its sign sets the handedness (see
+        :func:`~SpinWaveToolkit.bls.polarization.jones_vector`).
+        Ignored for other analyzer types.  Default is 1.0.
     full_output : bool, optional
         If True, returns additional intermediate results: polarizations
         with q-space grids and scattered electric field with real-space
@@ -513,6 +616,22 @@ def get_signal_GF_focal(
     --------
     get_signal_RT_focal, get_signal_RT_pupil
 
+    Notes
+    -----
+    - The radiating polarization sheet is placed at the interface of
+      the source layer with the layer above it (towards the
+      superstrate).  The attenuation of light inside the source layer
+      is accounted for by the volume factor in eq. (32) of the source
+      paper.
+    - The induced polarization is calculated only for the linear
+      magneto-optic (Voigt) coupling with ``Q = 1`` (see
+      :func:`~SpinWaveToolkit.bls.susceptibilities.mo_linear`), the
+      quadratic effects are neglected.
+    - The convolution of the electric field with the Bloch functions
+      is not normalized by the q-space grid spacing, i.e. the resulting
+      signal is in arbitrary units and its absolute value is not
+      comparable with the ``get_signal_RT_...`` functions.
+
     """
     warn(
         "`get_signal_GF_focal` is an experimental function and may be subject to change."
@@ -534,7 +653,7 @@ def get_signal_GF_focal(
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
     Q = np.sqrt(Qx**2 + Qy**2)
     # Use complex square root to avoid NaNs for negative arguments
-    Kzs = np.sqrt(d[source_layer_index - 1] * k0**2 - Q**2 + 0j)
+    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
     Kz = np.sqrt(k0**2 - Q**2 + 0j)
     # -------------------------------------------------------------
 
@@ -578,12 +697,13 @@ def get_signal_GF_focal(
     # Get the kx, ky grid for Bloch functions (assumed to be 1D arrays)
     kx_grid, ky_grid = KxKyBloch
 
-    # Compute a volume factor by integrating an exponential decay over the layer thickness
+    # Compute a volume factor by integrating an exponential decay over the layer
+    # thickness (both incident and scattered fields are attenuated), eq. (32)
     zs = np.linspace(0, d[source_layer_index - 1], 100)
     ExtinCoefMagLayer = np.sqrt(
         (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
     )
-    Volume = np.exp(-ExtinCoefMagLayer * k0 * zs)
+    Volume = np.exp(-2 * ExtinCoefMagLayer * k0 * zs)
     VolumeFac = trapezoid(Volume, zs)
 
     # Multiply the electric field by the volume factor
@@ -634,41 +754,16 @@ def get_signal_GF_focal(
     xi = np.linspace(-(Nxi - 1) / 2, (Nxi - 1) / 2, Nxi) * dxi
     yi = np.linspace(-(Nyi - 1) / 2, (Nyi - 1) / 2, Nyi) * dyi
     Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-    PSFFilter = np.exp(-(Xi**2 + Yi**2) / (2 * np.pi**2 * collectionSpot**2))
+    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
     # Create a mask for Q values within k0*NA.
     mask = (Q <= k0 * NA).astype(float)
     # Compute a common scaling factor (note: np.size returns the total number of elements).
     factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
     # -------------------------------------------------------------
     # --- Pre-compute analyzer coefficients on the real-space grid ---
-    if callable(output_analyzer):
-        ax, ay = output_analyzer(Xi, Yi)
-        ax, ay = np.asarray(ax), np.asarray(ay)
-    elif output_analyzer == "none":
-        ax, ay = None, None
-    elif output_analyzer == "linear":
-        alpha = np.deg2rad(output_analyzer_angle_deg)
-        ax, ay = np.cos(alpha), np.sin(alpha)
-    elif output_analyzer == "circular_r":
-        ax = 1 / np.sqrt(2)
-        ay = 1j / np.sqrt(2)
-    elif output_analyzer == "circular_l":
-        ax = 1 / np.sqrt(2)
-        ay = -1j / np.sqrt(2)
-    elif output_analyzer in ("radial", "azimuthal"):
-        rho = np.sqrt(Xi**2 + Yi**2)
-        cos_phi = np.divide(Xi, rho, out=np.ones_like(Xi), where=rho != 0)
-        sin_phi = np.divide(Yi, rho, out=np.zeros_like(Yi), where=rho != 0)
-        if output_analyzer == "radial":
-            ax, ay = cos_phi, sin_phi
-        else:
-            ax, ay = -sin_phi, cos_phi
-    else:
-        raise ValueError(
-            "Invalid output_analyzer. Expected one of "
-            "'none', 'linear', 'circular_r', 'circular_l', 'radial', 'azimuthal', "
-            "or a callable f(Xi, Yi)->(ax, ay)."
-        )
+    ax, ay = _analyzer_coefficients(
+        output_analyzer, output_analyzer_angle_deg, output_analyzer_axis_ratio, Xi, Yi
+    )
     # -------------------------------------------------------------
 
     if full_output:  # Preallocate polarization and scattered field.
@@ -798,6 +893,40 @@ def get_signal_GF_focal(
         return sigma
 
 
+def _analyzer_coefficients(output_analyzer, angle, axis_ratio, Xi, Yi):
+    """
+    Projection coefficients ``(ax, ay)`` of the output analyzer such
+    that the detected field is ``ax*Ex + ay*Ey``.
+
+    See the `output_analyzer` parameter of :func:`get_signal_GF_focal`.
+    Returns ``(None, None)`` if no analyzer is used.
+    """
+    if callable(output_analyzer):
+        ax, ay = output_analyzer(Xi, Yi)
+        return np.asarray(ax), np.asarray(ay)
+    if isinstance(output_analyzer, str):
+        if output_analyzer == "none":
+            return None, None
+        try:
+            e = jones_vector(output_analyzer, angle, axis_ratio, X=Xi, Y=Yi)
+        except ValueError as err:
+            raise ValueError(
+                f"Invalid output_analyzer '{output_analyzer}'. Expected 'none', "
+                "a polarization type of `polarization.jones_vector` ('linear', "
+                "'rcp', 'lcp', 'elliptical', 'radial', 'azimuthal'), a Jones "
+                "vector/field, or a callable f(Xi, Yi)->(ax, ay)."
+            ) from err
+    else:
+        e = np.asarray(output_analyzer)
+        if e.shape not in ((2,), (2, *Xi.shape)):
+            raise ValueError(
+                f"Analyzer Jones vector/field must have shape (2,) or "
+                f"{(2, *Xi.shape)}, got {e.shape}."
+            )
+    # Projection onto the polarization state transmitted by the analyzer
+    return np.conj(e[0]), np.conj(e[1])
+
+
 def getBLSsignal(
     SweepBloch,
     KxKyBloch,
@@ -867,8 +996,9 @@ def getBLSsignal(
     wavelength : float, optional
         (m ) wavelength of the light.  Default is 532e-9.
     collectionSpot : float, optional
-        (m ) collection spot size - used here as the beam waist.  Default
-        is 1e-6.
+        (m ) waist of the Gaussian collection spot in the sample plane,
+        i.e. the filter is h = exp(-(x**2 + y**2)/collectionSpot**2)
+        in amplitude (1/e**2 radius in intensity).  Default is 1e-6.
     focalLength : float, optional
         (m ) focal length of the lens.  Default is 1e-3.
 
@@ -919,7 +1049,7 @@ def getBLSsignal(
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
     Q = np.sqrt(Qx**2 + Qy**2)
     # Use complex square root to avoid NaNs for negative arguments
-    Kzs = np.sqrt(d[source_layer_index - 1] * k0**2 - Q**2 + 0j)
+    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
     Kz = np.sqrt(k0**2 - Q**2 + 0j)
     # -------------------------------------------------------------
 
@@ -963,12 +1093,13 @@ def getBLSsignal(
     # Get the kx, ky grid for Bloch functions (assumed to be 1D arrays)
     kx_grid, ky_grid = KxKyBloch
 
-    # Compute a volume factor by integrating an exponential decay over the layer thickness
+    # Compute a volume factor by integrating an exponential decay over the layer
+    # thickness (both incident and scattered fields are attenuated), eq. (32)
     zs = np.linspace(0, d[source_layer_index - 1], 100)
     ExtinCoefMagLayer = np.sqrt(
         (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
     )
-    Volume = np.exp(-ExtinCoefMagLayer * k0 * zs)
+    Volume = np.exp(-2 * ExtinCoefMagLayer * k0 * zs)
     VolumeFac = trapezoid(Volume, zs)
 
     # Multiply the electric field by the volume factor
@@ -1099,7 +1230,7 @@ def getBLSsignal(
         xi = np.linspace(-(Nxi - 1) / 2, (Nxi - 1) / 2, Nxi) * dxi
         yi = np.linspace(-(Nyi - 1) / 2, (Nyi - 1) / 2, Nyi) * dyi
         Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-        PSFFilter = np.exp(-(Xi**2 + Yi**2) / (2 * np.pi**2 * collectionSpot**2))
+        PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
         # -------------------------------------------------------------
 
         # --- Transform back to real space with an applied numerical aperture mask ---

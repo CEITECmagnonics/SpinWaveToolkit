@@ -6,6 +6,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from scipy.special import jv  # Bessel function of first kind
 from scipy.integrate import simpson  # Import simpson for numerical integration
+from SpinWaveToolkit.bls.polarization import jones_vector
 
 __all__ = ["ObjectiveLens"]
 
@@ -149,6 +150,7 @@ class ObjectiveLens:
                 x=theta,
             )
             for j, phii in enumerate(phi):
+                # Prefactor according to Novotny & Hecht, eq. (3.66)
                 common_factor = (
                     1j
                     * k0
@@ -156,11 +158,11 @@ class ObjectiveLens:
                     / 2
                     * np.sqrt(n1 / n2)
                     * E0
-                    * np.exp(1j * k0 * self.f)
+                    * np.exp(-1j * k0 * self.f)
                 )
                 Ex[i, j] = common_factor * (I00[i] + I02[i] * np.cos(2 * phii))
                 Ey[i, j] = common_factor * (I02[i] * np.sin(2 * phii))
-                Ez[i, j] = common_factor * (-2j * I01[i] * np.sin(phii))
+                Ez[i, j] = common_factor * (-2j * I01[i] * np.cos(phii))
         # Create a grid for the interpolation
         PHI, RHO = np.meshgrid(phi, rho)
         X = RHO * np.cos(PHI)
@@ -179,8 +181,13 @@ class ObjectiveLens:
         """
         Compute the focal field using a radial formulation.
 
-        The field incident onto the objective is assumed to be radially
-        polarized.
+        The field incident onto the objective is assumed to be a radially
+        polarized doughnut beam (superposition of Hermite-Gaussian modes
+        HG10 and HG01) with amplitude
+        ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``, where
+        ``w0 = f0 * f * sin(theta_max)`` is the beam waist given by the
+        filling factor `f0`.  (Note that "radial" polarization in
+        :meth:`getPupilField` assumes a Gaussian amplitude instead.)
 
         Parameters
         ----------
@@ -204,6 +211,7 @@ class ObjectiveLens:
         E0 = 1
         theta_max = np.arcsin(self.NA)
         n1, n2 = 1, 1
+        w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
         theta = np.linspace(0, theta_max, 41)
         fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
@@ -237,17 +245,18 @@ class ObjectiveLens:
             I10[i] = simpson(integrand_I10, x=theta)
 
             for j, phii in enumerate(phi):
+                # Prefactor according to Novotny & Hecht, eq. (3.70)
                 common_factor = (
                     1j
                     * k0
                     * self.f**2
-                    / 2
+                    / (2 * w0)
                     * np.sqrt(n1 / n2)
                     * E0
                     * np.exp(-1j * k0 * self.f)
                 )
-                Ex[i, j] = common_factor * (1j * Irad[i] * np.cos(phii))
-                Ey[i, j] = common_factor * (1j * Irad[i] * np.sin(phii))
+                Ex[i, j] = common_factor * (4j * Irad[i] * np.cos(phii))
+                Ey[i, j] = common_factor * (4j * Irad[i] * np.sin(phii))
                 Ez[i, j] = common_factor * (-4 * I10[i])
 
         PHI, RHO = np.meshgrid(phi, rho)
@@ -268,8 +277,12 @@ class ObjectiveLens:
         Compute the focal field using an azimuthal formulation
         (``E_z = 0``).
 
-        The field incident onto the objective is assumed to be
-        azimuthally polarized.
+        The field incident onto the objective is assumed to be an
+        azimuthally polarized doughnut beam with amplitude
+        ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``, where
+        ``w0 = f0 * f * sin(theta_max)`` is the beam waist given by the
+        filling factor `f0`.  (Note that "azimuthal" polarization in
+        :meth:`getPupilField` assumes a Gaussian amplitude instead.)
 
         Parameters
         ----------
@@ -293,6 +306,7 @@ class ObjectiveLens:
         E0 = 1
         theta_max = np.arcsin(self.NA)
         n1, n2 = 1, 1
+        w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
         theta = np.linspace(0, theta_max, 41)
         fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
@@ -314,17 +328,19 @@ class ObjectiveLens:
             )
             Iazm[i] = simpson(integrand_azm, x=theta)
             for j, phii in enumerate(phi):
+                # Prefactor according to Novotny & Hecht, eq. (3.72), here
+                # with incident polarization along (-sin(phi), cos(phi))
                 common_factor = (
                     1j
                     * k0
                     * self.f**2
-                    / 2
+                    / (2 * w0)
                     * np.sqrt(n1 / n2)
                     * E0
                     * np.exp(-1j * k0 * self.f)
                 )
-                Ex[i, j] = common_factor * (1j * Iazm[i] * np.sin(phii))
-                Ey[i, j] = common_factor * (-1j * Iazm[i] * np.cos(phii))
+                Ex[i, j] = common_factor * (-4j * Iazm[i] * np.sin(phii))
+                Ey[i, j] = common_factor * (4j * Iazm[i] * np.cos(phii))
                 Ez[i, j] = 0
 
         PHI, RHO = np.meshgrid(phi, rho)
@@ -361,9 +377,12 @@ class ObjectiveLens:
         KY : ndarray
             (rad/m) 2D reciprocal-space grid (ky).
         n : float, optional
-            Refractive index of the focusing medium. 
+            Refractive index of the focusing medium.
             Default is 1.0 (air/vacuum).
-        pol_type : str, optional
+        pol_type : str or array_like, optional
+            Polarization of the beam in the entrance pupil (before
+            focusing).  Either one of the following strings:
+
             | "linear" - linearly polarized (angle set by `pol_angle`)
             | "radial" - radial polarization
             | "azimuthal" - azimuthal polarization
@@ -371,20 +390,46 @@ class ObjectiveLens:
             | "lcp" - left-hand circular polarization
             | "elliptical" - elliptically polarized (uses `axis_ratio`
             |                and `pol_angle`)
-            Default is "linear".
+
+            or a Jones vector with shape ``(2,)``, or a spatially
+            varying Jones field with shape ``(2, *KX.shape)`` defined
+            on the `KX`, `KY` grid.  Such Jones vectors/fields can be
+            prepared using the :mod:`~SpinWaveToolkit.bls.polarization`
+            module, e.g. to include wave plates, spiral phase plates or
+            q-plates in the incident beam path.  Default is "linear".
         pol_angle : float, optional
-            (deg) angle of linear polarization or the major axis of 
-            elliptical polarization. Default is 0.
+            (deg) angle of linear polarization or the major axis of
+            elliptical polarization.  Default is 0.  Ignored if
+            `pol_type` is not a string.
         axis_ratio : float, optional
-            Ratio of the minor axis to the major axis for elliptical 
-            polarization. Can be positive or negative to dictate 
-            handedness. Default is 1.0. Ignored if `pol_type` 
+            Ratio of the minor axis to the major axis for elliptical
+            polarization.  Can be positive or negative to dictate
+            handedness.  Default is 1.0.  Ignored if `pol_type`
             is not "elliptical".
 
         Returns
         -------
         Ex_k, Ey_k, Ez_k : ndarray
             Complex electric field components in k-space (2D arrays).
+
+        Examples
+        --------
+        Focusing a vortex beam with topological charge 1, made from a
+        circularly polarized beam by a spiral phase plate:
+
+        .. code-block:: python
+
+            import numpy as np
+            import SpinWaveToolkit as SWT
+
+            pol = SWT.bls.polarization
+            lens = SWT.bls.ObjectiveLens(532e-9, 0.75, 2, 1e-3)
+            kx = np.linspace(-15e6, 15e6, 201)
+            KX, KY = np.meshgrid(kx, kx, indexing="ij")
+            e_in = pol.apply_jones_matrix(
+                pol.spiral_phase_plate(KX, KY, charge=1), pol.jones_vector("rcp")
+            )
+            Ex_k, Ey_k, Ez_k = lens.getPupilField(0, KX, KY, pol_type=e_in)
         """
 
         # --- CONSTANTS & PRELIMINARIES ---
@@ -435,37 +480,20 @@ class ObjectiveLens:
         propagator = np.exp(1j * k_medium * z * cos_theta)
 
         # --- POLARIZATION BASIS TRANSFORMATION ---
-        angle_rad = np.deg2rad(pol_angle)
-
-        # Jones vector in the entrance pupil (before focusing)
-        if pol_type == "linear":
-            e_in = np.array([np.cos(angle_rad), np.sin(angle_rad)])
-        elif pol_type == "rcp":
-            e_in = np.array([1, -1j]) / np.sqrt(2)
-        elif pol_type == "lcp":
-            e_in = np.array([1, 1j]) / np.sqrt(2)
-        elif pol_type == "radial":
-            e_in = np.array([cos_phi, sin_phi])
-        elif pol_type == "azimuthal":
-            e_in = np.array([-sin_phi, cos_phi])
-        elif pol_type == "elliptical":
-            # Canonical ellipse aligned with X-axis
-            norm = 1.0 / np.sqrt(1 + axis_ratio**2)
-            e_base = norm * np.array([1, 1j * axis_ratio])
-            
-            # Standard 2D rotation matrix
-            R = np.array([
-                [np.cos(angle_rad), -np.sin(angle_rad)],
-                [np.sin(angle_rad),  np.cos(angle_rad)]
-            ])
-            
-            # Rotate the ellipse to the desired angle
-            e_in = np.matmul(R, e_base)
+        # Jones vector/field in the entrance pupil (before focusing)
+        if isinstance(pol_type, str):
+            e_in = jones_vector(pol_type, pol_angle, axis_ratio, X=KX, Y=KY)
         else:
+            e_in = np.asarray(pol_type)
+        if e_in.shape not in ((2,), (2, *KX.shape)):
             raise ValueError(
-                f"Polarization type '{pol_type}' not recognized. "
-                "Use 'linear', 'radial', 'azimuthal', 'rcp', 'lcp', or 'elliptical'."
+                f"Jones vector/field must have shape (2,) or {(2, *KX.shape)}, "
+                f"got {e_in.shape}."
             )
+        # Broadcast to the KX grid and select the points within the pupil
+        if e_in.ndim == 1:
+            e_in = e_in.reshape((2,) + (1,) * KX.ndim)
+        e_in = np.broadcast_to(e_in, (2, *KX.shape))[:, pupil_mask]
 
         # Transformation according to Richards & Wolf (1959)
         ex = (cos_theta * cos_phi**2 + sin_phi**2) * e_in[0] + (
@@ -478,7 +506,10 @@ class ObjectiveLens:
 
         # --- ASSEMBLE FINAL FIELD IN K-SPACE ---
         E0 = 1.0  # Input amplitude normalization
-        prefactor = 1j * E0 * self.f / (2 * np.pi * k_medium)
+        # Angular spectrum representation, Novotny & Hecht eq. (3.47)
+        prefactor = (
+            1j * E0 * self.f / (2 * np.pi * k_medium) * np.exp(-1j * k_medium * self.f)
+        )
         
         Ex_k[pupil_mask] = prefactor * amplitude_factor * propagator * ex
         Ey_k[pupil_mask] = prefactor * amplitude_factor * propagator * ey
