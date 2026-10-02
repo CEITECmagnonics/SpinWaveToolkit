@@ -412,6 +412,28 @@ class ObjectiveLens:
         Ex_k, Ey_k, Ez_k : ndarray
             Complex electric field components in k-space (2D arrays).
 
+        Notes
+        -----
+        The amplitude of the incident beam is always Gaussian, given by
+        the filling factor `f0`, with the polarization state set by
+        `pol_type`.  Therefore, "radial" and "azimuthal" polarizations
+        here correspond to a Gaussian beam with a polarization
+        singularity on the optical axis (e.g. directly after a q-plate),
+        whereas :meth:`getFocalFieldRad` and :meth:`getFocalFieldAzm`
+        assume a doughnut beam with amplitude
+        ``E0 * 2*rho/w0 * exp(-rho**2/w0**2)``.  The doughnut beam can be
+        obtained here by weighting the Jones field by ``2*rho/w0``,
+        which with the sine condition ``rho = f*sin(theta)`` and
+        ``w0 = f0*f*sin(theta_max)`` reads:
+
+        .. code-block:: python
+
+            sin_theta = np.hypot(KX, KY) / (2 * np.pi * n / wavelength)
+            e_in = 2 * sin_theta / (f0 * NA / n) * pol.jones_vector(
+                "radial", X=KX, Y=KY
+            )
+            Ex_k, Ey_k, Ez_k = lens.getPupilField(z, KX, KY, n=n, pol_type=e_in)
+
         Examples
         --------
         Focusing a vortex beam with topological charge 1, made from a
