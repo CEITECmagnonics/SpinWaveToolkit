@@ -18,7 +18,6 @@ __all__ = [
     "get_transfer_function_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_GF_focal",
-    "get_signal_GF_focal_v",
     "getBLSsignal",
 ]
 
@@ -598,7 +597,7 @@ def get_signal_GF_focal(
     Returns
     -------
     sigma : ndarray
-        () calculated BLS spectrum.  1D array with shape ``(Nf,)``.
+        () calculated BLS spectrum.  1D real array with shape ``(Nf,)``.
     Px, Py, Pz : ndarray
         (V/m) induced polarization in the magnetic layer.  Corresponds
         to `P` in eq. (3) in Wojewoda et al. PRB 110, 224428 (2024).
@@ -634,6 +633,10 @@ def get_signal_GF_focal(
       the signal does not depend on the sampling of `E` or on `Nq`
       (provided they are fine enough).  Its absolute scale is still
       given by the (arbitrary) normalization of `E` and `Bloch`.
+    - The convolutions of the electric field with the Bloch functions
+      are evaluated using the convolution theorem (zero-padded FFTs),
+      which gives the same result as direct 2D convolutions, but is
+      much faster for fine q-grids.
 
     """
     warn(
@@ -644,6 +647,7 @@ def get_signal_GF_focal(
     )
 
     k0 = 2 * np.pi / wavelength
+    Nf = len(SweepBloch)
 
     # --- Set up q-space grid (qx and qy) ---
     qxHalf = np.linspace(0, 1.1, Nq) * k0
@@ -651,6 +655,9 @@ def get_signal_GF_focal(
 
     # qy is taken identical to qx
     qy = qx.copy()
+    Nqg = len(qx)  # = 2*Nq - 1
+    dkx = qx[1] - qx[0]
+    dky = qy[1] - qy[0]
 
     # Create the 2D grid using ndgrid convention (like Matlab)
     Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
@@ -658,6 +665,8 @@ def get_signal_GF_focal(
     # Use complex square root to avoid NaNs for negative arguments
     Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
     Kz = np.sqrt(k0**2 - Q**2 + 0j)
+    # Prepare the target points as an (M,2) array where M = number of Qx points
+    points = np.stack([Qx.ravel(), Qy.ravel()], axis=-1)
     # -------------------------------------------------------------
 
     # --- Suppose Exy is given as a tuple of 1D arrays (x, y) for the spatial coordinates ---
@@ -665,42 +674,33 @@ def get_signal_GF_focal(
     # Determine grid spacings (assuming uniform spacing)
     dx = EX[1] - EX[0]
     dy = EY[1] - EY[0]
-    Nx = EX.shape[0]
-    Ny = EY.shape[0]
 
     # --- Compute the Fourier transform of the electric field components ---
     # We assume E has shape (3, Ny, Nx) where E[0] is the X component, etc.
     # The factor dx*dy approximates the continuous Fourier transform
     # E(k) = int E(r) exp(-i k.r) d^2r, making it independent of the grid.
-    fftEI = np.empty_like(E, dtype=complex)
-    for comp in range(3):
-        # Apply ifftshift in both axes, then fft2, then fftshift back.
-        temp = ifftshift(E[comp])
-        temp = fft2(temp)
-        temp = fftshift(temp)
-        fftEI[comp, :, :] = temp * dx * dy
+    # Apply ifftshift in both axes, then fft2, then fftshift back.
+    fftEI = fftshift(
+        spfft.fft2(ifftshift(np.asarray(E), axes=(-2, -1)), axes=(-2, -1)),
+        axes=(-2, -1),
+    ) * (dx * dy)
     # -------------------------------------------------------------
 
     # --- Compute the Fourier domain grid corresponding to the spatial grid ---
     # The FFT frequency bins (in radians per meter) are given by:
-    kx_fft = fftshift(2 * np.pi * np.fft.fftfreq(Nx, d=dx))
-    ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(Ny, d=dy))
+    kx_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EX), d=dx))
+    ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EY), d=dy))
 
     # --- Interpolate the computed FFT of the E-field onto the Qx, Qy grid ---
     # Here fftEI has shape (3, Ny, Nx), i.e. it is defined on (KY_fft, KX_fft)
-    interp_fftEI = np.empty((3, Qx.shape[0], Qx.shape[1]), dtype=complex)
-    # Prepare the target points as an (M,2) array where M = number of Qx points
-    points = np.stack([Qy.ravel(), Qx.ravel()], axis=-1)
-    for comp in range(3):
-        # Create an interpolator for each component
-        interp_func = RegularGridInterpolator(
-            (ky_fft, kx_fft), fftEI[comp, :, :], bounds_error=False, fill_value=0
-        )
-        interp_fftEI[comp, :, :] = interp_func(points).reshape(Qx.shape)
-
-    # --- Prepare for frequency loop ---
-    # Get the kx, ky grid for Bloch functions (assumed to be 1D arrays)
-    kx_grid, ky_grid = KxKyBloch
+    # (all three components are interpolated at once)
+    interp_func = RegularGridInterpolator(
+        (ky_fft, kx_fft),
+        np.moveaxis(fftEI, 0, -1),
+        bounds_error=False,
+        fill_value=0,
+    )
+    interp_fftEI = np.moveaxis(interp_func(points[:, ::-1]), -1, 0).reshape(3, Nqg, Nqg)
 
     # Compute a volume factor by integrating an exponential decay over the layer
     # thickness (both incident and scattered fields are attenuated), eq. (32)
@@ -714,11 +714,16 @@ def get_signal_GF_focal(
     # Multiply the electric field by the volume factor and by the q-space
     # measure dqx*dqy/(2*pi)**2, so that the discrete convolutions below
     # approximate the continuous ones, eq. (18)
-    interp_fftEI *= VolumeFac * (qx[1] - qx[0]) * (qy[1] - qy[0]) / (2 * np.pi) ** 2
+    interp_fftEI *= VolumeFac * dkx * dky / (2 * np.pi) ** 2
 
-    # Prepare arrays to store the results for each frequency
-    Nf = len(SweepBloch)
-    sigma = np.zeros(Nf, dtype=complex)
+    # --- Prepare the convolutions using the convolution theorem ---
+    # FFTs zero-padded to at least 2*Nqg-1 points give the full linear
+    # convolution, from which the central (Nqg, Nqg) part is taken, i.e.
+    # the same result as convolve2d(..., mode="same").
+    fast_M = spfft.next_fast_len(2 * Nqg - 1)
+    start = (Nqg - 1) // 2
+    fftEI_conv = spfft.fft2(interp_fftEI, s=(fast_M, fast_M), axes=(-2, -1))
+    # -------------------------------------------------------------
 
     # --- Evaluate Fresnel coefficients and spherical Green functions ---
     # The Fresnelq function is expected to return two objects (htp and hts) that can be evaluated on Q.
@@ -747,23 +752,41 @@ def get_signal_GF_focal(
     )
     # -------------------------------------------------------------
 
-    # --- Compute real-space grids and apply the point-spread filter ---
-    # This represent limited ability to propagate the electric field to the detector.
-    # (This was moved out of the frequency loop since it does not depend on frequency.)
-    dkx = qx[1] - qx[0]
-    dky = qy[1] - qy[0]
-    Nxi = len(qx)
-    Nyi = len(qy)
-    DXi = 2 * np.pi / dkx
-    DYi = 2 * np.pi / dky
-    dxi = DXi / Nxi
-    dyi = DYi / Nyi
-    xi = np.linspace(-(Nxi - 1) / 2, (Nxi - 1) / 2, Nxi) * dxi
-    yi = np.linspace(-(Nyi - 1) / 2, (Nyi - 1) / 2, Nyi) * dyi
-    Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
+    # --- Calculate the p- and s-polarized electric field contributions ---
+    # pGF and sGF are assumed to be 3×2 structures (lists of lists or similar).
+    # The terms multiplying each polarization component do not depend on
+    # frequency, so they are evaluated here: Ep = sum_c P_c * pTerms[c], etc.
+    expMinus = np.exp(-1j * Kzs * d[source_layer_index - 1])
+    expPlus = np.exp(1j * Kzs * d[source_layer_index - 1])
+    pTerms = np.array([pGF[c][0] * expMinus + pGF[c][1] * expPlus for c in range(3)])
+    sTerms = np.array([sGF[c][0] * expMinus + sGF[c][1] * expPlus for c in range(3)])
+
+    # --- Convert to X and Y components in the laboratory frame ---
+    # Avoid division by zero: when Q==0 set cosPhi=1 and sinPhi=0.
+    cosPhi = np.divide(Qx, Q, out=np.ones_like(Qx), where=Q != 0)
+    sinPhi = np.divide(Qy, Q, out=np.zeros_like(Qy), where=Q != 0)
+
+    # --- Apply a polarization-dependent factor ---
+    Factor = (
+        (-2j * np.pi * np.sqrt(Kz * k0)) * np.exp(1j * k0 * focalLength) / focalLength
+    )
     # Create a mask for Q values within k0*NA.
     mask = (Q <= k0 * NA).astype(float)
+    # Ex_field = sum_c P_c * xTerms[c], Ey_field = sum_c P_c * yTerms[c]
+    xTerms = (pTerms * cosPhi - sTerms * sinPhi) * Factor * mask
+    yTerms = (pTerms * sinPhi + sTerms * cosPhi) * Factor * mask
+    # -------------------------------------------------------------
+
+    # --- Compute real-space grids and apply the point-spread filter ---
+    # This represent limited ability to propagate the electric field to the detector.
+    DXi = 2 * np.pi / dkx
+    DYi = 2 * np.pi / dky
+    dxi = DXi / Nqg
+    dyi = DYi / Nqg
+    xi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dxi
+    yi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dyi
+    Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
+    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
     # Compute a common scaling factor (note: np.size returns the total number of elements).
     factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
     # -------------------------------------------------------------
@@ -773,93 +796,60 @@ def get_signal_GF_focal(
     )
     # -------------------------------------------------------------
 
+    # --- Prepare for frequency loop ---
+    # Get the kx, ky grid for Bloch functions (assumed to be 1D arrays)
+    kx_grid, ky_grid = KxKyBloch
+    Bloch = np.asarray(Bloch)
+
+    # Prepare arrays to store the results for each frequency
+    sigma = np.zeros(Nf)
     if full_output:  # Preallocate polarization and scattered field.
-        Px = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-        Py = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-        Pz = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-        Ex_scat = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
-        Ey_scat = np.empty((Nf, Nq * 2 - 1, Nq * 2 - 1), dtype=complex)
+        Px = np.empty((Nf, Nqg, Nqg), dtype=complex)
+        Py = np.empty((Nf, Nqg, Nqg), dtype=complex)
+        Pz = np.empty((Nf, Nqg, Nqg), dtype=complex)
+        Ex_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
+        Ey_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
     # Loop over frequencies in the Bloch function.
     # Here we assume that the first dimension of Bloch (after the component index)
     # corresponds to the sweep index (and that len(SweepBloch)==Nf).
-    for i, _ in enumerate(SweepBloch):
+    for i in range(Nf):
         # --- Interpolate Bloch function components onto the Qx-Qy grid ---
         # We assume Bloch has shape (3, Nf, Nkx, Nky)
-        interp_Mx = RegularGridInterpolator(
-            (kx_grid, ky_grid), Bloch[0, i, :, :], bounds_error=False, fill_value=0
+        # (all three components are interpolated at once)
+        interp_M = RegularGridInterpolator(
+            (kx_grid, ky_grid),
+            np.moveaxis(Bloch[:, i], 0, -1),
+            bounds_error=False,
+            fill_value=0,
         )
-        interp_My = RegularGridInterpolator(
-            (kx_grid, ky_grid), Bloch[1, i, :, :], bounds_error=False, fill_value=0
-        )
-        interp_Mz = RegularGridInterpolator(
-            (kx_grid, ky_grid), Bloch[2, i, :, :], bounds_error=False, fill_value=0
-        )
-        # Evaluate at the (Qx, Qy) points:
-        points = np.stack([Qx.ravel(), Qy.ravel()], axis=-1)
-        Bloch_interp_Mx = interp_Mx(points).reshape(Qx.shape)
-        Bloch_interp_My = interp_My(points).reshape(Qx.shape)
-        Bloch_interp_Mz = interp_Mz(points).reshape(Qx.shape)
+        Bloch_interp = np.moveaxis(interp_M(points), -1, 0).reshape(3, Nqg, Nqg)
         # -------------------------------------------------------------
 
         # --- Convolve the electric field with the (interpolated) Bloch components ---
-        # We do not care about
-        Px_i = convolve2d(
-            interp_fftEI[2, :, :], 1j * Bloch_interp_My, mode="same"
-        ) + convolve2d(interp_fftEI[1, :, :], -1j * Bloch_interp_Mz, mode="same")
-        Py_i = convolve2d(
-            interp_fftEI[0, :, :], 1j * Bloch_interp_Mz, mode="same"
-        ) + convolve2d(interp_fftEI[2, :, :], -1j * Bloch_interp_Mx, mode="same")
-        Pz_i = convolve2d(
-            interp_fftEI[1, :, :], 1j * Bloch_interp_Mx, mode="same"
-        ) + convolve2d(interp_fftEI[0, :, :], -1j * Bloch_interp_My, mode="same")
+        # P = i (E x M), i.e. Px = conv(Ez, i*My) + conv(Ey, -i*Mz), etc.
+        fftM = spfft.fft2(Bloch_interp, s=(fast_M, fast_M), axes=(-2, -1))
+        P_conv = 1j * np.array(
+            [
+                fftEI_conv[2] * fftM[1] - fftEI_conv[1] * fftM[2],
+                fftEI_conv[0] * fftM[2] - fftEI_conv[2] * fftM[0],
+                fftEI_conv[1] * fftM[0] - fftEI_conv[0] * fftM[1],
+            ]
+        )
+        P_i = spfft.ifft2(P_conv, axes=(-2, -1))[
+            :, start : start + Nqg, start : start + Nqg
+        ]
         # -------------------------------------------------------------
         if full_output:  # save for output if requested
-            Px[i], Py[i], Pz[i] = Px_i, Py_i, Pz_i
-
-        # --- Calculate the p- and s-polarized electric field contributions ---
-        # pGF and sGF are assumed to be 3×2 structures (lists of lists or similar).
-        Ep = pGF[0][0] * Px_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[0][
-            1
-        ] * Px_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[1][
-            1
-        ] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Ep += pGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + pGF[2][
-            1
-        ] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-
-        Es = sGF[0][0] * Px_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[0][
-            1
-        ] * Px_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[1][0] * Py_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[1][
-            1
-        ] * Py_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        Es += sGF[2][0] * Pz_i * np.exp(-1j * Kzs * d[source_layer_index - 1]) + sGF[2][
-            1
-        ] * Pz_i * np.exp(1j * Kzs * d[source_layer_index - 1])
-        # -------------------------------------------------------------
-
-        # --- Convert to X and Y components in the laboratory frame ---
-        # Avoid division by zero: when Q==0 set cosPhi=1 and sinPhi=0.
-        cosPhi = np.divide(Qx, Q, out=np.ones_like(Qx), where=Q != 0)
-        sinPhi = np.divide(Qy, Q, out=np.zeros_like(Qy), where=Q != 0)
-        Ex_field = Ep * cosPhi - Es * sinPhi
-        Ey_field = Ep * sinPhi + Es * cosPhi
-        # -------------------------------------------------------------
-
-        # --- Apply a polarization-dependent factor ---
-        Factor = (
-            (-2j * np.pi * np.sqrt(Kz * k0))
-            * np.exp(1j * k0 * focalLength)
-            / focalLength
-        )
-        Ex_field *= Factor
-        Ey_field *= Factor
-        # -------------------------------------------------------------
+            Px[i], Py[i], Pz[i] = P_i
 
         # --- Transform back to real space with an applied numerical aperture mask ---
-        Ex_real = factor_fft * fftshift(ifft2(ifftshift(Ex_field * mask)))
-        Ey_real = factor_fft * fftshift(ifft2(ifftshift(Ey_field * mask)))
+        # (the mask is included in xTerms and yTerms)
+        Ex_real = factor_fft * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * xTerms, axis=0)))
+        )
+        Ey_real = factor_fft * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * yTerms, axis=0)))
+        )
         # Apply the point-spread (PSF) filter in real space.
         Ex_real *= PSFFilter
         Ey_real *= PSFFilter
@@ -898,234 +888,6 @@ def get_signal_GF_focal(
         return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
     else:
         return sigma
-
-
-def get_signal_GF_focal_v(
-    SweepBloch,
-    KxKyBloch,
-    Bloch,
-    Exy,
-    E,
-    DF,
-    PM,
-    d,
-    NA,
-    Nq=30,
-    source_layer_index=1,
-    output_layer_index=0,
-    wavelength=532e-9,
-    collectionSpot=1e-6,
-    focalLength=1e-3,
-    coherent_exc=False,
-    output_analyzer="none",
-    output_analyzer_angle_deg=0,
-    output_analyzer_axis_ratio=1.0,
-    full_output=False,
-):
-    """
-    Compute Brillouin light scattering (BLS) spectrum using the
-    Green function formalism (vectorized version).
-
-    This function gives the same results as :func:`get_signal_GF_focal`
-    (up to numerical precision), but the convolutions are computed using
-    the convolution theorem (zero-padded FFTs) and all quantities that
-    do not depend on frequency are precomputed, which is considerably
-    faster (typically by one to two orders of magnitude, increasing with
-    `Nq`).
-
-    .. warning::
-
-       This is an experimental function. Syntax and behavior may change
-       in future releases. Please verify the results carefully.
-
-    Source paper: https://doi.org/10.1103/PhysRevB.110.224428
-
-    Parameters
-    ----------
-    SweepBloch, KxKyBloch, Bloch, Exy, E, DF, PM, d, NA
-        See :func:`get_signal_GF_focal`.
-    Nq, source_layer_index, output_layer_index, wavelength, \
-    collectionSpot, focalLength, coherent_exc, output_analyzer, \
-    output_analyzer_angle_deg, output_analyzer_axis_ratio, full_output
-        Optional, see :func:`get_signal_GF_focal`.
-
-    Returns
-    -------
-    sigma : ndarray
-        () calculated BLS spectrum.  1D array with shape ``(Nf,)``.
-        (Unlike :func:`get_signal_GF_focal`, it is real-valued.)
-    Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, x_scat, y_scat : ndarray
-        Returned only if `full_output` is True.  See
-        :func:`get_signal_GF_focal`.
-
-    See also
-    --------
-    get_signal_GF_focal, get_signal_RT_focal, get_signal_RT_pupil
-
-    Notes
-    -----
-    The same physical assumptions as in :func:`get_signal_GF_focal`
-    apply, see its Notes section.
-
-    """
-    warn(
-        "`get_signal_GF_focal_v` is an experimental function and may be subject to"
-        + " change. Please verify results carefully.",
-        UserWarning,
-        stacklevel=2,
-    )
-
-    k0 = 2 * np.pi / wavelength
-    Nf = len(SweepBloch)
-
-    # --- Set up q-space grid (qx and qy), ndgrid convention ---
-    qxHalf = np.linspace(0, 1.1, Nq) * k0
-    qx = np.concatenate((-qxHalf[1:][::-1], qxHalf))
-    qy = qx.copy()
-    Nqg = len(qx)  # = 2*Nq - 1
-    dkx, dky = qx[1] - qx[0], qy[1] - qy[0]
-    Qx, Qy = np.meshgrid(qx, qy, indexing="ij")
-    Q = np.sqrt(Qx**2 + Qy**2)
-    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
-    Kz = np.sqrt(k0**2 - Q**2 + 0j)
-    points = np.stack([Qx.ravel(), Qy.ravel()], axis=-1)
-
-    # --- Continuous Fourier transform of the incident field ---
-    # E has shape (3, Ny, Nx), i.e. it is defined on (KY_fft, KX_fft)
-    EX, EY = Exy
-    dx, dy = EX[1] - EX[0], EY[1] - EY[0]
-    E = np.asarray(E)
-    fftEI = fftshift(
-        spfft.fft2(ifftshift(E, axes=(-2, -1)), axes=(-2, -1)),
-        axes=(-2, -1),
-    ) * (dx * dy)
-    kx_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EX), d=dx))
-    ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EY), d=dy))
-    interp_func = RegularGridInterpolator(
-        (ky_fft, kx_fft),
-        np.moveaxis(fftEI, 0, -1),  # (Ny, Nx, 3)
-        bounds_error=False,
-        fill_value=0,
-    )
-    E_q = np.moveaxis(interp_func(points[:, ::-1]), -1, 0).reshape(3, Nqg, Nqg)
-
-    # Volume factor, eq. (32), and the q-space measure of the convolution
-    zs = np.linspace(0, d[source_layer_index - 1], 100)
-    ExtinCoefMagLayer = np.sqrt(
-        (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
-    )
-    VolumeFac = trapezoid(np.exp(-2 * ExtinCoefMagLayer * k0 * zs), zs)
-    E_q *= VolumeFac * dkx * dky / (2 * np.pi) ** 2
-
-    # --- Convolution via the convolution theorem (zero-padded FFTs) ---
-    M = 2 * Nqg - 1  # size of the full linear convolution
-    fast_M = spfft.next_fast_len(M)
-    start = (Nqg - 1) // 2  # offset of the "same" part (as in convolve2d)
-    E_r = spfft.fft2(E_q, s=(fast_M, fast_M), axes=(-2, -1))
-
-    # --- Green functions and optics, collapsed to transfer terms ---
-    htp, hts = fresnel_coefficients(
-        lambda_=wavelength,
-        DF=DF,
-        PM=PM,
-        d=d,
-        source_layer_index=source_layer_index,
-        output_layer_index=output_layer_index,
-    )
-    tp = np.nan_to_num(htp(Q), nan=0)
-    ts = np.nan_to_num(hts(Q), nan=0)
-    pGF, sGF = sph_green_function(
-        Kx=Qx,
-        Ky=Qy,
-        DFMagLayer=DF[source_layer_index],
-        wavelength=wavelength,
-        tp=tp,
-        ts=ts,
-    )
-    exp_minus = np.exp(-1j * Kzs * d[source_layer_index - 1])
-    exp_plus = np.exp(1j * Kzs * d[source_layer_index - 1])
-    cosPhi = np.divide(Qx, Q, out=np.ones_like(Qx), where=Q != 0)
-    sinPhi = np.divide(Qy, Q, out=np.zeros_like(Qy), where=Q != 0)
-    mask = (Q <= k0 * NA).astype(float)
-    Factor = (
-        (-2j * np.pi * np.sqrt(Kz * k0)) * np.exp(1j * k0 * focalLength) / focalLength
-    )
-    p_terms = np.array([pGF[c][0] * exp_minus + pGF[c][1] * exp_plus for c in range(3)])
-    s_terms = np.array([sGF[c][0] * exp_minus + sGF[c][1] * exp_plus for c in range(3)])
-    # E_field_x,y = sum_c P_c * T_c (lab frame, including far-field factor and NA)
-    Tx = (p_terms * cosPhi - s_terms * sinPhi) * Factor * mask
-    Ty = (p_terms * sinPhi + s_terms * cosPhi) * Factor * mask
-
-    # --- Real-space grid, collection filter and analyzer ---
-    dxi = (2 * np.pi / dkx) / Nqg
-    dyi = (2 * np.pi / dky) / Nqg
-    xi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dxi
-    yi = np.linspace(-(Nqg - 1) / 2, (Nqg - 1) / 2, Nqg) * dyi
-    Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
-    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
-    factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
-    real_factor = factor_fft * PSFFilter
-    ax, ay = _analyzer_coefficients(
-        output_analyzer, output_analyzer_angle_deg, output_analyzer_axis_ratio, Xi, Yi
-    )
-
-    kx_grid, ky_grid = KxKyBloch
-    Bloch = np.asarray(Bloch)
-
-    sigma = np.empty(Nf)
-    if full_output:
-        P = np.empty((3, Nf, Nqg, Nqg), dtype=complex)
-        Ex_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
-        Ey_scat = np.empty((Nf, Nqg, Nqg), dtype=complex)
-
-    for i in range(Nf):
-        # --- Interpolate Bloch functions onto the q-grid -> (3, Nq, Nq) ---
-        interp_B = RegularGridInterpolator(
-            (kx_grid, ky_grid),
-            np.moveaxis(Bloch[:, i], 0, -1),  # (Nkx, Nky, 3)
-            bounds_error=False,
-            fill_value=0,
-        )
-        B_q = np.moveaxis(interp_B(points), -1, 0).reshape(3, Nqg, Nqg)
-        B_r = spfft.fft2(B_q, s=(fast_M, fast_M), axes=(-2, -1))
-
-        # --- Polarization P = i (E x M) (linear Voigt, Q = 1), eq. (18) ---
-        P_r = 1j * np.array(
-            [
-                E_r[2] * B_r[1] - E_r[1] * B_r[2],
-                E_r[0] * B_r[2] - E_r[2] * B_r[0],
-                E_r[1] * B_r[0] - E_r[0] * B_r[1],
-            ]
-        )
-        P_i = spfft.ifft2(P_r, axes=(-2, -1))[
-            :, start : start + Nqg, start : start + Nqg
-        ]
-
-        # --- Emitted far field in the lab frame and back to real space ---
-        Ex_real = real_factor * fftshift(
-            spfft.ifft2(ifftshift(np.sum(P_i * Tx, axis=0)))
-        )
-        Ey_real = real_factor * fftshift(
-            spfft.ifft2(ifftshift(np.sum(P_i * Ty, axis=0)))
-        )
-        if full_output:
-            P[:, i] = P_i
-            Ex_scat[i], Ey_scat[i] = Ex_real, Ey_real
-
-        # --- Output analyzer and detection ---
-        if ax is not None:
-            Ex_real = ax * Ex_real + ay * Ey_real
-            Ey_real = np.zeros_like(Ex_real)
-        if coherent_exc:
-            ExS = dxi * dyi * np.sum(Ex_real)
-            EyS = dxi * dyi * np.sum(Ey_real)
-            sigma[i] = abs(ExS) ** 2 + abs(EyS) ** 2
-        else:
-            sigma[i] = dxi * dyi * np.sum(np.abs(Ex_real) ** 2 + np.abs(Ey_real) ** 2)
-
-    if full_output:
-        return sigma, P[0], P[1], P[2], Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
-    return sigma
 
 
 def _analyzer_coefficients(output_analyzer, angle, axis_ratio, Xi, Yi):

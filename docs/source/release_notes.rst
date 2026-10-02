@@ -14,7 +14,7 @@ What's new
 - New sub-module :mod:`.bls.polarization` for describing the polarization of light with the Jones calculus, including wave plates, linear polarizers, spiral phase plates and q-plates.
 - :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
 - The `output_analyzer` of :func:`.bls.get_signal_GF_focal` now also accepts a Jones vector or field of the transmitted polarization. Its string values are unified with :func:`.bls.polarization.jones_vector` and :meth:`.bls.ObjectiveLens.getPupilField`, i.e. ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``, and ``"elliptical"`` was added (with the new `output_analyzer_axis_ratio` parameter).
-- New experimental function :func:`.bls.get_signal_GF_focal_v`, a vectorized version of :func:`.bls.get_signal_GF_focal` giving the same results considerably faster.
+- :func:`.bls.get_signal_GF_focal` is now considerably faster (by one to two orders of magnitude, increasing with `Nq`), since the convolutions are evaluated using the convolution theorem and all frequency-independent quantities are precomputed. The results are the same up to numerical precision, but `sigma` is now returned as a real array.
 - New function :func:`.bls.get_transfer_function_RT_pupil` for calculating only the transfer function of the reciprocity theorem approach, which can be reused for different susceptibility tensors.
 
 Fixes

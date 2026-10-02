@@ -29,7 +29,6 @@ Functions
 
 .. autosummary::
     get_signal_GF_focal
-    get_signal_GF_focal_v
     getBLSsignal
     get_signal_RT_pupil
     get_transfer_function_RT_pupil
@@ -56,7 +55,6 @@ from . import polarization
 __all__ = [
     "ObjectiveLens",
     "get_signal_GF_focal",
-    "get_signal_GF_focal_v",
     "getBLSsignal",
     "get_signal_RT_pupil",
     "get_transfer_function_RT_pupil",

@@ -22,8 +22,6 @@ Currently, the fastest approach is via the Reciprocity Theorem with electric fie
 
 .. autofunction:: get_signal_GF_focal
 
-.. autofunction:: get_signal_GF_focal_v
-
 .. autofunction:: getBLSsignal
 
 .. autofunction:: get_signal_RT_pupil
