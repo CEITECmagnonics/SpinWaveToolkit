@@ -18,6 +18,7 @@ __all__ = [
     "get_transfer_function_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_GF_focal",
+    "get_signal_GF_pupil",
     "getBLSsignal",
 ]
 
@@ -169,7 +170,8 @@ def get_signal_RT_pupil(
 
        To maintain a valid physical representation of the convolution
        integral, the input k-space grid (`KxKy`) MUST be strictly
-       equidistant.
+       equidistant and symmetric with respect to ``k = 0`` (preferably
+       with an odd number of points, so that ``k = 0`` is a grid point).
 
     Source paper: https://doi.org/10.1126/sciadv.ady8833
 
@@ -178,11 +180,14 @@ def get_signal_RT_pupil(
     KxKy : list[ndarray]
         (rad/m) list of two 1D arrays `(kx, ky)` with shapes ``(Nkx,)``
         and ``(Nky,)`` containing the reciprocal space coordinates.
-        Must be a uniform/equidistant grid.
+        Must be a uniform/equidistant grid symmetric with respect to
+        ``k = 0``.
     Ei_fields : list[ndarray]
         (V/m) list of the three reciprocal pupil field components
         `[Ekx, Eky, Ekz]` corresponding to the driving field E_dr
-        (incident laser). Each must have shape ``(Nkx, Nky)``.
+        (incident laser), as given by
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField`.  Each
+        must have shape ``(Nkx, Nky)``.
     Ej_fields : list[ndarray]
         (V/m) list of the three reciprocal pupil field components
         `[Ekx, Eky, Ekz]` corresponding to the virtual field E_v
@@ -266,7 +271,8 @@ def get_transfer_function_RT_pupil(
 
        To maintain a valid physical representation of the convolution
        integral, the input k-space grid (`KxKy`) MUST be strictly
-       equidistant.
+       equidistant and symmetric with respect to ``k = 0`` (preferably
+       with an odd number of points, so that ``k = 0`` is a grid point).
 
     Source paper: https://doi.org/10.1126/sciadv.ady8833
 
@@ -275,11 +281,14 @@ def get_transfer_function_RT_pupil(
     KxKy : list[ndarray]
         (rad/m) list of two 1D arrays `(kx, ky)` with shapes ``(Nkx,)``
         and ``(Nky,)`` containing the reciprocal space coordinates.
-        Must be a uniform/equidistant grid.
+        Must be a uniform/equidistant grid symmetric with respect to
+        ``k = 0``.
     Ei_fields : list[ndarray]
         (V/m) list of the three reciprocal pupil field components
         `[Ekx, Eky, Ekz]` corresponding to the driving field E_dr
-        (incident laser). Each must have shape ``(Nkx, Nky)``.
+        (incident laser), as given by
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField`.  Each
+        must have shape ``(Nkx, Nky)``.
     Ej_fields : list[ndarray]
         (V/m) list of the three reciprocal pupil field components
         `[Ekx, Eky, Ekz]` corresponding to the virtual field E_v
@@ -313,28 +322,21 @@ def get_transfer_function_RT_pupil(
     kx, ky = KxKy
     Nkx, Nky = len(kx), len(ky)
 
-    # --- Validation: Ensure grid is equidistant ---
-    # (Required by FFT, and physically required by direct discrete convolution)
-    if Nkx > 1 and not np.allclose(np.diff(kx), kx[1] - kx[0]):
-        raise ValueError(
-            "The kx grid must be strictly equidistant for valid discrete convolution."
-        )
-    if Nky > 1 and not np.allclose(np.diff(ky), ky[1] - ky[0]):
-        raise ValueError(
-            "The ky grid must be strictly equidistant for valid discrete convolution."
-        )
+    # --- Validation: Ensure grid is equidistant and symmetric ---
+    dkx, dky = _check_pupil_grid(kx, ky)
 
     # --- Stack fields ---
     Ei_k = np.stack(Ei_fields, axis=-1)  # Shape (Nkx, Nky, 3)
     Ej_k = np.stack(Ej_fields, axis=-1)  # Shape (Nkx, Nky, 3)
 
     # --- K-space grid spacings ---
-    dkx = kx[1] - kx[0] if Nkx > 1 else 1.0
-    dky = ky[1] - ky[0] if Nky > 1 else 1.0
     dK = dkx * dky
 
-    # Normalization factor for continuous convolution approximation
-    normalization = dK / (2 * np.pi) ** 2
+    # Normalization factor for continuous convolution approximation: the
+    # pupil fields (E(r) = int E_k(k) exp(i k.r) d^2k) are converted to
+    # Fourier transforms by (2*pi)**2 each, and the convolution measure
+    # is dK/(2*pi)**2
+    normalization = (2 * np.pi) ** 2 * dK
 
     # --- Calculate Transfer Function qmEiEj ---
     qmEiEj = np.zeros((3, 3, Nkx, Nky), dtype=complex)
@@ -888,6 +890,397 @@ def get_signal_GF_focal(
         return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
     else:
         return sigma
+
+
+def get_signal_GF_pupil(
+    KxKy,
+    Ei_fields,
+    Chi,
+    DF,
+    PM,
+    d,
+    NA,
+    source_layer_index=1,
+    output_layer_index=0,
+    wavelength=532e-9,
+    collectionSpot=1e-6,
+    focalLength=1e-3,
+    coherent_exc=False,
+    output_analyzer="none",
+    output_analyzer_angle_deg=0,
+    output_analyzer_axis_ratio=1.0,
+    full_output=False,
+):
+    """
+    Compute Brillouin light scattering (BLS) spectrum using the
+    Green function formalism, starting directly from the electric field
+    in reciprocal (k) space.
+
+    The incident field and the magneto-optic susceptibility are given on
+    the same k-space grid, so no interpolation is needed and the
+    calculation is faster than :func:`get_signal_GF_focal`.
+
+    .. warning::
+
+       This is an experimental function. Syntax and behavior may change
+       in future releases. Please verify the results carefully.
+
+    .. important::
+
+       To maintain a valid physical representation of the convolution
+       integral, the input k-space grid (`KxKy`) MUST be strictly
+       equidistant and symmetric with respect to ``k = 0``.
+
+    Source paper: https://doi.org/10.1103/PhysRevB.110.224428
+
+    Parameters
+    ----------
+    KxKy : list[ndarray]
+        (rad/m) list of two 1D arrays `(kx, ky)` with shapes ``(Nkx,)``
+        and ``(Nky,)`` containing the reciprocal space coordinates.
+        Must be a uniform/equidistant grid symmetric with respect to
+        ``k = 0``, preferably with an odd number of points (see Notes).
+    Ei_fields : list[ndarray]
+        (V/m) list of the three reciprocal pupil field components
+        `[Ekx, Eky, Ekz]` corresponding to the driving field E_dr
+        (incident laser), as given by
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField`.  Each
+        must have shape ``(Nkx, Nky)``.
+    Chi : ndarray
+        () dynamic magneto-optic susceptibility tensor with shape
+        ``(3, 3, Nf, Nkx, Nky)``, containing the tensor components
+        `Chi_ij` for each frequency and k-space grid point, e.g. from
+        :mod:`~SpinWaveToolkit.bls.susceptibilities`.
+    DF : ndarray
+        () vector of the complex dielectric functions for each material
+        in the stack.
+    PM : ndarray
+        () vector of the complex permeability functions for each
+        material in the stack.
+    d : ndarray
+        (m ) thickness of all layers in the stack excluding the
+        superstrate and substrate.  Usually just the thickness of the
+        magnetic layer.
+    NA : float
+        Numerical aperture of the collecting optical system.
+    source_layer_index, output_layer_index, wavelength, \
+    collectionSpot, focalLength, coherent_exc, output_analyzer, \
+    output_analyzer_angle_deg, output_analyzer_axis_ratio, full_output
+        Optional, see :func:`get_signal_GF_focal`.  The real-space grid
+        (`x_scat`, `y_scat`) for the output analyzer is given by the
+        reciprocal of `KxKy`, i.e. the Jones fields must have shape
+        ``(2, Nkx, Nky)``.
+
+    Returns
+    -------
+    sigma : ndarray
+        () calculated BLS spectrum.  1D real array with shape ``(Nf,)``.
+    Px, Py, Pz : ndarray
+        (V/m) induced polarization in the magnetic layer.  Corresponds
+        to `P` in eq. (3) in Wojewoda et al. PRB 110, 224428 (2024).
+        Each array has shape ``(Nf, Nkx, Nky)``.
+    Qx, Qy : ndarray
+        (rad/m) k-space grids (meshgrids of `KxKy`) for polarizations
+        `Px`, `Py`, `Pz`.  Each array has shape ``(Nkx, Nky)``.
+    Ex_scat, Ey_scat : ndarray
+        (V/m) scattered real-space electric field components before the
+        analyzer.  Each array has shape ``(Nf, Nkx, Nky)``.
+        Can be used for custom analyzer calculations and beam masking.
+    x_scat, y_scat : ndarray
+        (m ) real-space grids for the scattered electric field.
+        Each array has shape ``(Nkx, Nky)``.
+
+    See also
+    --------
+    get_signal_GF_focal, get_signal_RT_pupil
+
+    Notes
+    -----
+    - The pupil fields of
+      :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField` follow
+      the angular spectrum representation
+      ``E(r) = int E_k(k) exp(i k.r) d^2k``.  They are multiplied by
+      ``(2*pi)**2`` to obtain the Fourier transform
+      ``E(k) = int E(r) exp(-i k.r) d^2r`` used in
+      :func:`get_signal_GF_focal`, so both functions give the same
+      signal for the same objective lens.
+    - The induced polarization is ``P = Chi . E``, i.e.
+      ``P_u = sum_v Chi_uv E_v`` (convolution in k-space), eq. (18).
+    - Light scattered by magnons with wavevectors up to ``2*k0*NA``
+      can reach the detector.  Therefore, a note is issued if the
+      k-grid limit is smaller than this value (contributions of the
+      magnons outside the grid are neglected) or more than 10 times
+      larger (most of the grid does not contribute to the signal).  A
+      warning is issued if the incident field is not negligible at the
+      boundary of the grid, i.e. if it is truncated.
+    - If ``k = 0`` is not a grid point (even number of points), the
+      convolution is shifted by half of the grid step.  This is
+      negligible for dense grids, but a note is issued.
+    - The same physical assumptions as in :func:`get_signal_GF_focal`
+      apply (position of the radiating polarization sheet, volume
+      factor), see its Notes section.  Unlike there, any
+      susceptibility tensor can be used here.
+
+    """
+    warn(
+        "`get_signal_GF_pupil` is an experimental function and may be subject to change."
+        + " Please verify results carefully.",
+        UserWarning,
+        stacklevel=2,
+    )
+
+    k0 = 2 * np.pi / wavelength
+
+    # --- K-space coordinates (ndgrid convention, like Matlab) ---
+    kx, ky = KxKy
+    kx, ky = np.asarray(kx), np.asarray(ky)
+    Nkx, Nky = len(kx), len(ky)
+    dkx, dky = _check_pupil_grid(kx, ky)
+    Qx, Qy = np.meshgrid(kx, ky, indexing="ij")
+    Q = np.sqrt(Qx**2 + Qy**2)
+    # Use complex square root to avoid NaNs for negative arguments
+    Kzs = np.sqrt(DF[source_layer_index] * k0**2 - Q**2 + 0j)
+    Kz = np.sqrt(k0**2 - Q**2 + 0j)
+    # -------------------------------------------------------------
+
+    # --- Check the extent of the k-grid ---
+    E_k = np.stack(Ei_fields)  # Shape (3, Nkx, Nky)
+    absE = np.abs(E_k).max(axis=0)
+    edge = max(absE[0].max(), absE[-1].max(), absE[:, 0].max(), absE[:, -1].max())
+    if edge > 1e-3 * absE.max():
+        warn(
+            "The incident field is not negligible at the boundary of the k-grid "
+            + f"({edge / absE.max():.1e} of its maximum), i.e. it is truncated. "
+            + "Increase the k-grid limit.",
+            UserWarning,
+            stacklevel=2,
+        )
+    k_lim = min(kx[-1], ky[-1])
+    if k_lim < 2 * k0 * NA:
+        warn(
+            f"Note: the k-grid limit ({k_lim:.3g} rad/m) is smaller than 2*k0*NA "
+            + f"({2 * k0 * NA:.3g} rad/m).  Contributions of magnons with larger "
+            + "wavevectors, which could still scatter light into the NA, are neglected.",
+            UserWarning,
+            stacklevel=2,
+        )
+    elif k_lim > 10 * 2 * k0 * NA:
+        warn(
+            f"Note: the k-grid limit ({k_lim:.3g} rad/m) is more than 10 times larger "
+            + f"than 2*k0*NA ({2 * k0 * NA:.3g} rad/m), so most of the grid does not "
+            + "contribute to the signal.  A smaller limit gives a finer resolution for "
+            + "the same number of points.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    Chi = np.asarray(Chi)
+    if Chi.ndim != 5 or Chi.shape[:2] != (3, 3) or Chi.shape[3:] != (Nkx, Nky):
+        raise ValueError(
+            f"Chi must have shape (3, 3, Nf, {Nkx}, {Nky}), got {Chi.shape}."
+        )
+    Nf = Chi.shape[2]
+    # Skip components where susceptibility is zero
+    chi_mask = np.any(Chi, axis=(2, 3, 4))
+
+    # --- Fourier transform of the electric field from the pupil field ---
+    # The pupil field follows E(r) = int E_k(k) exp(i k.r) d^2k, while the
+    # Fourier transform is E(k) = int E(r) exp(-i k.r) d^2r = (2*pi)**2 E_k(k)
+    E_k = E_k * (2 * np.pi) ** 2
+
+    # Compute a volume factor by integrating an exponential decay over the layer
+    # thickness (both incident and scattered fields are attenuated), eq. (32)
+    zs = np.linspace(0, d[source_layer_index - 1], 100)
+    ExtinCoefMagLayer = np.sqrt(
+        (abs(DF[source_layer_index]) - np.real(DF[source_layer_index])) / 2
+    )
+    Volume = np.exp(-2 * ExtinCoefMagLayer * k0 * zs)
+    VolumeFac = trapezoid(Volume, zs)
+
+    # Multiply the electric field by the volume factor and by the q-space
+    # measure dqx*dqy/(2*pi)**2, so that the discrete convolutions below
+    # approximate the continuous ones, eq. (18)
+    E_k *= VolumeFac * dkx * dky / (2 * np.pi) ** 2
+
+    # --- Evaluate Fresnel coefficients and spherical Green functions ---
+    # The function returns two objects (htp and hts) that can be evaluated on Q.
+    htp, hts = fresnel_coefficients(
+        lambda_=wavelength,
+        DF=DF,
+        PM=PM,
+        d=d,
+        source_layer_index=source_layer_index,
+        output_layer_index=output_layer_index,
+    )
+    # Evaluate the Fresnel coefficients at each Q:
+    tp = htp(Q)  # htp at once, assumed shape (2, *Q.shape)
+    ts = hts(Q)  # hts at once, assumed shape (2, *Q.shape)
+    # Replace NaNs with zeros in the two (assumed) components.
+    tp_fixed = np.nan_to_num(tp, nan=0)
+    ts_fixed = np.nan_to_num(ts, nan=0)
+    # Compute the spherical Green functions
+    pGF, sGF = sph_green_function(
+        Kx=Qx,
+        Ky=Qy,
+        DFMagLayer=DF[source_layer_index],
+        wavelength=wavelength,
+        tp=tp_fixed,
+        ts=ts_fixed,
+    )
+    # -------------------------------------------------------------
+
+    # --- Calculate the p- and s-polarized electric field contributions ---
+    # pGF and sGF are assumed to be 3×2 structures (lists of lists or similar).
+    # The terms multiplying each polarization component do not depend on
+    # frequency, so they are evaluated here: Ep = sum_c P_c * pTerms[c], etc.
+    expMinus = np.exp(-1j * Kzs * d[source_layer_index - 1])
+    expPlus = np.exp(1j * Kzs * d[source_layer_index - 1])
+    pTerms = np.array([pGF[c][0] * expMinus + pGF[c][1] * expPlus for c in range(3)])
+    sTerms = np.array([sGF[c][0] * expMinus + sGF[c][1] * expPlus for c in range(3)])
+
+    # --- Convert to X and Y components in the laboratory frame ---
+    # Avoid division by zero: when Q==0 set cosPhi=1 and sinPhi=0.
+    cosPhi = np.divide(Qx, Q, out=np.ones_like(Qx), where=Q != 0)
+    sinPhi = np.divide(Qy, Q, out=np.zeros_like(Qy), where=Q != 0)
+
+    # --- Apply a polarization-dependent factor ---
+    Factor = (
+        (-2j * np.pi * np.sqrt(Kz * k0)) * np.exp(1j * k0 * focalLength) / focalLength
+    )
+    # Create a mask for Q values within k0*NA.
+    mask = (Q <= k0 * NA).astype(float)
+    # Ex_field = sum_c P_c * xTerms[c], Ey_field = sum_c P_c * yTerms[c]
+    xTerms = (pTerms * cosPhi - sTerms * sinPhi) * Factor * mask
+    yTerms = (pTerms * sinPhi + sTerms * cosPhi) * Factor * mask
+    # -------------------------------------------------------------
+
+    # --- Compute real-space grids and apply the point-spread filter ---
+    # This represent limited ability to propagate the electric field to the detector.
+    DXi = 2 * np.pi / dkx
+    DYi = 2 * np.pi / dky
+    dxi = DXi / Nkx
+    dyi = DYi / Nky
+    xi = np.linspace(-(Nkx - 1) / 2, (Nkx - 1) / 2, Nkx) * dxi
+    yi = np.linspace(-(Nky - 1) / 2, (Nky - 1) / 2, Nky) * dyi
+    Xi, Yi = np.meshgrid(xi, yi, indexing="ij")
+    PSFFilter = np.exp(-(Xi**2 + Yi**2) / collectionSpot**2)
+    # Compute a common scaling factor (note: np.size returns the total number of elements).
+    factor_fft = (focalLength / k0) ** 2 * Xi.size / (4 * np.pi**2) * dkx * dky
+    # -------------------------------------------------------------
+    # --- Pre-compute analyzer coefficients on the real-space grid ---
+    ax, ay = _analyzer_coefficients(
+        output_analyzer, output_analyzer_angle_deg, output_analyzer_axis_ratio, Xi, Yi
+    )
+    # -------------------------------------------------------------
+
+    # Prepare arrays to store the results for each frequency
+    sigma = np.zeros(Nf)
+    if full_output:  # Preallocate polarization and scattered field.
+        Px = np.empty((Nf, Nkx, Nky), dtype=complex)
+        Py = np.empty((Nf, Nkx, Nky), dtype=complex)
+        Pz = np.empty((Nf, Nkx, Nky), dtype=complex)
+        Ex_scat = np.empty((Nf, Nkx, Nky), dtype=complex)
+        Ey_scat = np.empty((Nf, Nkx, Nky), dtype=complex)
+    # Loop over frequencies in the susceptibility tensor.
+    for i in range(Nf):
+        # --- Convolve the electric field with the susceptibility ---
+        # P_u = sum_v Chi_uv * E_v (convolution in k-space)
+        P_i = np.zeros((3, Nkx, Nky), dtype=complex)
+        for u in range(3):
+            for v in range(3):
+                if chi_mask[u, v]:
+                    P_i[u] += fftconvolve(Chi[u, v, i], E_k[v], mode="same")
+        # -------------------------------------------------------------
+        if full_output:  # save for output if requested
+            Px[i], Py[i], Pz[i] = P_i
+
+        # --- Transform back to real space with an applied numerical aperture mask ---
+        # (the mask is included in xTerms and yTerms)
+        Ex_real = factor_fft * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * xTerms, axis=0)))
+        )
+        Ey_real = factor_fft * fftshift(
+            spfft.ifft2(ifftshift(np.sum(P_i * yTerms, axis=0)))
+        )
+        # Apply the point-spread (PSF) filter in real space.
+        Ex_real *= PSFFilter
+        Ey_real *= PSFFilter
+        # -------------------------------------------------------------
+        if full_output:  # save for output if requested
+            Ex_scat[i], Ey_scat[i] = Ex_real, Ey_real
+
+        # --- Apply the output analyzer filtering ---
+        # Analyzer projection: E_det = ax * Ex + ay * Ey.
+        if ax is not None:
+            E_det = ax * Ex_real + ay * Ey_real
+            Ex_real = E_det
+            Ey_real = np.zeros_like(E_det)
+        # -------------------------------------------
+
+        # --- Compute signal integrals over the image (spatial integration on the detector) ---
+        if coherent_exc:
+            ExS = dxi * dyi * np.sum(Ex_real)
+            EyS = dxi * dyi * np.sum(Ey_real)
+            sigma[i] = ExS.real**2 + ExS.imag**2 + EyS.real**2 + EyS.imag**2
+        else:
+            sigma[i] = (
+                dxi
+                * dyi
+                * np.sum(
+                    Ex_real.real**2
+                    + Ex_real.imag**2
+                    + Ey_real.real**2
+                    + Ey_real.imag**2
+                )
+            )
+
+    # Return the computed scattering cross-section (1D array over sweep)
+    # and optionally other intermediate results for further analysis or custom processing.
+    if full_output:
+        return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
+    else:
+        return sigma
+
+
+def _check_pupil_grid(kx, ky):
+    """
+    Check the reciprocal-space grid used by the ``..._pupil`` functions.
+
+    The discrete convolutions (``mode="same"``) represent the continuous
+    ones only on an equidistant grid symmetric with respect to
+    ``k = 0``, otherwise a ValueError is raised.  If ``k = 0`` is not a
+    grid point (even number of points), the result of the convolution
+    is shifted by half of the grid step and a note is issued.
+
+    Returns
+    -------
+    dkx, dky : float
+        (rad/m) grid steps (1.0 for grids with a single point).
+    """
+    steps = []
+    for name, k in (("kx", np.asarray(kx)), ("ky", np.asarray(ky))):
+        dk = k[1] - k[0] if len(k) > 1 else 1.0
+        # (Required by FFT, and physically required by direct discrete convolution)
+        if len(k) > 1 and not np.allclose(np.diff(k), dk):
+            raise ValueError(
+                f"The {name} grid must be strictly equidistant for valid discrete convolution."
+            )
+        if not np.isclose(k[0], -k[-1], rtol=0, atol=1e-3 * abs(dk)):
+            raise ValueError(
+                f"The {name} grid must be symmetric with respect to k = 0 (limits with the same "
+                + f"magnitude) for valid discrete convolution, got limits "
+                + f"{k[0]:.4g} and {k[-1]:.4g} rad/m."
+            )
+        if len(k) % 2 == 0:
+            warn(
+                f"Note: the {name} grid has an even number of points, i.e. k = 0 is not a grid "
+                + "point, which shifts the convolution by half of the grid step (negligible "
+                + "for dense grids).  Use an odd number of points to avoid it.",
+                UserWarning,
+                stacklevel=3,
+            )
+        steps.append(dk)
+    return steps
 
 
 def _analyzer_coefficients(output_analyzer, angle, axis_ratio, Xi, Yi):

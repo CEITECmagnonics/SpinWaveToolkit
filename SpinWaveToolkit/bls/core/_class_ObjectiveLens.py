@@ -415,6 +415,13 @@ class ObjectiveLens:
 
         Notes
         -----
+        The output is the angular spectrum representation of the focal
+        field (Novotny & Hecht, eq. (3.47)), i.e. the field near the
+        focus is ``E(r) = int E_k(k) exp(i k.r) d^2k``.  It therefore
+        differs by a factor ``(2*pi)**2`` from the Fourier transform
+        ``E(k) = int E(r) exp(-i k.r) d^2r``, which is taken into account
+        in the ``..._pupil`` BLS signal functions.
+
         The amplitude of the incident beam is always Gaussian, given by
         the filling factor `f0`, with the polarization state set by
         `pol_type`.  Therefore, "radial" and "azimuthal" polarizations

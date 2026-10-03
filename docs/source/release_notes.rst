@@ -15,6 +15,7 @@ What's new
 - :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
 - The `output_analyzer` of :func:`.bls.get_signal_GF_focal` now also accepts a Jones vector or field of the transmitted polarization. Its string values are unified with :func:`.bls.polarization.jones_vector` and :meth:`.bls.ObjectiveLens.getPupilField`, i.e. ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``, and ``"elliptical"`` was added (with the new `output_analyzer_axis_ratio` parameter).
 - :func:`.bls.get_signal_GF_focal` is now considerably faster (by one to two orders of magnitude, increasing with `Nq`), since the convolutions are evaluated using the convolution theorem and all frequency-independent quantities are precomputed. The results are the same up to numerical precision, but `sigma` is now returned as a real array.
+- New experimental function :func:`.bls.get_signal_GF_pupil` for calculating the BLS signal using the Green function formalism directly from the electric field in the reciprocal space and an arbitrary magneto-optic susceptibility tensor (analogously to :func:`.bls.get_signal_RT_pupil`). It avoids the interpolations of :func:`.bls.get_signal_GF_focal` and also accounts for magnons with wavevectors up to ``2*k0*NA``.
 - New function :func:`.bls.get_transfer_function_RT_pupil` for calculating only the transfer function of the reciprocity theorem approach, which can be reused for different susceptibility tensors.
 
 Fixes
@@ -23,6 +24,8 @@ Fixes
 - :func:`.bls.get_signal_GF_focal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
 - :func:`.bls.get_signal_GF_focal`: the incident field `E` (with shape ``(3, Ny, Nx)``) was transposed in the reciprocal space, i.e. mirrored with respect to the ``x = y`` line.
 - :func:`.bls.get_signal_GF_focal`: the Fourier transform of `E` and the convolution with the Bloch functions are now normalized as their continuous counterparts, so the signal no longer depends on the sampling of `E` or on `Nq`.
+- :func:`.bls.get_signal_RT_pupil`: the normalization of the transfer function now accounts for the angular spectrum representation of the fields from :meth:`.bls.ObjectiveLens.getPupilField` (factor ``(2*pi)**4``), so it agrees with :func:`.bls.get_signal_RT_focal`.
+- :func:`.bls.get_signal_RT_pupil` and :func:`.bls.get_transfer_function_RT_pupil` now raise an error if the k-grid is not symmetric with respect to ``k = 0`` (the convolution would be shifted), and issue a note if ``k = 0`` is not a grid point.
 - :func:`.bls.sph_green_function` used speed of light 3e9 m/s; now uses :data:`.C` and :data:`.MU0`.
 - :meth:`.bls.ObjectiveLens.getFocalField`: the z component of the focal field was rotated by 90 degrees.
 - :class:`.bls.ObjectiveLens`: the prefactors of all focal field methods now follow Novotny & Hecht and agree with :meth:`~.bls.ObjectiveLens.getPupilField` (including the phase). For radially and azimuthally polarized beams, the transverse components were 4 times too weak with respect to the longitudinal one.
