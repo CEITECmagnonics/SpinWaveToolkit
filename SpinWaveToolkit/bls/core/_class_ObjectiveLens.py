@@ -384,13 +384,13 @@ class ObjectiveLens:
             Polarization of the beam in the entrance pupil (before
             focusing).  Either one of the following strings:
 
-            | "linear" - linearly polarized (angle set by `pol_angle`)
-            | "radial" - radial polarization
-            | "azimuthal" - azimuthal polarization
-            | "rcp" - right-hand circular polarization
-            | "lcp" - left-hand circular polarization
-            | "elliptical" - elliptically polarized (uses `axis_ratio`
-            |                and `pol_angle`)
+            - "linear" - linearly polarized (angle set by `pol_angle`)
+            - "radial" - radial polarization
+            - "azimuthal" - azimuthal polarization
+            - "rcp" - right-hand circular polarization
+            - "lcp" - left-hand circular polarization
+            - "elliptical" - elliptically polarized (uses `axis_ratio`
+              and `pol_angle`)
 
             or a Jones vector with shape ``(2,)``, or a spatially
             varying Jones field with shape ``(2, *KX.shape)`` defined

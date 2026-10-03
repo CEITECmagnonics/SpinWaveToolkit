@@ -295,7 +295,15 @@ def get_transfer_function_RT_pupil(
         (detector side). Each must have shape ``(Nkx, Nky)``.
     conv_method : {"fft", "direct"}, optional
         The computational method used to perform the 2D convolution.
-        See :func:`get_signal_RT_pupil`.  Default is "fft".
+
+        - "fft" (default): Uses :func:`scipy.signal.fftconvolve`
+          (Convolution Theorem).  Scales as O(N log N). Highly
+          recommended for standard or large grids.
+
+        - "direct": Uses :func:`scipy.signal.convolve2d` (Sliding window
+          sum).  Scales as O(N^2).  Exceptionally slow for large arrays,
+          but provided as an alternative for testing or very small
+          grids.
     mask : array_like or None, optional
         Boolean array with shape ``(3, 3)``.  Components `qmEiEj[u, v]`
         where `mask[u, v]` is False are not calculated and left zero.
@@ -963,13 +971,71 @@ def get_signal_GF_pupil(
         magnetic layer.
     NA : float
         Numerical aperture of the collecting optical system.
-    source_layer_index, output_layer_index, wavelength, \
-    collectionSpot, focalLength, coherent_exc, output_analyzer, \
-    output_analyzer_angle_deg, output_analyzer_axis_ratio, full_output
-        Optional, see :func:`get_signal_GF_focal`.  The real-space grid
-        (`x_scat`, `y_scat`) for the output analyzer is given by the
-        reciprocal of `KxKy`, i.e. the Jones fields must have shape
-        ``(2, Nkx, Nky)``.
+    source_layer_index : int, optional
+        Index of the source layer in the stack.  Default is 1.
+    output_layer_index : int, optional
+        Index of the output layer in the stack.  Default is 0.
+    wavelength : float, optional
+        (m ) wavelength of the light.  Default is 532e-9.
+    collectionSpot : float, optional
+        (m ) waist of the Gaussian collection spot in the sample plane,
+        i.e. the filter is ``h = exp(-(x**2 + y**2)/collectionSpot**2)``
+        in amplitude (``1/e**2`` radius in intensity).  Default is 1e-6.
+    focalLength : float, optional
+        (m ) focal length of the lens.  Default is 1e-3.
+    coherent_exc : bool, optional
+        If True, calculates the coherent BLS signal (amplitudes sum
+        first).  If False (default), calculates the non-coherent/thermal
+        BLS signal (intensities sum first).
+    output_analyzer : {"none", "linear", "rcp", "lcp", "elliptical", \
+            "radial", "azimuthal"}, array_like or callable, optional
+        Output polarization analyzer applied in real space before the
+        detector.  The polarization types are the same as in
+        :func:`~SpinWaveToolkit.bls.polarization.jones_vector` and
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getPupilField`, and
+        the analyzer transmits the given polarization state.
+
+        - ``"none"`` (default): no analyzer (keeps both Ex and Ey).
+        - ``"linear"``: linear analyzer at `output_analyzer_angle_deg`.
+        - ``"rcp"``: right-hand circular analyzer.
+        - ``"lcp"``: left-hand circular analyzer.
+        - ``"elliptical"``: elliptical analyzer with major axis at
+          `output_analyzer_angle_deg` and axis ratio
+          `output_analyzer_axis_ratio`.
+        - ``"radial"``: spatially varying radial analyzer.
+        - ``"azimuthal"``: spatially varying azimuthal analyzer.
+
+        If an array is provided, it is the Jones vector with shape
+        ``(2,)``, or the Jones field with shape ``(2, Nkx, Nky)``
+        defined on the real-space grid (see `x_scat`, `y_scat` in
+        Returns), of the polarization transmitted by the analyzer.  The
+        detected field is then ``conj(e[0])*Ex + conj(e[1])*Ey``.  Such
+        arrays can be prepared using the
+        :mod:`~SpinWaveToolkit.bls.polarization` module.  Note that
+        optics with Jones matrix ``M`` followed by a polarizer
+        transmitting ``e_p`` is equivalent to an analyzer transmitting
+        ``e = M^H e_p`` (``M^H`` is the conjugate transpose of ``M``).
+        The array is not normalized, i.e. it can also be used for
+        amplitude masking.
+
+        If a callable is provided, it must have signature
+        ``f(x_scat, y_scat) -> (ax, ay)`` and return analyzer
+        coefficients broadcastable to the shape of ``x_scat`` and
+        ``y_scat`` (real space meshgrids - see Returns section).  The
+        detected field is then ``ax*Ex + ay*Ey``.
+    output_analyzer_angle_deg : float, optional
+        (deg) angle of the "linear" output analyzer or of the major axis
+        of the "elliptical" one (counter-clockwise from x).  Ignored for
+        other analyzer types.  Default is 0.
+    output_analyzer_axis_ratio : float, optional
+        () ratio of the minor axis to the major axis of the "elliptical"
+        output analyzer, its sign sets the handedness (see
+        :func:`~SpinWaveToolkit.bls.polarization.jones_vector`).
+        Ignored for other analyzer types.  Default is 1.0.
+    full_output : bool, optional
+        If True, returns additional intermediate results: polarizations
+        with q-space grids and scattered electric field with real-space
+        grids).  Default is False.
 
     Returns
     -------
@@ -1016,10 +1082,16 @@ def get_signal_GF_pupil(
     - If ``k = 0`` is not a grid point (even number of points), the
       convolution is shifted by half of the grid step.  This is
       negligible for dense grids, but a note is issued.
-    - The same physical assumptions as in :func:`get_signal_GF_focal`
-      apply (position of the radiating polarization sheet, volume
-      factor), see its Notes section.  Unlike there, any
-      susceptibility tensor can be used here.
+    - The radiating polarization sheet is placed at the interface of
+      the source layer with the layer above it (towards the
+      superstrate).  The attenuation of light inside the source layer
+      is accounted for by the volume factor in eq. (32) of the source
+      paper.
+    - The convolution of the electric field with the susceptibility is
+      normalized as its continuous counterpart, so the signal does not
+      depend on the sampling of the k-grid (provided it is fine
+      enough).  Its absolute scale is still given by the (arbitrary)
+      normalization of `Ei_fields` and `Chi`.
 
     """
     warn(

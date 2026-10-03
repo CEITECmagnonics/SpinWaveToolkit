@@ -68,14 +68,16 @@ def jones_vector(pol_type="linear", angle=0.0, axis_ratio=1.0, X=None, Y=None):
     Parameters
     ----------
     pol_type : str, optional
-        | "linear" - linearly polarized (angle set by `angle`)
-        | "rcp" - right-hand circular polarization
-        | "lcp" - left-hand circular polarization
-        | "elliptical" - elliptically polarized (uses `axis_ratio`
-        |                and `angle`)
-        | "radial" - radial polarization (requires `X` and `Y`)
-        | "azimuthal" - azimuthal polarization (requires `X` and `Y`)
-        Default is "linear".
+        Polarization type, one of:
+
+        - "linear" (default) - linearly polarized (angle set by `angle`)
+        - "rcp" - right-hand circular polarization
+        - "lcp" - left-hand circular polarization
+        - "elliptical" - elliptically polarized (uses `axis_ratio`
+          and `angle`)
+        - "radial" - radial polarization (requires `X` and `Y`)
+        - "azimuthal" - azimuthal polarization (requires `X` and `Y`)
+
     angle : float, optional
         (deg) angle of linear polarization or of the major axis of
         elliptical polarization.  Default is 0.
