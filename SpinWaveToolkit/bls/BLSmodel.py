@@ -522,8 +522,9 @@ def get_signal_GF_focal(
         Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing
         the X and Y coordinates of the electric field.
     E : ndarray
-        (V/m) 3D array with shape ``(3, Ny, Nx)`` containing the X, Y, Z
-        components of the electric field.
+        (V/m) 3D array with shape ``(3, Nx, Ny)`` containing the X, Y, Z
+        components of the electric field, e.g. from
+        :meth:`~SpinWaveToolkit.bls.ObjectiveLens.getFocalField`.
     DF : ndarray
         () vector of the complex dielectric functions for each material
         in the stack.
@@ -686,7 +687,7 @@ def get_signal_GF_focal(
     dy = EY[1] - EY[0]
 
     # --- Compute the Fourier transform of the electric field components ---
-    # We assume E has shape (3, Ny, Nx) where E[0] is the X component, etc.
+    # We assume E has shape (3, Nx, Ny) where E[0] is the X component, etc.
     # The factor dx*dy approximates the continuous Fourier transform
     # E(k) = int E(r) exp(-i k.r) d^2r, making it independent of the grid.
     # Apply ifftshift in both axes, then fft2, then fftshift back.
@@ -702,15 +703,15 @@ def get_signal_GF_focal(
     ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(len(EY), d=dy))
 
     # --- Interpolate the computed FFT of the E-field onto the Qx, Qy grid ---
-    # Here fftEI has shape (3, Ny, Nx), i.e. it is defined on (KY_fft, KX_fft)
+    # Here fftEI has shape (3, Nx, Ny), i.e. it is defined on (KX_fft, KY_fft)
     # (all three components are interpolated at once)
     interp_func = RegularGridInterpolator(
-        (ky_fft, kx_fft),
+        (kx_fft, ky_fft),
         np.moveaxis(fftEI, 0, -1),
         bounds_error=False,
         fill_value=0,
     )
-    interp_fftEI = np.moveaxis(interp_func(points[:, ::-1]), -1, 0).reshape(3, Nqg, Nqg)
+    interp_fftEI = np.moveaxis(interp_func(points), -1, 0).reshape(3, Nqg, Nqg)
 
     # Compute a volume factor by integrating an exponential decay over the layer
     # thickness (both incident and scattered fields are attenuated), eq. (32)
@@ -1435,7 +1436,7 @@ def getBLSsignal(
         Tuple of two vectors with shapes ``(Nx,)``, ``(Ny,)`` containing
         the X and Y coordinates of the electric field.
     E : ndarray
-        (V/m) 3D array with shape ``(3, Ny, Nx)`` containing the X, Y, Z
+        (V/m) 3D array with shape ``(3, Nx, Ny)`` containing the X, Y, Z
         components of the electric field.
     DF : ndarray
         () vector of the complex dielectric functions for each material
@@ -1515,7 +1516,7 @@ def getBLSsignal(
     # -------------------------------------------------------------
 
     # --- Compute the Fourier transform of the electric field components ---
-    # We assume E has shape (3, Ny, Nx) where E[0] is the X component, etc.
+    # We assume E has shape (3, Nx, Ny) where E[0] is the X component, etc.
     fftEI = np.empty_like(E, dtype=complex)
     for comp in range(3):
         # Apply ifftshift in both axes, then fft2, then fftshift back.
@@ -1539,7 +1540,7 @@ def getBLSsignal(
     ky_fft = fftshift(2 * np.pi * np.fft.fftfreq(Ny, d=dy))
 
     # --- Interpolate the computed FFT of the E-field onto the Qx, Qy grid ---
-    # Here fftEI has shape (3, Ny, Nx) and is defined on (KX_fft, KY_fft)
+    # Here fftEI has shape (3, Nx, Ny) and is defined on (KX_fft, KY_fft)
     interp_fftEI = np.empty((3, Qx.shape[0], Qx.shape[1]), dtype=complex)
     for comp in range(3):
         # Create an interpolator for each component

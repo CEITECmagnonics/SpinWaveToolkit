@@ -3,7 +3,6 @@ Core (private) file for the `ObjectiveLens` class.
 """
 
 import numpy as np
-from scipy.interpolate import griddata
 from scipy.special import jv  # Bessel function of first kind
 from scipy.integrate import simpson  # Import simpson for numerical integration
 from SpinWaveToolkit.bls.polarization import jones_vector
@@ -57,23 +56,28 @@ class ObjectiveLens:
         self.f0 = f0
         self.f = f
 
-    def _scattered_interpolant(self, x, y, z, XI, YI):
+    def _focal_grid(self, rho_max, N, Nrho):
         """
-        Interpolates scattered data ``(x, y, z)`` onto a regular grid
-        ``(XI, YI)``.
+        Output grid of the focal field methods and the radial grid for
+        the evaluation of the integrals.
 
-        Uses linear interpolation with a nearest-neighbor fallback for
-        undefined points.
+        The radial grid covers the whole square output grid, i.e. it
+        spans ``[0, sqrt(2)*rho_max]``.
         """
-        points = np.column_stack((x, y))
-        grid_z_linear = griddata(points, z, (XI, YI), method="linear")
-        nan_mask = np.isnan(grid_z_linear)
-        if np.any(nan_mask):
-            grid_z_nearest = griddata(points, z, (XI, YI), method="nearest")
-            grid_z_linear[nan_mask] = grid_z_nearest[nan_mask]
-        return grid_z_linear
+        xi = np.linspace(-rho_max, rho_max, N)
+        yi = np.linspace(-rho_max, rho_max, N)
+        XI, YI = np.meshgrid(xi, yi, indexing="ij")
+        RHO = np.sqrt(XI**2 + YI**2)
+        PHI = np.arctan2(YI, XI)
+        rho = np.linspace(0, np.sqrt(2) * rho_max, Nrho)
+        return xi, yi, RHO, PHI, rho
 
-    def getFocalField(self, z, rho_max, N):
+    @staticmethod
+    def _interp_rho(rho, values, RHO):
+        """Linearly interpolates complex `values` given on `rho` to `RHO`."""
+        return np.interp(RHO, rho, values.real) + 1j * np.interp(RHO, rho, values.imag)
+
+    def getFocalField(self, z, rho_max, N, Ntheta=161, Nrho=1000):
         """
         Compute the focal field using a general formulation.
 
@@ -86,17 +90,42 @@ class ObjectiveLens:
             (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m ) maximum radial coordinate for evaluation.
+            (m ) maximum coordinate for evaluation, i.e. the output grid
+            spans ``[-rho_max, rho_max]`` in both x and y.
         N : int
-            Number of points in each direction for the output grid.
+            Number of points in each direction for the output grid.  An
+            odd number is recommended, so that the grid contains the focus
+            ``x = y = 0``.  (Otherwise, the Fourier transform of the field
+            acquires a phase ramp corresponding to a shift by half of the
+            grid step.)
+        Ntheta : int, optional
+            Number of points for the numerical integration over the
+            focusing angle (Simpson's rule).  Default is 161.
+        Nrho : int, optional
+            Number of points of the radial grid on which the integrals are
+            evaluated before they are interpolated onto the output grid.
+            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
+            `rho_max` requires more points for the same accuracy (a radial
+            step of about ``wavelength/40`` or smaller is recommended).
+            Default is 1000.
 
         Returns
         -------
         xi, yi : ndarray
-            Vectors (1D numpy arrays) defining the interpolation grid.
+            Vectors (1D numpy arrays) defining the output grid.
         Exi, Eyi, Ezi : ndarray
             Complex electric field components on the grid.  Specified as
-            2D arrays.
+            2D arrays with shape ``(N, N)``, indexed as ``[ix, iy]`` (same
+            as :meth:`getPupilField` on a grid with ``indexing="ij"``).
+
+        Notes
+        -----
+        The integrals over the focusing angle depend only on the radial
+        coordinate.  They are evaluated on a radial grid and linearly
+        interpolated onto the output grid, while the azimuthal dependence
+        of the field is evaluated exactly.  With the default sampling,
+        the relative error of the field is about 0.1 % for
+        ``rho_max = 10e-6`` and ``wavelength = 532e-9``.
         """
         E0 = 1  # Amplitude of the incident electric field
         n1, n2 = (
@@ -106,78 +135,59 @@ class ObjectiveLens:
         k0 = 2 * np.pi / self.wavelength * n2  # wavenumber of the light
         theta_max = np.arcsin(self.NA / n2)  # Maximum angle of the light cone
 
-        theta = np.linspace(0, theta_max, 41)  # Angular coordinate
+        theta = np.linspace(0, theta_max, Ntheta)  # Angular coordinate
         fw = np.exp(
             -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
         )  # Apodization function
-        phi = np.linspace(0, 2 * np.pi, 45)  # Azimuthal coordinate
-        rho = np.linspace(1e-12, rho_max, 180)  # Radial coordinate
+        # Output grid and radial grid for the integrals
+        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
 
-        # Initialize arrays for the integrals
-        I00 = np.zeros(rho.shape, dtype=complex)
-        I01 = np.zeros(rho.shape, dtype=complex)
-        I02 = np.zeros(rho.shape, dtype=complex)
-        Ex = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ey = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ez = np.zeros((len(rho), len(phi)), dtype=complex)
+        # Compute the integrals for the electric field components
+        # (for all radial coordinates at once, rho along the first axis)
+        krs = k0 * np.outer(rho, np.sin(theta))
+        I00 = simpson(
+            fw
+            * (np.cos(theta) ** (1 / 2))
+            * np.sin(theta)
+            * (1 + np.cos(theta))
+            * jv(0, krs)
+            * np.exp(1j * k0 * z * np.cos(theta)),
+            x=theta,
+            axis=-1,
+        )
+        I01 = simpson(
+            fw
+            * (np.cos(theta) ** (1 / 2))
+            * (np.sin(theta) ** 2)
+            * jv(1, krs)
+            * np.exp(1j * k0 * z * np.cos(theta)),
+            x=theta,
+            axis=-1,
+        )
+        I02 = simpson(
+            fw
+            * (np.cos(theta) ** (1 / 2))
+            * np.sin(theta)
+            * (1 - np.cos(theta))
+            * jv(2, krs)
+            * np.exp(1j * k0 * z * np.cos(theta)),
+            x=theta,
+            axis=-1,
+        )
+        # Interpolate the integrals onto the output grid
+        I00, I01, I02 = (self._interp_rho(rho, I, RHO) for I in (I00, I01, I02))
 
-        for i, rhoi in enumerate(rho):
-            # Compute the integrals for the electric field components
-            I00[i] = simpson(
-                fw
-                * (np.cos(theta) ** (1 / 2))
-                * np.sin(theta)
-                * (1 + np.cos(theta))
-                * jv(0, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta)),
-                x=theta,
-            )
-            I01[i] = simpson(
-                fw
-                * (np.cos(theta) ** (1 / 2))
-                * (np.sin(theta) ** 2)
-                * jv(1, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta)),
-                x=theta,
-            )
-            I02[i] = simpson(
-                fw
-                * (np.cos(theta) ** (1 / 2))
-                * np.sin(theta)
-                * (1 - np.cos(theta))
-                * jv(2, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta)),
-                x=theta,
-            )
-            for j, phii in enumerate(phi):
-                # Prefactor according to Novotny & Hecht, eq. (3.66)
-                common_factor = (
-                    1j
-                    * k0
-                    * self.f
-                    / 2
-                    * np.sqrt(n1 / n2)
-                    * E0
-                    * np.exp(-1j * k0 * self.f)
-                )
-                Ex[i, j] = common_factor * (I00[i] + I02[i] * np.cos(2 * phii))
-                Ey[i, j] = common_factor * (I02[i] * np.sin(2 * phii))
-                Ez[i, j] = common_factor * (-2j * I01[i] * np.cos(phii))
-        # Create a grid for the interpolation
-        PHI, RHO = np.meshgrid(phi, rho)
-        X = RHO * np.cos(PHI)
-        Y = RHO * np.sin(PHI)
-        xi = np.linspace(np.min(X), np.max(X), N)
-        yi = np.linspace(np.min(Y), np.max(Y), N)
-        XI, YI = np.meshgrid(xi, yi)
-        # Interpolate the electric field components
-        Exi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ex.ravel(), XI, YI)
-        Eyi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ey.ravel(), XI, YI)
-        Ezi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ez.ravel(), XI, YI)
+        # Prefactor according to Novotny & Hecht, eq. (3.66)
+        common_factor = (
+            1j * k0 * self.f / 2 * np.sqrt(n1 / n2) * E0 * np.exp(-1j * k0 * self.f)
+        )
+        Exi = common_factor * (I00 + I02 * np.cos(2 * PHI))
+        Eyi = common_factor * (I02 * np.sin(2 * PHI))
+        Ezi = common_factor * (-2j * I01 * np.cos(PHI))
 
         return xi, yi, Exi, Eyi, Ezi
 
-    def getFocalFieldRad(self, z, rho_max, N):
+    def getFocalFieldRad(self, z, rho_max, N, Ntheta=161, Nrho=1000):
         """
         Compute the focal field using a radial formulation.
 
@@ -195,17 +205,40 @@ class ObjectiveLens:
             (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m ) maximum radial coordinate for evaluation.
+            (m ) maximum coordinate for evaluation, i.e. the output grid
+            spans ``[-rho_max, rho_max]`` in both x and y.
         N : int
-            Number of points in each direction for the output grid.
+            Number of points in each direction for the output grid.  An
+            odd number is recommended, so that the grid contains the focus
+            ``x = y = 0``.  (Otherwise, the Fourier transform of the field
+            acquires a phase ramp corresponding to a shift by half of the
+            grid step.)
+        Ntheta : int, optional
+            Number of points for the numerical integration over the
+            focusing angle (Simpson's rule).  Default is 161.
+        Nrho : int, optional
+            Number of points of the radial grid on which the integrals are
+            evaluated before they are interpolated onto the output grid.
+            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
+            `rho_max` requires more points for the same accuracy (a radial
+            step of about ``wavelength/40`` or smaller is recommended).
+            Default is 1000.
 
         Returns
         -------
         xi, yi : 1D numpy arrays
-            Vectors defining the interpolation grid.
+            Vectors defining the output grid.
         Exi, Eyi, Ezi : ndarray
             Complex electric field components on the grid.  Specified as
-            2D arrays.
+            2D arrays with shape ``(N, N)``, indexed as ``[ix, iy]`` (same
+            as :meth:`getPupilField` on a grid with ``indexing="ij"``).
+
+        Notes
+        -----
+        The integrals over the focusing angle depend only on the radial
+        coordinate.  They are evaluated on a radial grid and linearly
+        interpolated onto the output grid, while the azimuthal dependence
+        of the field is evaluated exactly.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
@@ -213,66 +246,50 @@ class ObjectiveLens:
         n1, n2 = 1, 1
         w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
-        theta = np.linspace(0, theta_max, 41)
+        theta = np.linspace(0, theta_max, Ntheta)
         fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
+        # Output grid and radial grid for the integrals
+        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
 
-        phi = np.linspace(0, 2 * np.pi, 45)
-        rho = np.linspace(0, rho_max, 180)
+        # Compute the integrals (for all radial coordinates at once)
+        krs = k0 * np.outer(rho, np.sin(theta))
+        integrand_rad = (
+            fw
+            * (np.cos(theta) ** (3 / 2))
+            * (np.sin(theta) ** 2)
+            * jv(1, krs)
+            * np.exp(1j * k0 * z * np.cos(theta))
+        )
+        Irad = simpson(integrand_rad, x=theta, axis=-1)
 
-        Irad = np.zeros(rho.shape, dtype=complex)
-        I10 = np.zeros(rho.shape, dtype=complex)
-        Ex = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ey = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ez = np.zeros((len(rho), len(phi)), dtype=complex)
+        integrand_I10 = (
+            fw
+            * (np.cos(theta) ** (1 / 2))
+            * (np.sin(theta) ** 3)
+            * jv(0, krs)
+            * np.exp(1j * k0 * z * np.cos(theta))
+        )
+        I10 = simpson(integrand_I10, x=theta, axis=-1)
+        # Interpolate the integrals onto the output grid
+        Irad, I10 = (self._interp_rho(rho, I, RHO) for I in (Irad, I10))
 
-        for i, rhoi in enumerate(rho):
-            integrand_rad = (
-                fw
-                * (np.cos(theta) ** (3 / 2))
-                * (np.sin(theta) ** 2)
-                * jv(1, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta))
-            )
-            Irad[i] = simpson(integrand_rad, x=theta)
-
-            integrand_I10 = (
-                fw
-                * (np.cos(theta) ** (1 / 2))
-                * (np.sin(theta) ** 3)
-                * jv(0, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta))
-            )
-            I10[i] = simpson(integrand_I10, x=theta)
-
-            for j, phii in enumerate(phi):
-                # Prefactor according to Novotny & Hecht, eq. (3.70)
-                common_factor = (
-                    1j
-                    * k0
-                    * self.f**2
-                    / (2 * w0)
-                    * np.sqrt(n1 / n2)
-                    * E0
-                    * np.exp(-1j * k0 * self.f)
-                )
-                Ex[i, j] = common_factor * (4j * Irad[i] * np.cos(phii))
-                Ey[i, j] = common_factor * (4j * Irad[i] * np.sin(phii))
-                Ez[i, j] = common_factor * (-4 * I10[i])
-
-        PHI, RHO = np.meshgrid(phi, rho)
-        X = RHO * np.cos(PHI)
-        Y = RHO * np.sin(PHI)
-        xi = np.linspace(np.min(X), np.max(X), N)
-        yi = np.linspace(np.min(Y), np.max(Y), N)
-        XI, YI = np.meshgrid(xi, yi)
-
-        Exi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ex.ravel(), XI, YI)
-        Eyi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ey.ravel(), XI, YI)
-        Ezi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ez.ravel(), XI, YI)
+        # Prefactor according to Novotny & Hecht, eq. (3.70)
+        common_factor = (
+            1j
+            * k0
+            * self.f**2
+            / (2 * w0)
+            * np.sqrt(n1 / n2)
+            * E0
+            * np.exp(-1j * k0 * self.f)
+        )
+        Exi = common_factor * (4j * Irad * np.cos(PHI))
+        Eyi = common_factor * (4j * Irad * np.sin(PHI))
+        Ezi = common_factor * (-4 * I10)
 
         return xi, yi, Exi, Eyi, Ezi
 
-    def getFocalFieldAzm(self, z, rho_max, N):
+    def getFocalFieldAzm(self, z, rho_max, N, Ntheta=161, Nrho=1000):
         """
         Compute the focal field using an azimuthal formulation
         (``E_z = 0``).
@@ -290,17 +307,41 @@ class ObjectiveLens:
             (m ) defocus of the beam (``z = 0`` corresponds to the focal
             plane).
         rho_max : float
-            (m ) maximum radial coordinate for evaluation.
+            (m ) maximum coordinate for evaluation, i.e. the output grid
+            spans ``[-rho_max, rho_max]`` in both x and y.
         N : int
-            Number of points in each direction for the output grid.
+            Number of points in each direction for the output grid.  An
+            odd number is recommended, so that the grid contains the focus
+            ``x = y = 0``.  (Otherwise, the Fourier transform of the field
+            acquires a phase ramp corresponding to a shift by half of the
+            grid step.)
+        Ntheta : int, optional
+            Number of points for the numerical integration over the
+            focusing angle (Simpson's rule).  Default is 161.
+        Nrho : int, optional
+            Number of points of the radial grid on which the integral is
+            evaluated before it is interpolated onto the output grid.
+            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
+            `rho_max` requires more points for the same accuracy (a radial
+            step of about ``wavelength/40`` or smaller is recommended).
+            Default is 1000.
 
         Returns
         -------
         xi, yi : 1D numpy arrays
-            Vectors defining the interpolation grid.
+            Vectors defining the output grid.
         Exi, Eyi, Ezi : ndarray
             Complex electric field components on the grid (with ``E_z``
-            identically zero).  Specified as 2D arrays.
+            identically zero).  Specified as 2D arrays with shape
+            ``(N, N)``, indexed as ``[ix, iy]`` (same as
+            :meth:`getPupilField` on a grid with ``indexing="ij"``).
+
+        Notes
+        -----
+        The integral over the focusing angle depends only on the radial
+        coordinate.  It is evaluated on a radial grid and linearly
+        interpolated onto the output grid, while the azimuthal dependence
+        of the field is evaluated exactly.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
@@ -308,51 +349,37 @@ class ObjectiveLens:
         n1, n2 = 1, 1
         w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
-        theta = np.linspace(0, theta_max, 41)
+        theta = np.linspace(0, theta_max, Ntheta)
         fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
-        phi = np.linspace(0, 2 * np.pi, 45)
-        rho = np.linspace(0, rho_max, 180)
+        # Output grid and radial grid for the integral
+        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
 
-        Iazm = np.zeros(rho.shape, dtype=complex)
-        Ex = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ey = np.zeros((len(rho), len(phi)), dtype=complex)
-        Ez = np.zeros((len(rho), len(phi)), dtype=complex)  # Remains zero
+        # Compute the integral (for all radial coordinates at once)
+        integrand_azm = (
+            fw
+            * (np.cos(theta) ** (1 / 2))
+            * (np.sin(theta) ** 2)
+            * jv(1, k0 * np.outer(rho, np.sin(theta)))
+            * np.exp(1j * k0 * z * np.cos(theta))
+        )
+        Iazm = simpson(integrand_azm, x=theta, axis=-1)
+        # Interpolate the integral onto the output grid
+        Iazm = self._interp_rho(rho, Iazm, RHO)
 
-        for i, rhoi in enumerate(rho):
-            integrand_azm = (
-                fw
-                * (np.cos(theta) ** (1 / 2))
-                * (np.sin(theta) ** 2)
-                * jv(1, k0 * rhoi * np.sin(theta))
-                * np.exp(1j * k0 * z * np.cos(theta))
-            )
-            Iazm[i] = simpson(integrand_azm, x=theta)
-            for j, phii in enumerate(phi):
-                # Prefactor according to Novotny & Hecht, eq. (3.72), here
-                # with incident polarization along (-sin(phi), cos(phi))
-                common_factor = (
-                    1j
-                    * k0
-                    * self.f**2
-                    / (2 * w0)
-                    * np.sqrt(n1 / n2)
-                    * E0
-                    * np.exp(-1j * k0 * self.f)
-                )
-                Ex[i, j] = common_factor * (-4j * Iazm[i] * np.sin(phii))
-                Ey[i, j] = common_factor * (4j * Iazm[i] * np.cos(phii))
-                Ez[i, j] = 0
-
-        PHI, RHO = np.meshgrid(phi, rho)
-        X = RHO * np.cos(PHI)
-        Y = RHO * np.sin(PHI)
-        xi = np.linspace(np.min(X), np.max(X), N)
-        yi = np.linspace(np.min(Y), np.max(Y), N)
-        XI, YI = np.meshgrid(xi, yi)
-
-        Exi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ex.ravel(), XI, YI)
-        Eyi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ey.ravel(), XI, YI)
-        Ezi = self._scattered_interpolant(X.ravel(), Y.ravel(), Ez.ravel(), XI, YI)
+        # Prefactor according to Novotny & Hecht, eq. (3.72), here
+        # with incident polarization along (-sin(phi), cos(phi))
+        common_factor = (
+            1j
+            * k0
+            * self.f**2
+            / (2 * w0)
+            * np.sqrt(n1 / n2)
+            * E0
+            * np.exp(-1j * k0 * self.f)
+        )
+        Exi = common_factor * (-4j * Iazm * np.sin(PHI))
+        Eyi = common_factor * (4j * Iazm * np.cos(PHI))
+        Ezi = np.zeros_like(Exi)  # Remains zero
 
         return xi, yi, Exi, Eyi, Ezi
 
@@ -374,7 +401,10 @@ class ObjectiveLens:
         z : float
             (m ) defocus distance along optical axis.
         KX : ndarray
-            (rad/m) 2D reciprocal-space grid (kx).
+            (rad/m) 2D reciprocal-space grid (kx).  Use
+            ``np.meshgrid(kx, ky, indexing="ij")`` to get the ``[ix, iy]``
+            indexing used throughout the :mod:`~SpinWaveToolkit.bls`
+            module.
         KY : ndarray
             (rad/m) 2D reciprocal-space grid (ky).
         n : float, optional
@@ -411,7 +441,8 @@ class ObjectiveLens:
         Returns
         -------
         Ex_k, Ey_k, Ez_k : ndarray
-            Complex electric field components in k-space (2D arrays).
+            Complex electric field components in k-space (2D arrays with
+            the same shape as `KX` and `KY`).
 
         Notes
         -----
