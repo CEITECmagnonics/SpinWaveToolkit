@@ -1169,6 +1169,7 @@ def _signal_GF(
     for i in range(Nf):
         # --- Convolve the electric field with the susceptibility ---
         # P_u = sum_v Chi_uv * E_v (convolution in k-space), only nonzero Chi_uv
+        # -> saves time compared to fftconvolve by computing fftE outside for loop
         fftChi = spfft.fft2(Chi[chi_u, chi_v, i], s=pad, axes=(-2, -1))
         P_conv = np.zeros((3, *pad), dtype=complex)
         for n, (u, v) in enumerate(zip(chi_u, chi_v)):

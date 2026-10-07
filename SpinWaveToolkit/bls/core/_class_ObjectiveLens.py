@@ -2,9 +2,9 @@
 Core (private) file for the `ObjectiveLens` class.
 """
 
+from warnings import warn
 import numpy as np
-from scipy.special import jv  # Bessel function of first kind
-from scipy.integrate import simpson  # Import simpson for numerical integration
+from scipy.special import j0, j1  # Bessel functions of first kind
 from SpinWaveToolkit.bls.polarization import jones_vector
 
 __all__ = ["ObjectiveLens"]
@@ -56,28 +56,187 @@ class ObjectiveLens:
         self.f0 = f0
         self.f = f
 
-    def _focal_grid(self, rho_max, N, Nrho):
+    def _focal_field(self, z, rho_max, N, rtol, kernels, coef, assemble):
         """
-        Output grid of the focal field methods and the radial grid for
-        the evaluation of the integrals.
+        Focal field from integrals over the focusing angle with
+        automatically chosen sampling.
 
-        The radial grid covers the whole square output grid, i.e. it
-        spans ``[0, sqrt(2)*rho_max]``.
+        Common part of the focal field methods.  The integrals
+
+            ``I_k(rho) = int_0^theta_max g_k(theta) J_{n_k}(k0 rho sin(theta))
+            exp(i k0 z cos(theta)) dtheta``
+
+        are evaluated by Simpson's rule on a radial grid and assembled
+        into the field on the ``N x N`` output grid.  The numbers of
+        points of the angular and radial grids are chosen such that the
+        estimated maximum error of the field (relative to the maximum of
+        its components on the output grid) is below `rtol`, half of
+        which is assigned to each of the two discretizations:
+
+        - Angular quadrature: the initial number of points follows from
+          the number of oscillations of the integrand over the aperture.
+          The error is estimated by comparing Simpson's rule with that on
+          every other point (``|I_h - I_2h|/15``).
+        - Radial grid: if the output grid has fewer distinct radii than
+          needed for the interpolation, the integrals are evaluated
+          exactly at these radii.  Otherwise, they are evaluated on an
+          equidistant radial grid and linearly interpolated, with the
+          error estimated from the second differences of the integrals
+          (``max |I_i - (I_{i-1} + I_{i+1})/2| / 4``, i.e. the maximum
+          interpolation error for a locally constant second
+          derivative).
+
+        If an estimate exceeds its part of `rtol`, the corresponding grid
+        is refined accordingly and the calculation repeated.
+
+        Parameters
+        ----------
+        z, rho_max, N, rtol :
+            As in :meth:`getFocalField`.
+        kernels : list[tuple]
+            ``(n_k, g_k)`` for each integral, where ``n_k`` in
+            ``{0, 1, 2}`` is the order of the Bessel function and
+            ``g_k(theta)`` returns the angular weight (without the Bessel
+            function and the defocus phase).
+        coef : ndarray
+            Array with shape ``(3, len(kernels))``, upper bounds of the
+            magnitude of the coefficients of ``I_k`` in the field
+            components (including the common prefactor), used to
+            propagate the error estimates of the integrals to the field.
+        assemble : callable
+            ``assemble(I, cos_phi, sin_phi) -> (Ex, Ey, Ez)`` assembling
+            the field from the integrals ``I`` (list of arrays with the
+            shape of the output grid) and the cosine and sine of the
+            azimuth of the output grid.
+
+        Returns
+        -------
+        xi, yi, Exi, Eyi, Ezi : ndarray
+            Output grid and field components as in :meth:`getFocalField`.
         """
+        if not 1e-10 <= rtol < 1:
+            # (smaller values approach the round-off errors and could not be reached)
+            raise ValueError(f"`rtol` must be between 1e-10 and 1, got {rtol}.")
+        k0 = 2 * np.pi / self.wavelength
+        theta_max = np.arcsin(self.NA)
+        tol = rtol / 2  # error budget for each of the two discretizations
+
         xi = np.linspace(-rho_max, rho_max, N)
         yi = np.linspace(-rho_max, rho_max, N)
-        XI, YI = np.meshgrid(xi, yi, indexing="ij")
-        RHO = np.sqrt(XI**2 + YI**2)
-        PHI = np.arctan2(YI, XI)
-        rho = np.linspace(0, np.sqrt(2) * rho_max, Nrho)
-        return xi, yi, RHO, PHI, rho
+        RHO = np.sqrt(xi[:, np.newaxis] ** 2 + yi**2)
+        # Azimuth of the output grid (phi = 0 on the optical axis)
+        cos_phi = np.divide(
+            xi[:, np.newaxis], RHO, out=np.ones_like(RHO), where=RHO > 0
+        )
+        sin_phi = np.divide(yi, RHO, out=np.zeros_like(RHO), where=RHO > 0)
+        # Distinct radii of the output grid: x_i = q_i * rho_max/(N-1) with
+        # integers q_i, so they follow from the distinct values of
+        # q_i**2 + q_j**2 (found on one octant of the grid)
+        if N > 1:
+            q = 2 * np.arange(N) - (N - 1)
+            q2 = np.unique(q**2)
+            iu, ju = np.triu_indices(len(q2))
+            s = np.unique(q2[iu] + q2[ju])
+            rho_exact = rho_max / (N - 1) * np.sqrt(s)
+        else:
+            rho_exact = RHO.ravel()
+        rho_end = rho_exact[-1]
+        idx_exact = None  # index of the radius of each grid point in rho_exact
 
-    @staticmethod
-    def _interp_rho(rho, values, RHO):
-        """Linearly interpolates complex `values` given on `rho` to `RHO`."""
-        return np.interp(RHO, rho, values.real) + 1j * np.interp(RHO, rho, values.imag)
+        # Initial sampling from error models calibrated to the estimates
+        # below, so that usually no refinement is needed: Simpson's rule
+        # ~ 0.03*p**-4 for p points per oscillation period of the integrand
+        # (at least 6, so that the estimate on every other point is
+        # reliable), interpolation ~ 0.05*(drho*k0*NA)**2
+        n_osc = (
+            k0 * (rho_end * self.NA + abs(z) * (1 - np.cos(theta_max))) / (2 * np.pi)
+        )
+        Ntheta = _simpson_points(max(6, (0.03 / tol) ** 0.25) * n_osc)
+        Nrho = int(np.ceil(rho_end * k0 * self.NA / np.sqrt(tol / 0.05))) + 1
 
-    def getFocalField(self, z, rho_max, N, Ntheta=161, Nrho=1000):
+        for _ in range(5):
+            exact = len(rho_exact) <= Nrho
+            rho = rho_exact if exact else np.linspace(0, rho_end, Nrho)
+            I, dI_theta = self._radial_integrals(rho, Ntheta, kernels, z)
+            if exact:
+                if idx_exact is None:
+                    idx_exact = (
+                        np.searchsorted(s, np.add.outer(q**2, q**2))
+                        if N > 1
+                        else np.zeros(RHO.shape, dtype=int)
+                    )
+                E = assemble([Ik[idx_exact] for Ik in I], cos_phi, sin_phi)
+                err_rho = 0.0
+            else:
+                # Linear interpolation on the equidistant radial grid
+                t = RHO * ((Nrho - 1) / rho_end)
+                i = np.minimum(t.astype(int), Nrho - 2)
+                t -= i
+                E = assemble([Ik[i] + np.diff(Ik)[i] * t for Ik in I], cos_phi, sin_phi)
+                d2 = np.abs(I[:, 1:-1] - (I[:, :-2] + I[:, 2:]) / 2).max(axis=1) / 4
+                err_rho = (coef @ d2).max()
+            err_theta = (coef @ dI_theta).max()
+            E_max = max(np.abs(c).max() for c in E)
+            if err_theta <= tol * E_max and err_rho <= tol * E_max:
+                break
+            # Refine the grid(s) with too large error estimates
+            if err_theta > tol * E_max:
+                ratio = (err_theta / (tol * E_max)) ** 0.25
+                Ntheta = _simpson_points(1.2 * ratio * (Ntheta - 1))
+            if err_rho > tol * E_max:
+                ratio = np.sqrt(err_rho / (tol * E_max))
+                Nrho = int(np.ceil(1.2 * ratio * (Nrho - 1))) + 1
+        else:
+            warn(
+                f"The focal field did not reach the requested accuracy rtol = {rtol:.1e} "
+                + f"(estimated errors {err_theta / E_max:.1e} of the angular integration "
+                + f"and {err_rho / E_max:.1e} of the radial interpolation).",
+                UserWarning,
+                stacklevel=3,
+            )
+        return (xi, yi, *E)
+
+    def _radial_integrals(self, rho, Ntheta, kernels, z):
+        """
+        Integrals over the focusing angle at radii `rho` (Simpson's rule
+        with `Ntheta` points, ``Ntheta - 1`` divisible by 4).
+
+        Returns the integrals with shape ``(len(kernels), len(rho))`` and
+        the error estimates ``max_rho |I_h - I_2h|/15`` of each of them.
+        """
+        k0 = 2 * np.pi / self.wavelength
+        theta = np.linspace(0, np.arcsin(self.NA), Ntheta)
+        sin_theta = np.sin(theta)
+        phase = np.exp(1j * k0 * z * np.cos(theta))
+        # Simpson weights on the full grid and on every other point
+        w_fine = _simpson_weights(Ntheta, theta[1] - theta[0])
+        w_coarse = _simpson_weights((Ntheta + 1) // 2, 2 * (theta[1] - theta[0]))
+        G = [g(theta) * phase for _, g in kernels]
+        v_fine = [w_fine * Gk for Gk in G]
+        v_coarse = [w_coarse * Gk[::2] for Gk in G]
+        orders = {n for n, _ in kernels}
+
+        I = np.empty((len(kernels), len(rho)), dtype=complex)
+        I_coarse = np.empty_like(I)
+        chunk = max(1, 2**21 // Ntheta)  # limits the memory of the Bessel arrays
+        for start in range(0, len(rho), chunk):
+            sl = slice(start, start + chunk)
+            x = k0 * np.outer(rho[sl], sin_theta)
+            J = {}
+            if orders & {0, 2}:
+                J[0] = j0(x)
+            if orders & {1, 2}:
+                J[1] = j1(x)
+            if 2 in orders:  # recurrence J2 = 2*J1/x - J0, with J2(0) = 0
+                J[2] = np.divide(2 * J[1], x, out=J[0].copy(), where=x != 0) - J[0]
+            for k, (n, _) in enumerate(kernels):
+                # real matrix times complex vector, avoiding a complex copy of J
+                I[k, sl] = J[n] @ v_fine[k].real + 1j * (J[n] @ v_fine[k].imag)
+                Jc = J[n][:, ::2]
+                I_coarse[k, sl] = Jc @ v_coarse[k].real + 1j * (Jc @ v_coarse[k].imag)
+        return I, np.abs(I - I_coarse).max(axis=1) / 15
+
+    def getFocalField(self, z, rho_max, N, rtol=1e-4):
         """
         Compute the focal field using a general formulation.
 
@@ -98,16 +257,11 @@ class ObjectiveLens:
             ``x = y = 0``.  (Otherwise, the Fourier transform of the field
             acquires a phase ramp corresponding to a shift by half of the
             grid step.)
-        Ntheta : int, optional
-            Number of points for the numerical integration over the
-            focusing angle (Simpson's rule).  Default is 161.
-        Nrho : int, optional
-            Number of points of the radial grid on which the integrals are
-            evaluated before they are interpolated onto the output grid.
-            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
-            `rho_max` requires more points for the same accuracy (a radial
-            step of about ``wavelength/40`` or smaller is recommended).
-            Default is 1000.
+        rtol : float, optional
+            () requested accuracy, i.e. the maximum error of the field
+            components on the output grid relative to their maximum.  The
+            numerical sampling is chosen automatically to reach it (see
+            Notes).  Must be between 1e-10 and 1.  Default is 1e-4.
 
         Returns
         -------
@@ -120,12 +274,33 @@ class ObjectiveLens:
 
         Notes
         -----
-        The integrals over the focusing angle depend only on the radial
-        coordinate.  They are evaluated on a radial grid and linearly
-        interpolated onto the output grid, while the azimuthal dependence
-        of the field is evaluated exactly.  With the default sampling,
-        the relative error of the field is about 0.1 % for
-        ``rho_max = 10e-6`` and ``wavelength = 532e-9``.
+        The field is given by integrals over the focusing angle, which
+        depend only on the radial coordinate, while the azimuthal
+        dependence of the field is evaluated exactly.  The integrals are
+        evaluated by Simpson's rule and, if the output grid has many
+        distinct radii, on an equidistant radial grid from which they
+        are linearly interpolated.  Both discretizations are chosen
+        such that their estimated errors are below ``rtol/2``:
+
+        - The number of angular points follows from the number of
+          oscillations of the integrand over the aperture, which grows
+          with `rho_max` and `z`, and the error is estimated by
+          comparison with Simpson's rule on every other point.
+        - The radial step follows from the wavelength and `NA` (about
+          ``wavelength/50`` for ``rtol = 1e-4`` and ``NA = 0.75``), and
+          the interpolation error is estimated from the second
+          differences of the integrals.  If the output grid has fewer
+          distinct radii than the radial grid would need, the integrals
+          are evaluated exactly at these radii instead (no
+          interpolation), which is typical for small `N`.
+
+        If an estimate is too large, the sampling is refined and the
+        calculation repeated.  The estimates are asymptotic (not
+        rigorous) bounds; a warning is issued if the accuracy is not
+        reached after several refinements.  The computational time
+        grows only weakly with `N` and approximately as
+        ``rho_max**2 * rtol**(-3/4)`` for large `rho_max` (or with the
+        number of distinct radii of the output grid, if smaller).
         """
         E0 = 1  # Amplitude of the incident electric field
         n1, n2 = (
@@ -135,59 +310,35 @@ class ObjectiveLens:
         k0 = 2 * np.pi / self.wavelength * n2  # wavenumber of the light
         theta_max = np.arcsin(self.NA / n2)  # Maximum angle of the light cone
 
-        theta = np.linspace(0, theta_max, Ntheta)  # Angular coordinate
-        fw = np.exp(
-            -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
-        )  # Apodization function
-        # Output grid and radial grid for the integrals
-        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
+        def fw(theta):  # Apodization function
+            return np.exp(
+                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
+            )
 
-        # Compute the integrals for the electric field components
-        # (for all radial coordinates at once, rho along the first axis)
-        krs = k0 * np.outer(rho, np.sin(theta))
-        I00 = simpson(
-            fw
-            * (np.cos(theta) ** (1 / 2))
-            * np.sin(theta)
-            * (1 + np.cos(theta))
-            * jv(0, krs)
-            * np.exp(1j * k0 * z * np.cos(theta)),
-            x=theta,
-            axis=-1,
-        )
-        I01 = simpson(
-            fw
-            * (np.cos(theta) ** (1 / 2))
-            * (np.sin(theta) ** 2)
-            * jv(1, krs)
-            * np.exp(1j * k0 * z * np.cos(theta)),
-            x=theta,
-            axis=-1,
-        )
-        I02 = simpson(
-            fw
-            * (np.cos(theta) ** (1 / 2))
-            * np.sin(theta)
-            * (1 - np.cos(theta))
-            * jv(2, krs)
-            * np.exp(1j * k0 * z * np.cos(theta)),
-            x=theta,
-            axis=-1,
-        )
-        # Interpolate the integrals onto the output grid
-        I00, I01, I02 = (self._interp_rho(rho, I, RHO) for I in (I00, I01, I02))
+        # Angular weights of the integrals I00, I01, I02 (without the Bessel
+        # functions and the defocus phase)
+        kernels = [
+            (0, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) * (1 + np.cos(t))),
+            (1, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 2),
+            (2, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) * (1 - np.cos(t))),
+        ]
 
         # Prefactor according to Novotny & Hecht, eq. (3.66)
         common_factor = (
             1j * k0 * self.f / 2 * np.sqrt(n1 / n2) * E0 * np.exp(-1j * k0 * self.f)
         )
-        Exi = common_factor * (I00 + I02 * np.cos(2 * PHI))
-        Eyi = common_factor * (I02 * np.sin(2 * PHI))
-        Ezi = common_factor * (-2j * I01 * np.cos(PHI))
 
-        return xi, yi, Exi, Eyi, Ezi
+        def assemble(I, cos_phi, sin_phi):
+            I00, I01, I02 = I
+            Exi = common_factor * (I00 + I02 * (cos_phi**2 - sin_phi**2))  # cos(2 phi)
+            Eyi = common_factor * (I02 * 2 * sin_phi * cos_phi)  # sin(2 phi)
+            Ezi = common_factor * (-2j * I01 * cos_phi)
+            return Exi, Eyi, Ezi
 
-    def getFocalFieldRad(self, z, rho_max, N, Ntheta=161, Nrho=1000):
+        coef = np.abs(common_factor) * np.array([[1, 0, 1], [0, 0, 1], [0, 2, 0]])
+        return self._focal_field(z, rho_max, N, rtol, kernels, coef, assemble)
+
+    def getFocalFieldRad(self, z, rho_max, N, rtol=1e-4):
         """
         Compute the focal field using a radial formulation.
 
@@ -213,16 +364,12 @@ class ObjectiveLens:
             ``x = y = 0``.  (Otherwise, the Fourier transform of the field
             acquires a phase ramp corresponding to a shift by half of the
             grid step.)
-        Ntheta : int, optional
-            Number of points for the numerical integration over the
-            focusing angle (Simpson's rule).  Default is 161.
-        Nrho : int, optional
-            Number of points of the radial grid on which the integrals are
-            evaluated before they are interpolated onto the output grid.
-            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
-            `rho_max` requires more points for the same accuracy (a radial
-            step of about ``wavelength/40`` or smaller is recommended).
-            Default is 1000.
+        rtol : float, optional
+            () requested accuracy, i.e. the maximum error of the field
+            components on the output grid relative to their maximum.  The
+            numerical sampling is chosen automatically to reach it (see
+            Notes of :meth:`getFocalField`).  Must be between 1e-10 and
+            1.  Default is 1e-4.
 
         Returns
         -------
@@ -236,9 +383,9 @@ class ObjectiveLens:
         Notes
         -----
         The integrals over the focusing angle depend only on the radial
-        coordinate.  They are evaluated on a radial grid and linearly
-        interpolated onto the output grid, while the azimuthal dependence
-        of the field is evaluated exactly.
+        coordinate, while the azimuthal dependence of the field is
+        evaluated exactly.  The numerical sampling is the same as in
+        :meth:`getFocalField`.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
@@ -246,32 +393,17 @@ class ObjectiveLens:
         n1, n2 = 1, 1
         w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
-        theta = np.linspace(0, theta_max, Ntheta)
-        fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
-        # Output grid and radial grid for the integrals
-        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
+        def fw(theta):  # Apodization function
+            return np.exp(
+                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
+            )
 
-        # Compute the integrals (for all radial coordinates at once)
-        krs = k0 * np.outer(rho, np.sin(theta))
-        integrand_rad = (
-            fw
-            * (np.cos(theta) ** (3 / 2))
-            * (np.sin(theta) ** 2)
-            * jv(1, krs)
-            * np.exp(1j * k0 * z * np.cos(theta))
-        )
-        Irad = simpson(integrand_rad, x=theta, axis=-1)
-
-        integrand_I10 = (
-            fw
-            * (np.cos(theta) ** (1 / 2))
-            * (np.sin(theta) ** 3)
-            * jv(0, krs)
-            * np.exp(1j * k0 * z * np.cos(theta))
-        )
-        I10 = simpson(integrand_I10, x=theta, axis=-1)
-        # Interpolate the integrals onto the output grid
-        Irad, I10 = (self._interp_rho(rho, I, RHO) for I in (Irad, I10))
+        # Angular weights of the integrals Irad and I10 (without the Bessel
+        # functions and the defocus phase)
+        kernels = [
+            (1, lambda t: fw(t) * np.cos(t) ** (3 / 2) * np.sin(t) ** 2),
+            (0, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 3),
+        ]
 
         # Prefactor according to Novotny & Hecht, eq. (3.70)
         common_factor = (
@@ -283,13 +415,18 @@ class ObjectiveLens:
             * E0
             * np.exp(-1j * k0 * self.f)
         )
-        Exi = common_factor * (4j * Irad * np.cos(PHI))
-        Eyi = common_factor * (4j * Irad * np.sin(PHI))
-        Ezi = common_factor * (-4 * I10)
 
-        return xi, yi, Exi, Eyi, Ezi
+        def assemble(I, cos_phi, sin_phi):
+            Irad, I10 = I
+            Exi = common_factor * (4j * Irad * cos_phi)
+            Eyi = common_factor * (4j * Irad * sin_phi)
+            Ezi = common_factor * (-4 * I10)
+            return Exi, Eyi, Ezi
 
-    def getFocalFieldAzm(self, z, rho_max, N, Ntheta=161, Nrho=1000):
+        coef = np.abs(common_factor) * np.array([[4, 0], [4, 0], [0, 4]])
+        return self._focal_field(z, rho_max, N, rtol, kernels, coef, assemble)
+
+    def getFocalFieldAzm(self, z, rho_max, N, rtol=1e-4):
         """
         Compute the focal field using an azimuthal formulation
         (``E_z = 0``).
@@ -315,16 +452,12 @@ class ObjectiveLens:
             ``x = y = 0``.  (Otherwise, the Fourier transform of the field
             acquires a phase ramp corresponding to a shift by half of the
             grid step.)
-        Ntheta : int, optional
-            Number of points for the numerical integration over the
-            focusing angle (Simpson's rule).  Default is 161.
-        Nrho : int, optional
-            Number of points of the radial grid on which the integral is
-            evaluated before it is interpolated onto the output grid.
-            The radial grid spans ``[0, sqrt(2)*rho_max]``, so larger
-            `rho_max` requires more points for the same accuracy (a radial
-            step of about ``wavelength/40`` or smaller is recommended).
-            Default is 1000.
+        rtol : float, optional
+            () requested accuracy, i.e. the maximum error of the field
+            components on the output grid relative to their maximum.  The
+            numerical sampling is chosen automatically to reach it (see
+            Notes of :meth:`getFocalField`).  Must be between 1e-10 and
+            1.  Default is 1e-4.
 
         Returns
         -------
@@ -339,9 +472,9 @@ class ObjectiveLens:
         Notes
         -----
         The integral over the focusing angle depends only on the radial
-        coordinate.  It is evaluated on a radial grid and linearly
-        interpolated onto the output grid, while the azimuthal dependence
-        of the field is evaluated exactly.
+        coordinate, while the azimuthal dependence of the field is
+        evaluated exactly.  The numerical sampling is the same as in
+        :meth:`getFocalField`.
         """
         k0 = 2 * np.pi / self.wavelength
         E0 = 1
@@ -349,22 +482,14 @@ class ObjectiveLens:
         n1, n2 = 1, 1
         w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
 
-        theta = np.linspace(0, theta_max, Ntheta)
-        fw = np.exp(-1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2))
-        # Output grid and radial grid for the integral
-        xi, yi, RHO, PHI, rho = self._focal_grid(rho_max, N, Nrho)
+        def fw(theta):  # Apodization function
+            return np.exp(
+                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
+            )
 
-        # Compute the integral (for all radial coordinates at once)
-        integrand_azm = (
-            fw
-            * (np.cos(theta) ** (1 / 2))
-            * (np.sin(theta) ** 2)
-            * jv(1, k0 * np.outer(rho, np.sin(theta)))
-            * np.exp(1j * k0 * z * np.cos(theta))
-        )
-        Iazm = simpson(integrand_azm, x=theta, axis=-1)
-        # Interpolate the integral onto the output grid
-        Iazm = self._interp_rho(rho, Iazm, RHO)
+        # Angular weight of the integral Iazm (without the Bessel function
+        # and the defocus phase)
+        kernels = [(1, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 2)]
 
         # Prefactor according to Novotny & Hecht, eq. (3.72), here
         # with incident polarization along (-sin(phi), cos(phi))
@@ -377,11 +502,16 @@ class ObjectiveLens:
             * E0
             * np.exp(-1j * k0 * self.f)
         )
-        Exi = common_factor * (-4j * Iazm * np.sin(PHI))
-        Eyi = common_factor * (4j * Iazm * np.cos(PHI))
-        Ezi = np.zeros_like(Exi)  # Remains zero
 
-        return xi, yi, Exi, Eyi, Ezi
+        def assemble(I, cos_phi, sin_phi):
+            (Iazm,) = I
+            Exi = common_factor * (-4j * Iazm * sin_phi)
+            Eyi = common_factor * (4j * Iazm * cos_phi)
+            Ezi = np.zeros_like(Exi)  # Remains zero
+            return Exi, Eyi, Ezi
+
+        coef = np.abs(common_factor) * np.array([[4], [4], [0]])
+        return self._focal_field(z, rho_max, N, rtol, kernels, coef, assemble)
 
     def getPupilField(
         self, z, KX, KY, n=1.0, pol_type="linear", pol_angle=0, axis_ratio=1.0
@@ -577,3 +707,20 @@ class ObjectiveLens:
         Ez_k[pupil_mask] = prefactor * amplitude_factor * propagator * ez
 
         return Ex_k, Ey_k, Ez_k
+
+
+def _simpson_points(n):
+    """
+    Number of points for Simpson's rule with error estimate: at least
+    `n` (and at least 21), with the number of intervals divisible by 4,
+    so that Simpson's rule can also be applied on every other point.
+    """
+    return 4 * int(np.ceil(max(n, 20) / 4)) + 1
+
+
+def _simpson_weights(n, h):
+    """Weights of the composite Simpson's rule for `n` (odd) points with step `h`."""
+    w = np.full(n, 2.0)
+    w[1::2] = 4.0
+    w[0] = w[-1] = 1.0
+    return w * h / 3
