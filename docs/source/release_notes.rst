@@ -6,8 +6,8 @@ Release Notes
     For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
 
 
-Unreleased
-----------
+Version 1.4.0
+-------------
 
 What's new
 ^^^^^^^^^^

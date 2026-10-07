@@ -631,9 +631,9 @@ class ObjectiveLens:
                 f"refractive index of the medium (n={n})."
             )
 
-        k_vac = 2 * np.pi / self.wavelength     # Vacuum wave number
-        k_medium = k_vac * n                    # Medium wave number
-        theta_max = np.arcsin(self.NA / n)      # Max focusing angle
+        k_vac = 2 * np.pi / self.wavelength  # Vacuum wave number
+        k_medium = k_vac * n  # Medium wave number
+        theta_max = np.arcsin(self.NA / n)  # Max focusing angle
 
         # Radial k-vector and pupil mask (defines the physical aperture limit)
         K_rho = np.sqrt(KX**2 + KY**2)
