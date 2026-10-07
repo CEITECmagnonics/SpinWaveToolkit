@@ -11,6 +11,7 @@ Version 1.4.0
 
 What's new
 ^^^^^^^^^^
+- :class:`.SingleLayerNumeric` now builds and diagonalizes the system matrices for all wavenumbers at once, which makes it much faster (e.g. 0.09 s instead of 4 s for 10 000 wavenumbers). The wavenumber, the angles, the external field, the thickness, and the material parameters can now be given as 1D arrays of the same length (calculated elementwise), e.g. flattened 2D grids of wavevectors (with an array of `phi`) or field sweeps. The results are exactly the same as before.
 - New sub-module :mod:`.bls.polarization` for describing the polarization of light with the Jones calculus, including wave plates, linear polarizers, spiral phase plates and q-plates.
 - :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
 - The `output_analyzer` of :func:`.bls.get_signal_GF_focal` now also accepts a Jones vector or field of the transmitted polarization. Its string values are unified with :func:`.bls.polarization.jones_vector` and :meth:`.bls.ObjectiveLens.getPupilField`, i.e. ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``, and ``"elliptical"`` was added (with the new `output_analyzer_axis_ratio` parameter).

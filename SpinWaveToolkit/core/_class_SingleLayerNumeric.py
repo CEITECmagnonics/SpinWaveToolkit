@@ -20,26 +20,35 @@ class SingleLayerNumeric:
     The laboratory coordinate frame of reference is
     *z || to film normal* and *x || to in-plane wavevector*.
 
-    Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not guaranteed.
+    The wavenumber `kxi`, the angles `theta` and `phi`, the external
+    field `Bext`, the thickness `d` and the material parameters can be
+    given either as scalars or as 1D arrays of the same length, and
+    the results are calculated elementwise.  This allows, e.g., to
+    calculate the dispersion on a 2D grid of wavevectors at once (with
+    flattened arrays of wavenumbers and angles `phi`), or a field sweep
+    for a single wavenumber.  The system matrices for all elements are
+    built and diagonalized at once, so there is no loop over the
+    elements.  Exceptions: `d` and `dp` must be scalars for
+    ``boundary_cond=4``, and the group velocity (and the quantities
+    derived from it) needs `kxi` to be the varying 1D array.
 
     Parameters
     ----------
-    Bext : float
+    Bext : float or 1D array
         (T ) external magnetic field.
     material : Material
         instance of `Material` describing the magnetic layer material.
         Its properties are saved as attributes, but this object is not.
-    d : float
+    d : float or 1D array
         (m ) layer thickness (in z direction)
     kxi : float or 1D array, optional
         (rad/m) k-vector (wavenumber), usually a vector.
-    theta : float, optional
+    theta : float or 1D array, optional
         (rad) out of plane angle static M, pi/2 is totally
         in-plane magnetization.  Other values than pi/2 multiples
         might give wrong results, as the model currently does not
         describe these situations.
-    phi : float or ndarray, optional
+    phi : float or 1D array, optional
         (rad) in-plane angle of M from kxi, pi/2 is DE geometry.
     weff : float, optional
         (m ) effective width of the waveguide (not used for zeroth
@@ -161,7 +170,7 @@ class SingleLayerNumeric:
         self._KuOOP = KuOOP
         self.N = N
         self.kxi = np.array(kxi)
-        if (theta + 1e-6) % (np.pi / 2) > 1e-3:
+        if np.any((np.asarray(theta) + 1e-6) % (np.pi / 2) > 1e-3):
             print(
                 "WARNING: theta is not a multiple of pi/2. The results might be misleading!"
             )
@@ -368,12 +377,8 @@ class SingleLayerNumeric:
             (rad/m) wavenumber.
         """
         # ### The totally pinned BC should be added
-        kappa = n * np.pi / self.d
-        kappac = nc * np.pi / self.d
-        if kappa == 0:
-            kappa = 1
-        if kappac == 0:
-            kappac = 1
+        kappa = n * np.pi / self.d if n != 0 else 1
+        kappac = nc * np.pi / self.d if nc != 0 else 1
         k = np.sqrt(np.power(kxi, 2) + kappa**2)
         kc = np.sqrt(np.power(kxi, 2) + kappac**2)
         # Totally unpinned boundary condition
@@ -491,6 +496,12 @@ class SingleLayerNumeric:
             Quantization number.
         """
 
+        if np.ndim(self.d) > 0 or np.ndim(self.dp) > 0:
+            raise ValueError(
+                "`d` and `dp` must be scalars for the partially pinned boundary "
+                + "condition (boundary_cond=4)."
+            )
+
         def trans_eq(kappa, d, dp):
             e = (kappa**2 - dp**2) * np.tan(kappa * d) - kappa * dp * 2
             return e
@@ -515,19 +526,26 @@ class SingleLayerNumeric:
         """
         Build Tacchi/Kalinikos `C_k` with `N` thickness modes (size `2N x 2N`).
         Default ``N=3``, which gives 6x6 matrix.
+
+        `k` and the parameters of the model can be scalars or 1D arrays
+        of the same length ``M``.  The matrix has a shape of
+        ``(2*N, 2*N)`` if all of them are scalars, otherwise
+        ``(M, 2*N, 2*N)``.
         """
-        C = np.zeros((2 * N, 2 * N), dtype=float)
         b = self.__bTacchi()
+        entries = []  # (row, column, value)
 
         # Diagonal 2x2 blocks for each mode n
         for n in range(N):
             ann = self.__ankTacchi(n, k) + self.__CnncTacchi(n, n, k)
             pnn = self.__pnncTacchi(n, n, k)
             i = 2 * n
-            C[i, i] = -ann
-            C[i, i + 1] = -(b + pnn)
-            C[i + 1, i] = b + pnn
-            C[i + 1, i + 1] = ann
+            entries += [
+                (i, i, -ann),
+                (i, i + 1, -(b + pnn)),
+                (i + 1, i, b + pnn),
+                (i + 1, i + 1, ann),
+            ]
 
         # Off-diagonal couplings between modes n != m
         # Same parity (both even or both odd): P-couplings => C,p blocks
@@ -541,18 +559,24 @@ class SingleLayerNumeric:
                     # same parity -> C,p block; keep your (col_mode, row_mode) call order
                     Cmn = self.__CnncTacchi(m, n, k)
                     pmn = self.__pnncTacchi(m, n, k)
-                    C[i, j] += -Cmn
-                    C[i, j + 1] += -pmn
-                    C[i + 1, j] += pmn
-                    C[i + 1, j + 1] += Cmn
+                    entries += [
+                        (i, j, -Cmn),
+                        (i, j + 1, -pmn),
+                        (i + 1, j, pmn),
+                        (i + 1, j + 1, Cmn),
+                    ]
                 else:
                     # opposite parity -> q block
                     qmn = self.__qnncTacchi(
                         m, n, k
                     )  # note antisymmetry is inside your function
-                    C[i, j + 1] += -qmn
-                    C[i + 1, j] += -qmn
+                    entries += [(i, j + 1, -qmn), (i + 1, j, -qmn)]
 
+        # All entries are evaluated elementwise for array parameters
+        shape = np.broadcast_shapes(*(np.shape(val) for _, _, val in entries))
+        C = np.zeros(shape + (2 * N, 2 * N), dtype=float)
+        for i, j, val in entries:
+            C[..., i, j] += val
         return C
 
     def GetDispersion(self):
@@ -579,25 +603,23 @@ class SingleLayerNumeric:
         -------
         wV : ndarray
             (rad*Hz) frequencies of the `N` lowest spin-wave modes.
-            Has a shape of ``(N, M)``, where ``M = kxi.shape[0]``.
+            Has a shape of ``(N, M)``, where ``M`` is the length of
+            `kxi` (or of the array parameters, see the class
+            docstring).
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
             given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of ``(2*N, N, M)``, where ``M = kxi.shape[0]``.
+            Has a shape of ``(2*N, N, M)``.
         """
-        ks = np.sqrt(np.power(self.kxi, 2))  # can this be just np.abs(kxi)?
-        wV = np.zeros((self.N, np.size(ks, 0)))
-        vV = np.zeros((2 * self.N, self.N, np.size(ks, 0)))
-        for idx, k in enumerate(ks):
-            Ck = np.array(
-                self._Ck(k=k, N=self.N),
-                dtype=float,
-            )
-            w, v = linalg.eig(Ck)
-            indi = np.argsort(w)[self.N :]  # sort low-to-high and crop to positive
-            wV[:, idx] = w[indi]  # eigenvalues (dispersion)
-            vV[:, :, idx] = v[:, indi]  # eigenvectors (mode profiles)
-        return wV, vV
+        ks = np.abs(self.kxi)
+        # System matrices for all elements, shape (M, 2N, 2N)
+        Ck = self._Ck(k=ks, N=self.N).reshape(-1, 2 * self.N, 2 * self.N)
+        w, v = linalg.eig(Ck)  # all matrices at once
+        indi = np.argsort(w, axis=-1)[:, self.N :]  # sort low-to-high, keep positive
+        wV = np.real(np.take_along_axis(w, indi, axis=-1)).T  # eigenvalues (dispersion)
+        # eigenvectors (mode profiles), shape (2N, N, M)
+        vV = np.real(np.take_along_axis(v, indi[:, np.newaxis, :], axis=-1))
+        return wV, vV.transpose(1, 2, 0)
 
     def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
@@ -605,7 +627,9 @@ class SingleLayerNumeric:
         The result is given in m/s.
 
         .. warning::
-            Works only when ``kxi.shape[0] >= 2``.
+            Works only when ``kxi.shape[0] >= 2`` and the elements of
+            `kxi` follow each other along a line in k-space (not e.g.
+            for flattened 2D grids of wavevectors).
 
         Parameters
         ----------
