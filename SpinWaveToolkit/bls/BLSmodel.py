@@ -261,8 +261,10 @@ def get_transfer_function_RT_pupil(
     reciprocity theorem, starting directly from the electric fields in
     reciprocal (k) space.
 
-    The transfer function `qmEiEj` is given by the convolution of the
-    k-space fields: `qmEiEj = FT(Ej) * FT(Ei)`.  It does not depend on
+    The transfer function is ``qmEiEj[u, v](q) = int Ej_u(r) Ei_v(r)
+    exp(i q.r) d^2r``, the same as in :func:`get_signal_RT_focal`.  It
+    is evaluated as the convolution of the k-space fields,
+    ``FT(Ej_u) * FT(Ei_v)``, taken at ``-q``.  It does not depend on
     the magnetization dynamics and can therefore be reused for
     calculation of BLS spectra for different susceptibility tensors,
     see :func:`get_signal_RT_pupil`.
@@ -360,7 +362,11 @@ def get_transfer_function_RT_pupil(
             else:  # conv_method == 'direct'
                 conv = convolve2d(Ej_k[..., u], Ei_k[..., v], mode="same")
 
-            qmEiEj[u, v] = normalization * conv
+            # The convolution of the angular spectra gives the spectrum of
+            # Ej_u*Ei_v, i.e. int Ej_u Ei_v exp(-i q.r) d^2r, so it is
+            # mirrored to q -> -q (exact on the symmetric grid) to get the
+            # transfer function with exp(+i q.r) as in get_signal_RT_focal
+            qmEiEj[u, v] = normalization * conv[::-1, ::-1]
 
     return qmEiEj
 

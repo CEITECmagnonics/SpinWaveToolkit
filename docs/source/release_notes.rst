@@ -24,6 +24,7 @@ What's new
 
 Fixes
 ^^^^^
+- :func:`.bls.get_signal_RT_pupil` and :func:`.bls.get_transfer_function_RT_pupil`: the transfer function was mirrored in the reciprocal space (``q -> -q``) with respect to :func:`.bls.get_signal_RT_focal`, i.e. its components odd in ``q`` had the opposite sign. This affected the signal only when the even and odd components of the susceptibility interfere, e.g. for non-reciprocal spin waves with quadratic magneto-optic effects, but not for circularly precessing magnetization with the linear (or isotropic quadratic) magneto-optic effect only.
 - :func:`.bls.get_signal_GF_focal`: the longitudinal wavevector in the magnetic layer was calculated from the layer thickness instead of its dielectric function.
 - :func:`.bls.get_signal_GF_focal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
 - :func:`.bls.get_signal_GF_focal`: the incident field `E` (with shape ``(3, Ny, Nx)``) was transposed in the reciprocal space, i.e. mirrored with respect to the ``x = y`` line.
