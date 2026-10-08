@@ -11,6 +11,7 @@ Version 1.4.0
 
 What's new
 ^^^^^^^^^^
+- New example notebooks: :doc:`_example_nbs/BLS_signal_from_GF_pupil` (Green function approach with the laser field in the reciprocal space), :doc:`_example_nbs/BLS_signal_comparison` (all BLS signal functions applied to the same system), and :doc:`_example_nbs/BLS_polarization_optics` (the :mod:`.bls.polarization` sub-module, focusing of beams with structured polarization, and polarization-resolved BLS with linear and quadratic magneto-optic effects).
 - :class:`.SingleLayerNumeric` now builds and diagonalizes the system matrices for all wavenumbers at once, which makes it much faster (e.g. 0.09 s instead of 4 s for 10 000 wavenumbers). The wavenumber, the angles, the external field, the thickness, and the material parameters can now be given as 1D arrays of the same length (calculated elementwise), e.g. flattened 2D grids of wavevectors (with an array of `phi`) or field sweeps. The results are exactly the same as before.
 - New sub-module :mod:`.bls.polarization` for describing the polarization of light with the Jones calculus, including wave plates, linear polarizers, spiral phase plates and q-plates.
 - :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
@@ -24,12 +25,13 @@ What's new
 
 Fixes
 ^^^^^
+- The BLS example notebooks :doc:`_example_nbs/BLS_signal_from_GF_focal`, :doc:`_example_nbs/BLS_signal_from_RT_focal` and :doc:`_example_nbs/BLS_signal_from_RT_pupil` were updated to the new API and re-run (their results change due to the fixes below). They have shorter titles with labels (GF#1, GF#2, RT#1, RT#2) and link to each other, and all use the same convention for the magnetization (along *y*) and its dynamic components. The examples show how to calculate the Bloch functions point by point (for any dispersion class) and for all wavevectors at once (with :class:`.SingleLayer` and :class:`.SingleLayerNumeric`).
 - :func:`.bls.get_signal_RT_pupil` and :func:`.bls.get_transfer_function_RT_pupil`: the transfer function was mirrored in the reciprocal space (``q -> -q``) with respect to :func:`.bls.get_signal_RT_focal`, i.e. its components odd in ``q`` had the opposite sign. This affected the signal only when the even and odd components of the susceptibility interfere, e.g. for non-reciprocal spin waves with quadratic magneto-optic effects, but not for circularly precessing magnetization with the linear (or isotropic quadratic) magneto-optic effect only.
 - :func:`.bls.get_signal_GF_focal`: the longitudinal wavevector in the magnetic layer was calculated from the layer thickness instead of its dielectric function.
 - :func:`.bls.get_signal_GF_focal`: the volume factor now accounts for the attenuation of both the incident and the scattered light (eq. (32) in Wojewoda et al. PRB 110, 224428 (2024)), and the Gaussian collection filter now has the waist given by `collectionSpot` (eq. (26) ibid.).
 - :func:`.bls.get_signal_GF_focal`: the incident field `E` (with shape ``(3, Ny, Nx)``) was transposed in the reciprocal space, i.e. mirrored with respect to the ``x = y`` line.
 - :func:`.bls.get_signal_GF_focal`: the Fourier transform of `E` and the convolution in the reciprocal space are now normalized as their continuous counterparts, so the signal no longer depends on the sampling of `E` or of the k-grid.
-- :func:`.bls.get_signal_RT_pupil`: the normalization of the transfer function now accounts for the angular spectrum representation of the fields from :meth:`.bls.ObjectiveLens.getPupilField` (factor ``(2*pi)**4``), so it agrees with :func:`.bls.get_signal_RT_focal`.
+- :func:`.bls.get_signal_RT_pupil`: the normalization of the transfer function now accounts for the angular spectrum representation of the fields from :meth:`.bls.ObjectiveLens.getPupilField` (factor ``(2*pi)**4`` in the transfer function, i.e. ``(2*pi)**8`` in the signal), so it agrees with :func:`.bls.get_signal_RT_focal`.
 - :func:`.bls.get_signal_RT_pupil` and :func:`.bls.get_transfer_function_RT_pupil` now raise an error if the k-grid is not symmetric with respect to ``k = 0`` (the convolution would be shifted), and issue a note if ``k = 0`` is not a grid point.
 - :func:`.bls.sph_green_function` used speed of light 3e9 m/s; now uses :data:`.C` and :data:`.MU0`.
 - :meth:`.bls.ObjectiveLens.getFocalField`: the z component of the focal field was rotated by 90 degrees.

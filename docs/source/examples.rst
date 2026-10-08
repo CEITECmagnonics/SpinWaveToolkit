@@ -21,4 +21,5 @@ Here is a list of examples that demonstrate how to use the SpinWaveToolkit. The 
     _example_nbs/BLS_signal_from_RT_focal
     _example_nbs/BLS_signal_from_RT_pupil
     _example_nbs/BLS_signal_comparison
+    _example_nbs/BLS_polarization_optics
 
