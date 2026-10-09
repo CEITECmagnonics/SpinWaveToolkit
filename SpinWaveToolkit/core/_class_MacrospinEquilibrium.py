@@ -185,6 +185,9 @@ class MacrospinEquilibrium:
         """Add uniaxial anisotropy to the system.  Only the first order
         constant is assumed.
 
+        Can be used to update an already defined anisotropy by referring
+        to the same name.
+
         Parameters
         ----------
         name : str
