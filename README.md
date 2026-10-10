@@ -73,6 +73,9 @@ decLen = PyChar.GetDecLen()*1e6  # um
 ```
 For more examples (with images) look [here](https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/examples.html).
 
+### Try it yourself
+Explore the capabilities with our new web-based calculator: [SWTweb] at [https://ceitecmagnonics.github.io/SWTweb/][SWTweb]. Rapid calculations, parameter sweeps, BLS signal modelling — all runs locally in your browser, powered by SpinWaveToolkit.
+
 ## Cite us
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
@@ -117,6 +120,7 @@ All sources of models used within the SpinWaveToolkit are cited in their respect
 
 
 [SWTpy]:SpinWaveToolkit
+[SWTweb]:https://ceitecmagnonics.github.io/SWTweb/
 [numpy]:https://numpy.org/
 [scipy]:https://scipy.org/
 [tqdm]:https://tqdm.github.io/

@@ -3,7 +3,7 @@ Release Notes
 
 .. tip::
 
-    For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
+    For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_ and the detailed list of all changes in `CHANGELOG.md <https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CHANGELOG.md>`_.
 
 
 Version 1.4.0
@@ -16,7 +16,7 @@ What's new
 - :class:`.SingleLayerNumeric` now builds and diagonalizes the system matrices for all wavenumbers at once, which makes it much faster (e.g. 0.09 s instead of 4 s for 10 000 wavenumbers). The wavenumber, the angles, the external field, the thickness, and the material parameters can now be given as 1D arrays of the same length (calculated elementwise), e.g. flattened 2D grids of wavevectors (with an array of `phi`) or field sweeps. The results are exactly the same as before.
 - New sub-module :mod:`.bls.polarization` for describing the polarization of light with the Jones calculus, including wave plates, linear polarizers, spiral phase plates and q-plates.
 - :meth:`.bls.ObjectiveLens.getPupilField` now also accepts a Jones vector or a spatially varying Jones field as `pol_type`, e.g. prepared with :mod:`.bls.polarization`.
-- :meth:`.bls.ObjectiveLens.getPupilField`: parameters renamed (`polarization_type` -> `pol_type`, `polarization_angle_deg` -> `pol_angle`), new polarization type ``"elliptical"`` (with the `axis_ratio` parameter), and new parameter `n` (refractive index of the focusing medium, default 1.0) as the fourth positional argument, so calls passing the polarization type positionally have to be updated.
+- :meth:`.bls.ObjectiveLens.getPupilField`: parameters renamed (`polarization_type` -> `pol_type`, `polarization_angle_deg` -> `pol_angle`; the old names still work, but are deprecated and will be removed in version 1.6), new polarization type ``"elliptical"`` (with the `axis_ratio` parameter), and new parameter `n` (refractive index of the focusing medium, default 1.0) as the last parameter.
 - The `output_analyzer` of :func:`.bls.get_signal_GF_focal` now also accepts a Jones vector or field of the transmitted polarization. Its string values are unified with :func:`.bls.polarization.jones_vector` and :meth:`.bls.ObjectiveLens.getPupilField`, i.e. ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``, and ``"elliptical"`` was added (with the new `output_analyzer_axis_ratio` parameter).
 - :func:`.bls.get_signal_GF_focal` now takes the magneto-optic susceptibility tensor `Chi` on its k-grid `KxKyChi` (e.g. from :mod:`.bls.susceptibilities`) instead of the Bloch functions (`SweepBloch`, `KxKyBloch`, `Bloch`), consistently with the other BLS signal functions. Therefore, any susceptibility (e.g. quadratic magneto-optic effects) can be used, not only the linear one with ``Q = 1``. The internal q-grid (limited to ``1.1*k0``) and the `Nq` parameter were removed, all k-space calculations are now done on the grid of `Chi`. With a grid reaching ``2*k0*NA``, magnons with larger wavevectors, which can still scatter light into the NA, are now accounted for (about 8 % of the thermal signal for NA = 0.75). The previous behavior is obtained with ``Chi = bls.susceptibilities.mo_linear(Bloch)`` interpolated onto the former q-grid. A note is issued if the k-grid is smaller than ``2*k0*NA``, and a warning if `E` is sampled too coarsely.
 - :func:`.bls.get_signal_GF_focal` is now considerably faster (by one to two orders of magnitude for fine grids), since the convolutions are evaluated using the convolution theorem and all frequency-independent quantities are precomputed. The results are the same up to numerical precision, but `sigma` is now returned as a real array.
@@ -41,6 +41,7 @@ Fixes
 - :meth:`.bls.ObjectiveLens.getPupilField`: the ``"radial"`` polarization gave a field parallel to the wavevector, and ``"rcp"`` and ``"lcp"`` gave circular polarization of the opposite handedness with an additional azimuthal phase (a vortex beam).  All polarizations are now transformed from the Jones vector in the entrance pupil according to Richards & Wolf.  The prefactor now follows the angular spectrum representation of Novotny & Hecht, ``1j*f*exp(-1j*k*f)/(2*pi*k)`` instead of ``f``.
 - ``GetBlochFunction`` methods of the dispersion classes now weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, so that it complies with the PRB paper.
 - :class:`.bls.ObjectiveLens`: the focal field methods failed with SciPy >= 1.14 (positional argument of :func:`scipy.integrate.simpson`).
+- :meth:`.DoubleLayerNumeric.GetDispersion` returned only the imaginary part of the eigenvectors (multiplied by ``gamma*MU0``), so the in-plane amplitudes were always zero.  It now returns the complex eigenvectors with unit norm; their layout and complex character are documented.
 - :meth:`.SingleLayerNumeric.GetDispersion`: the layout of the eigenvectors (Fourier coefficients of the out-of-plane and in-plane mode profiles) is now documented.  The docstrings of :class:`.MacrospinEquilibrium` and :class:`.SingleLayerNumeric` and the example :doc:`_example_nbs/dispersion_relation_basic` link to the related new examples.
 - Documentation: new landing page, citation of the SpinWaveToolkit paper in the documentation and ``README.md``, and updated requirements for building the documentation.
 
@@ -69,7 +70,7 @@ Fixes
 
 Version 1.2.1
 -------------
-`2026-02-23`
+`2026-02-25`
 
 Patch featuring important dispersion-model fixes and small tweaks.
 

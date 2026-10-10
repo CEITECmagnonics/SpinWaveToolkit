@@ -287,9 +287,12 @@ class DoubleLayerNumeric:
         dispersion relation (as the matrix is 4x4 it has 4 eigenvalues).
         The eigen values represent the acoustic and optic spin-wave
         modes (each with negative and positive frequency).
-        The eigenvectors represent the amplitude of the individual
-        spin-wave modes and can be used to calculate spin-wave profile
-        (see example NumericCalculationofDispersionModeProfiles.py).
+        The eigenvectors represent the amplitudes of the dynamic
+        magnetization in the individual layers.  The magnetization is
+        assumed uniform across the thickness of each layer, so the
+        model (and the mode profiles) loses accuracy for layers thick
+        enough to have higher-order thickness modes in proximity to the
+        two base modes.
 
         The returned modes are sorted from low (acoustic) to high
         (optic) frequencies, omitting the negative-frequency modes.
@@ -301,9 +304,21 @@ class DoubleLayerNumeric:
             modes.  Has a shape of ``(2, N)``, where
             ``N = kxi.shape[0]``.
         vV : ndarray
-            Mode profiles of corresponding eigenfrequencies,
-            given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of ``(4, 2, N)``, where ``N = kxi.shape[0]``.
+            () complex eigenvectors of the corresponding
+            eigenfrequencies, normalized to unit norm.  Has a shape of
+            ``(4, 2, N)``, where ``N = kxi.shape[0]``.  ``vV[2*l]`` and
+            ``vV[2*l+1]`` are the in-plane (perpendicular to the static
+            magnetization) and out-of-plane amplitudes of layer ``l+1``,
+            respectively.
+
+        Notes
+        -----
+        The mode amplitudes are complex.  Up to a common (arbitrary)
+        phase of each eigenvector, the in-plane amplitudes are real and
+        the out-of-plane amplitudes imaginary, i.e. the components
+        precess in quadrature on an ellipse given by the ratio of their
+        moduli.  With the time dependence ``exp(1j*wV*t)`` of the model,
+        the dynamic magnetization is ``np.real(vV*np.exp(1j*wV*t))``.
         """
         Ms1 = self.Ms
         Ms2 = self.Ms2
@@ -323,7 +338,7 @@ class DoubleLayerNumeric:
 
         ks = self.kxi
         wV = np.zeros((2, np.size(ks, 0)))
-        vV = np.zeros((4, 2, np.size(ks, 0)))
+        vV = np.zeros((4, 2, np.size(ks, 0)), dtype=complex)
         for idx, k in enumerate(ks):
             Zet1 = (
                 np.sinh(k * self.d / 2)
@@ -456,9 +471,7 @@ class DoubleLayerNumeric:
             w, v = linalg.eig(A)
             indi = np.argsort(np.imag(w))[2:]  # sort low-to-high and crop to positive
             wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
-            vV[:, :, idx] = (
-                np.imag(v)[:, indi] * self.gamma * MU0
-            )  # eigenvectors (mode profiles)
+            vV[:, :, idx] = v[:, indi]  # eigenvectors (mode amplitudes)
         return wV, vV
 
     def GetPhis(self):

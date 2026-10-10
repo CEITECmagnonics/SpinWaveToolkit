@@ -514,7 +514,15 @@ class ObjectiveLens:
         return self._focal_field(z, rho_max, N, rtol, kernels, coef, assemble)
 
     def getPupilField(
-        self, z, KX, KY, n=1.0, pol_type="linear", pol_angle=0, axis_ratio=1.0
+        self,
+        z,
+        KX,
+        KY,
+        pol_type="linear",
+        pol_angle=0,
+        axis_ratio=1.0,
+        n=1.0,
+        **kwargs,
     ):
         """
         Computes the complex electric field distribution in reciprocal
@@ -537,9 +545,6 @@ class ObjectiveLens:
             module.
         KY : ndarray
             (rad/m) 2D reciprocal-space grid (ky).
-        n : float, optional
-            Refractive index of the focusing medium.
-            Default is 1.0 (air/vacuum).
         pol_type : str or array_like, optional
             Polarization of the beam in the entrance pupil (before
             focusing).  Either one of the following strings:
@@ -567,6 +572,15 @@ class ObjectiveLens:
             polarization.  Can be positive or negative to dictate
             handedness.  Default is 1.0.  Ignored if `pol_type`
             is not "elliptical".
+        n : float, optional
+            Refractive index of the focusing medium.
+            Default is 1.0 (air/vacuum).
+
+        Other Parameters
+        ----------------
+        polarization_type, polarization_angle_deg
+            Deprecated names of `pol_type` and `pol_angle` (renamed in
+            version 1.4), which will be removed in version 1.6.
 
         Returns
         -------
@@ -622,6 +636,28 @@ class ObjectiveLens:
             )
             Ex_k, Ey_k, Ez_k = lens.getPupilField(0, KX, KY, pol_type=e_in)
         """
+
+        # --- DEPRECATED PARAMETER NAMES (renamed in v1.4) ---
+        for old, new in (
+            ("polarization_type", "pol_type"),
+            ("polarization_angle_deg", "pol_angle"),
+        ):
+            if old in kwargs:
+                warn(
+                    f"`{old}` was renamed to `{new}` and will be removed in "
+                    + "SpinWaveToolkit v1.6.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                if new == "pol_type":
+                    pol_type = kwargs.pop(old)
+                else:
+                    pol_angle = kwargs.pop(old)
+        if kwargs:
+            raise TypeError(
+                "getPupilField() got an unexpected keyword argument "
+                + f"'{next(iter(kwargs))}'"
+            )
 
         # --- CONSTANTS & PRELIMINARIES ---
         # Prevent math domain errors (arcsin(x) where x > 1)
