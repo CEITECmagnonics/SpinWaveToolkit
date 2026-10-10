@@ -592,9 +592,8 @@ class SingleLayerNumeric:
         The eigen values represent `N` lowest spin-wave modes
         (`N` with negative and positive frequency).  The eigenvectors
         represent the amplitude of the individual spin-wave modes and
-        can be used to calculate spin-wave profile (see example
-        NumericCalculationofDispersionModeProfiles.py).
-        # ### Update example when it's ready
+        can be used to calculate spin-wave profile (see the example
+        :doc:`/_example_nbs/mode_profiles_numeric`).
 
         The returned modes are sorted from low to high frequencies,
         omitting the negative-frequency modes.
@@ -609,7 +608,10 @@ class SingleLayerNumeric:
         vV : ndarray
             Mode profiles of corresponding eigenfrequencies,
             given as Fourier coefficients for IP and OOP profiles.
-            Has a shape of ``(2*N, N, M)``.
+            Has a shape of ``(2*N, N, M)``.  ``vV[2*n]`` and
+            ``vV[2*n+1]`` are the OOP and IP amplitudes of the thickness
+            mode ``cos(n*pi*z/d)`` (weighted by ``1/sqrt(2)`` for
+            ``n = 0``) for unpinned boundary conditions.
         """
         ks = np.abs(self.kxi)
         # System matrices for all elements, shape (M, 2N, 2N)
