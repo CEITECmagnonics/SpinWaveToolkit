@@ -112,7 +112,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   (multiplied by `gamma*MU0`), i.e. the in-plane amplitudes were always zero.  It now returns
   the complex eigenvectors with unit norm, ordered as (in-plane, out-of-plane) amplitudes of
   layer 1 and layer 2.
-- Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()`, links to the
+- Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()`, `SingleLayerNumeric.GetDispersion()`, links to the
   related examples, and minor fixes.
 
 ## [1.3.0] - 2026-05-04
