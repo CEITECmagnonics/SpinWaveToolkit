@@ -114,6 +114,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   layer 1 and layer 2.
 - Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()`, `SingleLayerNumeric.GetDispersion()`, links to the
   related examples, and minor fixes.
+- Documentation: rendering of default values is simplified using `autodoc_preserve_defaults = True` in `conf.py`. Affects mainly `kxi` parameters in dispersion classes.
 
 ## [1.3.0] - 2026-05-04
 

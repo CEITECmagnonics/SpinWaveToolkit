@@ -35,6 +35,7 @@ templates_path = ['_templates']
 exclude_patterns = ["_build"]
 
 nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might not have all extensions within the venv)
+autodoc_preserve_defaults = True  # show default values as in the source code (e.g. `kxi=np.linspace(...)`)
 
 
 
