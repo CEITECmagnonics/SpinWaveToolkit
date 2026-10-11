@@ -141,7 +141,7 @@ class SingleLayerNumeric:
 
         PyChar = SingleLayerNumeric(Bext=20e-3, kxi=kxi, theta=np.pi/2,
                                     phi=np.pi/2, d=30e-9, weff=2e-6,
-                                    boundary_cond=2, material=SWT.NiFe)
+                                    boundary_cond=1, material=SWT.NiFe)
         DispPy = PyChar.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
         vgPy = PyChar.GetGroupVelocity()*1e-3  # km/s
         lifetimePy = PyChar.GetLifetime()*1e9  # ns

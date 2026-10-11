@@ -108,6 +108,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   interfere.
 - `GetBlochFunction()` of `SingleLayer`, `SingleLayerNumeric`, `DoubleLayerNumeric` and
   `SingleLayerSCcoupled` weights the Bloch function by `sqrt(2*n_BE)` instead of `n_BE`.
+- `SingleLayer.phi` has now a property/setter form with `__update_w0()` call after value update.
 - `DoubleLayerNumeric.GetDispersion()` returned only the imaginary part of the eigenvectors
   (multiplied by `gamma*MU0`), i.e. the in-plane amplitudes were always zero.  It now returns
   the complex eigenvectors with unit norm, ordered as (in-plane, out-of-plane) amplitudes of
