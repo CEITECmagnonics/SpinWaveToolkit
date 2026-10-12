@@ -121,12 +121,15 @@ class TestPupilField:
     def test_aperture(self, lens, pupil_grid):
         KX, KY = pupil_grid
         Ek = lens.getPupilField(0, KX, KY)
-        outside = np.hypot(KX, KY) > K0 * NA
-        assert outside.any()
+        # (points exactly on the edge of the pupil are skipped, since their
+        # assignment depends on round-off, which differs between platforms)
+        rho = np.hypot(KX, KY) / (K0 * NA)
+        outside, inside = rho > 1 + 1e-9, rho < 1 - 1e-9
+        assert outside.any() and np.any(np.abs(rho - 1) < 1e-9)
         for c in Ek:
             assert c.shape == KX.shape
             assert np.all(c[outside] == 0)
-        assert np.all(Ek[0][~outside] != 0)
+        assert np.all(Ek[0][inside] != 0)
 
     @pytest.mark.parametrize(
         "pol_type", ["linear", "rcp", "radial", "azimuthal", "elliptical"]
