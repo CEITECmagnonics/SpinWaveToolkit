@@ -7,3 +7,4 @@ Select a submodule from the list to view its details.
    :maxdepth: 1
 
    susceptibilities/index
+   polarization/index

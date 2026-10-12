@@ -135,11 +135,12 @@ dependencies = [
 # referred to as "extras". For a more extensive definition see:
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
-dev = ["black", "pylint", "pytest", "matplotlib"]  # ### add minimal versions?
+dev = ["black", "pylint", "pytest", "pytest-cov", "matplotlib"]  # ### add minimal versions?
 dev_doc = [  # for development and documentation build
     "black",
     "pylint",
     "pytest",
+    "pytest-cov",
     "matplotlib",
     "sphinx<=9.1",  # for documentation build (latest version with correct handling of things)
     "pydata-sphinx-theme<=0.22", # fixed at a stable build
@@ -164,7 +165,7 @@ deploy = [  # for automated build and deployment of documentation to GH Pages
     "sphinx-toolbox",  # for special tools (collapsible sections, ...)
     "sphinx-copybutton"  # for copy buttons upon hover above code cells
 ]  # ### add minimal versions? # requires Python>=3.11 to have correct sphinx>=8.2.3
-test = ["pytest"]
+test = ["pytest", "pytest-cov"]
 
 # List URLs that are relevant to your project
 #
@@ -193,3 +194,12 @@ include-package-data = false
 
 [tool.setuptools.dynamic]
 version = {attr = "SpinWaveToolkit.__version__"}
+
+[tool.coverage.run]
+# test coverage, see `pytest --cov` in CONTRIBUTING.md
+source = ["SpinWaveToolkit"]
+relative_files = true  # needed by the coverage comment in GH Actions (test.yml)
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

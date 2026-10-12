@@ -3,7 +3,42 @@ Release Notes
 
 .. tip::
 
-    For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_.
+    For more information, see the `Releases on GitHub <https://github.com/CEITECmagnonics/SpinWaveToolkit/releases>`_ and the detailed list of all changes in `CHANGELOG.md <https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/CHANGELOG.md>`_.
+
+
+Version 1.4.0
+-------------
+
+Minor release with polarization optics, faster and more precise focal fields and BLS signal calculations, and several fixes that change the calculated BLS signal.
+
+What's new
+^^^^^^^^^^
+- New sub-module :mod:`.bls.polarization` for the Jones calculus (wave plates, polarizers, spiral phase plates, q-plates). Jones vectors and fields can be passed to :meth:`.bls.ObjectiveLens.getPupilField` and as the `output_analyzer` of :func:`.bls.get_signal_GF_focal`, and both accept the new ``"elliptical"`` polarization.
+- New experimental function :func:`.bls.get_signal_GF_pupil` (Green function approach with the field in the reciprocal space) and new function :func:`.bls.get_transfer_function_RT_pupil` (transfer function reusable for different susceptibilities).
+- :func:`.bls.get_signal_GF_focal` accepts any magneto-optic susceptibility tensor (e.g. quadratic effects) and is 10 to 100 times faster for fine grids.
+- The focal fields of :class:`.bls.ObjectiveLens` are more precise and several times faster. The sampling is chosen automatically for the requested precision given by the new parameter `rtol`. :meth:`~.bls.ObjectiveLens.getPupilField` has a new parameter `n` (refractive index of the focusing medium).
+- :class:`.SingleLayerNumeric` is much faster (e.g. 0.09 s instead of 4 s for 10 000 wavenumbers) and accepts 1D arrays of the wavenumber, angles, field, thickness and material parameters, e.g. for 2D wavevector grids or field sweeps.
+- New example notebooks: :doc:`_example_nbs/BLS_signal_from_GF_pupil`, :doc:`_example_nbs/BLS_signal_comparison`, :doc:`_example_nbs/BLS_polarization_optics`, :doc:`_example_nbs/FMR_with_PMA` and :doc:`_example_nbs/mode_profiles_numeric`.
+
+Changes requiring updates of your code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- :func:`.bls.get_signal_GF_focal` (experimental) takes the susceptibility `Chi` on its k-grid `KxKyChi` instead of the Bloch functions (the former behavior is obtained with ``Chi = bls.susceptibilities.mo_linear(Bloch)``), and the parameter `Nq` was removed. The incident field `E` has the shape ``(3, Nx, Ny)``, and the `output_analyzer` values ``"circular_r"`` and ``"circular_l"`` were renamed to ``"rcp"`` and ``"lcp"``. With a k-grid reaching ``2*k0*NA``, magnons with larger wavevectors are now included (about 8 % of the thermal signal for NA = 0.75).
+- The focal field methods of :class:`.bls.ObjectiveLens` return the fields indexed as ``[ix, iy]`` (previously ``[iy, ix]``), consistently with the rest of the :mod:`.bls` module.
+- :meth:`.bls.ObjectiveLens.getPupilField`: the parameters `polarization_type` and `polarization_angle_deg` were renamed to `pol_type` and `pol_angle` (the old names are deprecated and will be removed in version 1.6).
+- :meth:`.DoubleLayerNumeric.GetDispersion` returns complex eigenvectors (see Fixes).
+
+Fixes
+^^^^^
+These fixes change the calculated BLS signal with respect to version 1.3.
+
+- :func:`.bls.get_signal_GF_focal`: the longitudinal wavevector in the magnetic layer, the volume factor and the collection filter were wrong, the incident field was transposed in the reciprocal space, and the signal depended on the sampling.
+- :func:`.bls.get_signal_RT_pupil` now agrees with :func:`.bls.get_signal_RT_focal`: its normalization was off by a factor of ``(2*pi)**8``, and the transfer function was mirrored (``q -> -q``), which affected the interference of even and odd components of the susceptibility (e.g. non-reciprocal spin waves with quadratic magneto-optic effects). Asymmetric k-grids now raise an error.
+- :meth:`.bls.ObjectiveLens.getPupilField`: the ``"radial"``, ``"rcp"`` and ``"lcp"`` polarizations were wrong (field parallel to the wavevector, or opposite handedness with a vortex phase), and the prefactor now follows Novotny & Hecht.
+- :class:`.bls.ObjectiveLens`: the z component of :meth:`~.bls.ObjectiveLens.getFocalField` was rotated by 90 degrees, the transverse components of radially and azimuthally polarized beams were 4 times too weak, and the focal field methods failed with SciPy >= 1.14.
+- ``GetBlochFunction`` methods weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, in agreement with the PRB paper.
+- :func:`.bls.sph_green_function` used the speed of light 3e9 m/s. Now uses internal constants :data:`.C` and :data:`.MU0`.
+- :meth:`.DoubleLayerNumeric.GetDispersion`: the in-plane amplitudes of the eigenvectors were always zero.
+- Documentation: the BLS examples were updated and re-run, the eigenvectors of :class:`.SingleLayerNumeric` and :class:`.DoubleLayerNumeric` are documented, new landing page, promotion of `SWTweb <https://ceitecmagnonics.github.io/SWTweb/>`_, and citation of the SpinWaveToolkit paper.
 
 
 Version 1.3.0
@@ -30,21 +65,21 @@ Fixes
 
 Version 1.2.1
 -------------
-`2026-02-23`
+`2026-02-25`
 
 Patch featuring important dispersion-model fixes and small tweaks.
 
 What's new
 ^^^^^^^^^^
 - All ``GetBlochFunction()`` methods now include optional weighting by Bose-Einstein distribution.
-- New physical constant - Planck constant :py:attr:`.H` - added to the module.
+- New physical constant - Planck constant :data:`.H` - added to the module.
 
 Fixes
 ^^^^^
 - Anisotropy tensor in :py:class:`.SingleLayer` is now correctly handled for dispersion relation calculations.
 - Correct formula for ellipticity use in :py:class:`.SingleLayer`.
 - Docstring fixes and minor improvements, mainly in :py:class:`.DoubleLayerNumeric`.
-- BLS example now includes also first PSSW mode and usage of BE distribution (see :doc:`_example_nbs/BLS_signal_from_single_layer`).
+- BLS example now includes also first PSSW mode and usage of BE distribution (example ``BLS_signal_from_single_layer``, in 1.4.0 superseded by :doc:`_example_nbs/BLS_signal_from_GF_focal`).
 - Documentation improvements.
 - Instructions in ``CONTRIBUTING.md`` updated.
 

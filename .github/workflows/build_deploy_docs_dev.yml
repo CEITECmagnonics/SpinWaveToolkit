@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -56,15 +56,15 @@ jobs:
           rm -rf site/$DOCS_VERSION
           mkdir -p site/$DOCS_VERSION
           cp -r docs/build/html/* site/$DOCS_VERSION/
-          
+
           # Save curated versions.json
           cp docs/source/versions.json site/
-          
+
           # Copy redirect file (index0.html -> index.html)
           cp docs/source/index0.html site/index.html
 
       - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: site
 

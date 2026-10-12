@@ -1,5 +1,15 @@
 # SpinWaveToolkit
 
+[![PyPI version](https://img.shields.io/pypi/v/SpinWaveToolkit)](https://pypi.org/project/SpinWaveToolkit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/SpinWaveToolkit)](https://pypi.org/project/SpinWaveToolkit/)
+[![Downloads](https://img.shields.io/pypi/dm/SpinWaveToolkit)](https://pypistats.org/packages/spinwavetoolkit)
+[![License](https://img.shields.io/github/license/CEITECmagnonics/SpinWaveToolkit)](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/LICENSE)
+[![Tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/CEITECmagnonics/SpinWaveToolkit/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/python-coverage-comment-action-data/endpoint.json)](https://github.com/CEITECmagnonics/SpinWaveToolkit/tree/python-coverage-comment-action-data)
+[![Docs](https://github.com/CEITECmagnonics/SpinWaveToolkit/actions/workflows/build_deploy_docs.yml/badge.svg)](https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/index.html)
+[![Paper](https://img.shields.io/badge/DOI-10.1088%2F1361--648X%2Fae6430-blue)](https://doi.org/10.1088/1361-648X/ae6430)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 <img src="https://raw.githubusercontent.com/CEITECmagnonics/SpinWaveToolkit/master/docs/source/_static/logo+text.svg#L1" width=60%>
 
 SpinWaveToolkit is an open-source Python package which provides analytical tools for spin-wave physics and research.
@@ -73,6 +83,9 @@ decLen = PyChar.GetDecLen()*1e6  # um
 ```
 For more examples (with images) look [here](https://ceitecmagnonics.github.io/SpinWaveToolkit/stable/examples.html).
 
+### Try it yourself
+Explore the capabilities with our new web-based calculator: [SWTweb] at [https://ceitecmagnonics.github.io/SWTweb/][SWTweb]. Rapid calculations, parameter sweeps, BLS signal modelling — all runs locally in your browser, powered by SpinWaveToolkit.
+
 ## Cite us
 
 If you use SpinWaveToolkit in your work, please cite it as follows:
@@ -117,6 +130,7 @@ All sources of models used within the SpinWaveToolkit are cited in their respect
 
 
 [SWTpy]:SpinWaveToolkit
+[SWTweb]:https://ceitecmagnonics.github.io/SWTweb/
 [numpy]:https://numpy.org/
 [scipy]:https://scipy.org/
 [tqdm]:https://tqdm.github.io/

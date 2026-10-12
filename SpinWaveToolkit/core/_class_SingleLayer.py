@@ -164,6 +164,7 @@ class SingleLayer:
         self._gamma = material.gamma
         self._Aex = material.Aex
         self._theta = theta
+        self._phi = phi
         self._theta_H = self.theta if (theta_H is None) else theta_H
         self._phi_H = phi if (phi_H is None) else phi_H
         # Demag tensors in laboratory frame (z = film normal)
@@ -171,7 +172,6 @@ class SingleLayer:
         self._Na = np.zeros((3, 3)) if Na is None else np.array(Na)
 
         self.kxi = np.array(kxi)
-        self.phi = phi
         self.d = d
         self.weff = weff
         self.boundary_cond = boundary_cond
@@ -230,12 +230,22 @@ class SingleLayer:
 
     @property
     def theta(self):
-        """Out-of-plane angle of static M (rad)."""
+        """Polar (out-of-plane) angle of static M (rad)."""
         return self._theta
 
     @theta.setter
     def theta(self, val):
         self._theta = val
+        self.__update_w0()
+
+    @property
+    def phi(self):
+        """Azimuthal (in-plane) angle of static M (rad)."""
+        return self._phi
+
+    @phi.setter
+    def phi(self, val):
+        self._phi = val
         self.__update_w0()
 
     @property
@@ -335,7 +345,6 @@ class SingleLayer:
         # mhat: (3, ...), Nd: (3,3), result: shape (...)
         B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Nd, mhat)
         B_eff += -MU0 * self.Ms * np.einsum("i...,ij,j...->...", mhat, self.Na, mhat)
-        # ### check that the sign of Na from MacEq is correct. Use TetraX maybe.
         self.w0 = self.gamma * B_eff  # shape matches broadcasted input
 
     def __GetPropagationVector(self, n=0, nc=-1, nT=0):
@@ -964,6 +973,9 @@ class SingleLayer:
         mu : float or None, optional
             (J ) chemical potential for the Bose-Einstein distribution.
             If `temp` or `mu` is None, no distribution is applied.
+            Otherwise, the Bloch function is weighted by
+            ``sqrt(2*n_BE)``, where ``n_BE`` is the Bose-Einstein
+            distribution (see :func:`~SpinWaveToolkit.distBE`).
 
         Returns
         -------
@@ -985,7 +997,8 @@ class SingleLayer:
         blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
 
         if temp is not None and mu is not None:
-            blochFunc *= distBE(w, temp=temp, mu=mu)[:, np.newaxis]
+            # amplitude ~ sqrt(2*n_BE), i.e. BLS intensity ~ n_BE
+            blochFunc *= np.sqrt(2 * distBE(w, temp=temp, mu=mu))[:, np.newaxis]
 
         return w, blochFunc
 

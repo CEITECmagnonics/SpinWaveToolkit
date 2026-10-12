@@ -14,6 +14,10 @@ Modules
 :mod:`~SpinWaveToolkit.bls.susceptibilities`
     Module for computing the dynamic magneto-optic susceptibility tensor
     components for a given dynamic magnetization vector.
+:mod:`~SpinWaveToolkit.bls.polarization`
+    Module for describing the polarization of light and simple
+    polarization optics (wave plates, spiral phase plates, q-plates)
+    using the Jones calculus.
 
 Classes
 -------
@@ -25,8 +29,10 @@ Functions
 
 .. autosummary::
     get_signal_GF_focal
+    get_signal_GF_pupil
     getBLSsignal
     get_signal_RT_pupil
+    get_transfer_function_RT_pupil
     get_signal_RT_focal
     get_signal_RT_focal_3d
     fresnel_coefficients
@@ -44,16 +50,20 @@ from .greenAndFresnel import *
 from .BLSmodel import *
 from .core._class_ObjectiveLens import *
 from . import susceptibilities
+from . import polarization
 
 
 __all__ = [
     "ObjectiveLens",
     "get_signal_GF_focal",
+    "get_signal_GF_pupil",
     "getBLSsignal",
     "get_signal_RT_pupil",
+    "get_transfer_function_RT_pupil",
     "get_signal_RT_focal",
     "get_signal_RT_focal_3d",
     "fresnel_coefficients",
     "sph_green_function",
     "susceptibilities",
+    "polarization",
 ]
