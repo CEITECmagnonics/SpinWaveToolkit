@@ -71,6 +71,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   and `README.md` ([#71]), and updated requirements for building the documentation (`sphinx<=9.1`,
   `pydata-sphinx-theme<=0.22`, `nbsphinx<=0.9.8`).
 - GitHub Actions updated to versions running on Node 24 ([#61]).
+- `CONTRIBUTING.md`: added instructions for the release PR template with checklist of things to do before merging a `new-release` to `master`.
 
 ### Deprecated
 
