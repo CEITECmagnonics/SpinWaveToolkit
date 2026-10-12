@@ -70,10 +70,10 @@ def fresnel_coefficients(lambda_, DF, PM, d, source_layer_index, output_layer_in
 
     Returns
     -------
-    htp : function
+    htp : callable
         A function that computes the p-polarized Fresnel transmission
         coefficients for given q.
-    hts : function
+    hts : callable
         A function that computes the s-polarized Fresnel transmission
         coefficients for given q.
 

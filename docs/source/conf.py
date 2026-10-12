@@ -36,6 +36,10 @@ exclude_patterns = ["_build"]
 
 nbsphinx_execute = 'never'  # to avoid re-running notebooks during build (might not have all extensions within the venv)
 autodoc_preserve_defaults = True  # show default values as in the source code (e.g. `kxi=np.linspace(...)`)
+suppress_warnings = [  # unreferenced footnotes/citations are intended (reference lists in index.rst and publications.rst)
+    "ref.footnote",
+    "ref.citation",
+]
 
 
 
@@ -104,6 +108,7 @@ nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ip
 
 autodoc_member_order = "groupwise"  # to have members ordered by their type https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_member_order
 numpydoc_xref_param_type = True  # to allow cross-referencing of parameters etc.
+numpydoc_class_members_toctree = False  # methods are documented on the class page (no stub pages for the Methods tables)
 numpydoc_xref_ignore = {"type", "optional", "default", "or", "of"}
 numpydoc_xref_aliases = {  # Mappings to fully qualified paths (or correct ReST references) for the aliases/shortcuts used when specifying the types of parameters.
     # python

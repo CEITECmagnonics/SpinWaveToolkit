@@ -373,8 +373,8 @@ class ObjectiveLens:
 
         Returns
         -------
-        xi, yi : 1D numpy arrays
-            Vectors defining the output grid.
+        xi, yi : ndarray
+            Vectors (1D numpy arrays) defining the output grid.
         Exi, Eyi, Ezi : ndarray
             Complex electric field components on the grid.  Specified as
             2D arrays with shape ``(N, N)``, indexed as ``[ix, iy]`` (same
@@ -461,8 +461,8 @@ class ObjectiveLens:
 
         Returns
         -------
-        xi, yi : 1D numpy arrays
-            Vectors defining the output grid.
+        xi, yi : ndarray
+            Vectors (1D numpy arrays) defining the output grid.
         Exi, Eyi, Ezi : ndarray
             Complex electric field components on the grid (with ``E_z``
             identically zero).  Specified as 2D arrays with shape

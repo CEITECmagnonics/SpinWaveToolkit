@@ -72,7 +72,7 @@ Patch featuring important dispersion-model fixes and small tweaks.
 What's new
 ^^^^^^^^^^
 - All ``GetBlochFunction()`` methods now include optional weighting by Bose-Einstein distribution.
-- New physical constant - Planck constant :py:attr:`.H` - added to the module.
+- New physical constant - Planck constant :data:`.H` - added to the module.
 
 Fixes
 ^^^^^

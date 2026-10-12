@@ -41,6 +41,17 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - Example notebooks: `BLS_signal_from_GF_pupil`, `BLS_signal_comparison` ([#63]),
   `BLS_polarization_optics`, `FMR_with_PMA` ([#13]) and `mode_profiles_numeric` ([#42]).
 - Mentions of [SWTweb](https://ceitecmagnonics.github.io/SWTweb/) added to `README.md` and documentation ([#59], [#70]).
+- Unit tests of the `bls` submodule (`polarization`, `susceptibilities`, `ObjectiveLens`, the
+  reciprocity theorem and Green function signal functions, Fresnel coefficients and Green
+  functions), of the helper functions, and of the elementwise parameters and Bloch functions of
+  `SingleLayer` and `SingleLayerNumeric`.  Test coverage increased from 40 % to 83 %.
+- Test coverage measured by `pytest --cov` (`pytest-cov` added to the `dev`, `dev_doc` and `test`
+  extras, settings in `pyproject.toml`).  The `coverage` job of the test workflow posts a
+  coverage comment to each PR and updates the coverage badge after each push to `master` (data
+  stored in the `python-coverage-comment-action-data` branch); PRs from forks are commented by
+  the new `coverage_comment.yml` workflow.
+- Badges in `README.md` (PyPI version, Python versions, downloads, license, tests, coverage,
+  documentation, paper DOI, code style).
 
 ### Changed
 
@@ -72,6 +83,9 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   `pydata-sphinx-theme<=0.22`, `nbsphinx<=0.9.8`).
 - GitHub Actions updated to versions running on Node 24 ([#61]).
 - `CONTRIBUTING.md`: added instructions for the release PR template with checklist of things to do before merging a `new-release` to `master`.
+- `CONTRIBUTING.md`: instructions for measuring the test coverage, description of the coverage
+  comments in PRs, and the new `python-coverage-comment-action-data` branch (managed by GitHub
+  Actions only).
 
 ### Deprecated
 
@@ -117,6 +131,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()`, `SingleLayerNumeric.GetDispersion()`, links to the
   related examples, and minor fixes.
 - Documentation: rendering of default values is simplified using `autodoc_preserve_defaults = True` in `conf.py`. Affects mainly `kxi` parameters in dispersion classes.
+- Documentation: the build has no warnings (no stub pages for the Methods tables of the classes, intentionally unreferenced footnotes and citations), and broken cross-references were fixed.
 
 ## [1.3.0] - 2026-05-04
 
