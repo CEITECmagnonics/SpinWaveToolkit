@@ -27,3 +27,6 @@ build/
 docs/source/bin/
 *.egg-info/
 
+# test coverage (pytest --cov)
+.coverage
+htmlcov/

@@ -1,0 +1,33 @@
+name: Post coverage comment
+
+# Posts the coverage comment to PRs from forks, which do not have the
+# permissions to do so in the `coverage` job of `test.yml` (it uploads the
+# comment as an artifact instead).  See
+# https://github.com/py-cov-action/python-coverage-comment-action
+# (Workflows triggered by `workflow_run` are taken from the default branch.)
+
+on:
+  workflow_run:
+    workflows: ["Run Pytests"]
+    types:
+      - completed
+
+jobs:
+  post-comment:
+    name: Post coverage comment
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    permissions:
+      pull-requests: write  # to post the comment and edit it on later runs
+      actions: read  # to download the comment artifact from the triggering run
+      contents: read
+    steps:
+      # DO NOT run actions/checkout here, for security reasons
+      # (the code of the PR from a fork is not trusted)
+      - name: Post comment
+        uses: py-cov-action/python-coverage-comment-action@v4.5
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PR_RUN_ID: ${{ github.event.workflow_run.id }}

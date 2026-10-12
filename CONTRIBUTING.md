@@ -91,7 +91,7 @@ First of all, make sure you have these modules installed, e.g. by using `pip` an
 ```cmd
 py -m pip install black
 py -m pip install pylint
-py -m pip install pytest
+py -m pip install pytest pytest-cov
 ```
 Then, if you want to apply them to some script or a folder with scripts such as a full module, e.g. the [SpinWaveToolkit][SWTpy], open a command line and write
 ```cmd
@@ -107,12 +107,24 @@ After this you might want to check the changes done by [black] (easily done in G
 ### Notes on [pytest]
 Check the currently available tests in the [tests](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/tests) folder. If you think there are some SWT functionalities that are poorly tested or not tested yet at all, either make your own test and commit it to some branch/fork of SWT, or write your idea in a new [Issue][Issues] so someone else can try to implement it.
 
+To see which parts of the code are not covered by the tests, run the tests with the [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/) plugin
+```cmd
+py -m pytest --cov  &:: prints the coverage of each file with the line numbers not executed by any test
+py -m pytest --cov --cov-report=html  &:: the same as an interactive report in htmlcov/index.html
+```
+(The settings are in the `[tool.coverage.*]` sections of [pyproject.toml](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/pyproject.toml).)  Note that a covered line is not necessarily a tested one, i.e. the tests should also check that the results are correct.
+
+The coverage is also checked by GH Actions (the `coverage` job in [test.yml](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.github/workflows/test.yml), using [python-coverage-comment-action](https://github.com/py-cov-action/python-coverage-comment-action)):
+- In each PR (e.g. to `new-release` or `master`), a comment with the coverage of the changed files and of the changed lines is posted (and updated with new commits), compared to the coverage of `master`.  (For PRs from forks, the comment is posted by the [coverage_comment.yml](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.github/workflows/coverage_comment.yml) workflow.)
+- After each push to `master`, the coverage badge in the README is updated.  The data are stored in the `python-coverage-comment-action-data` branch, which **must not be touched manually** (see [Branch logic](#branch-logic)).  The branch also contains an HTML coverage report of `master`.
+
 ### Branch logic
 Here, you should find the answer to your question "What branch should I use?".
 
-There are by default three branches, that will be here hopefully always:
+There are by default four branches, that will be here hopefully always:
 - `master` - here the newest stable code is published. We do not continue to develop older versions, so one branch like this is enough. **You cannot directly commit to this branch!** Luckily there are protection rules that prevent accidental push to this branch. Only Pull Requests (PRs), usually from the `new-release` branch, are allowed, and only at a point when the code is stable and ready for a new release. See [below](#checks-before-each-pr-of-a-new-release) for a list of things to check before merging to `master`.
 - `gh-pages` - branch that is managed purely by our GH Actions, i.e. **DO NOT TOUCH IT!** It is the only backup of docs for older versions. Unfortunately, we cannot apply protection rules for this branch, as the GH Actions Bot needs direct access.
+- `python-coverage-comment-action-data` - branch that is managed purely by our GH Actions (the `coverage` job in [test.yml](https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/.github/workflows/test.yml)), i.e. **DO NOT TOUCH IT!** It stores the test coverage of `master`, which is shown by the coverage badge in the README and used as the reference in the coverage comments of PRs (see [Notes on pytest](#notes-on-pytest)).  For the same reason as for `gh-pages`, no protection rules can be applied to it.
 - `new-release` - the newest functionalities are gathered here before we push it to `master`. This branch is also used to generate the *dev* documentation. It is the only branch of these three, where direct contributors may commit, but is is not recommended unless you know what you are doing and you do only small fixes.
 
 For larger fixes and implementing new functionalities, it is best if you create a new branch based on the `new-release` and give it some descriptive name, e.g. `new-model-triple-layer`. Then you make your changes in this branch. When you feel everything works well and you did enough tests, make a PR of your branch to `new-release` and request some reviews. It would be nice if you mention also [Issues] that are solved by your PR in the PR description. If the responsible people find your PR all right, it will be merged to the `new-release` branch and your contribution will be part of the next release.
