@@ -52,6 +52,12 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   the new `coverage_comment.yml` workflow.
 - Badges in `README.md` (PyPI version, Python versions, downloads, license, tests, coverage,
   documentation, paper DOI, code style).
+- `MacrospinEquilibrium.find_equilibria()`: all equilibria found directly as the solutions of a
+  6x6 eigenvalue problem, sorted by energy (i.e. including the global minimum), with their type
+  (0 minimum, 1 maximum, 2 saddle point);
+  `MacrospinEquilibrium.minimize(global_minimum=True)` sets the global minimum.
+- Unit tests of `MacrospinEquilibrium` (analytical derivatives, random systems compared with
+  `find_equilibria()` and a dense grid, Stoner-Wohlfarth switching fields, labile equilibria).
 
 ### Changed
 
@@ -86,6 +92,19 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - `CONTRIBUTING.md`: instructions for measuring the test coverage, description of the coverage
   comments in PRs, and the new `python-coverage-comment-action-data` branch (managed by GitHub
   Actions only).
+- `MacrospinEquilibrium.minimize()` uses the analytical gradient and Hessian of the energy
+  density and the trust-region method `"trust-exact"` with steps limited to 0.3 rad by default
+  (previously `"Nelder-Mead"` with numerical sampling only), i.e. 3 to 20 times faster
+  `minimize()` and `hysteresis()`.  The angles are optimized in a local frame (no singularity at
+  the poles, no bounds), the energy is normalized by `MU0*Ms**2`, and the result is checked to be
+  a minimum (labile equilibria are left along the direction of negative curvature, with a
+  deterministic choice of the side, towards +z for symmetric bifurcations).  `scipy_kwargs` may
+  now contain `tol` and `options`, but not `bounds`; the gradient and Hessian are passed to the
+  methods that use them; `res.x` holds the lab-frame angles.
+- `MacrospinEquilibrium.getHeff()` is evaluated analytically (previously by numerical
+  derivatives, which were inaccurate close to the poles).
+- Example `macrospin_equilibrium_histloop`: no explicit `scipy_kwargs` in the hysteresis loops,
+  demonstration of `find_equilibria()`.
 
 ### Deprecated
 
@@ -94,6 +113,12 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 
 ### Fixed
 
+- `MacrospinEquilibrium.hysteresis()` switched the magnetization too early, because the
+  minimization could jump over the energy barrier of the metastable state (by 1-2 % of the
+  Stoner-Wohlfarth switching field with the former default `"Nelder-Mead"`, about 20 % with
+  `"L-BFGS-B"`).  It now agrees with the Stoner-Wohlfarth astroid.
+- `MacrospinEquilibrium.minimize()` reported "Not converged" for many correct results (the
+  tolerance was `1e-20`).
 - `ObjectiveLens.getFocalField()`: the z component of the focal field was rotated by 90°.
 - `ObjectiveLens`: the prefactors of all focal field methods follow Novotny & Hecht and agree
   with `getPupilField()` (including the phase); for radially and azimuthally polarized beams,

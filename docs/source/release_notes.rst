@@ -18,6 +18,7 @@ What's new
 - :func:`.bls.get_signal_GF_focal` accepts any magneto-optic susceptibility tensor (e.g. quadratic effects) and is 10 to 100 times faster for fine grids.
 - The focal fields of :class:`.bls.ObjectiveLens` are more precise and several times faster. The sampling is chosen automatically for the requested precision given by the new parameter `rtol`. :meth:`~.bls.ObjectiveLens.getPupilField` has a new parameter `n` (refractive index of the focusing medium).
 - :class:`.SingleLayerNumeric` is much faster (e.g. 0.09 s instead of 4 s for 10 000 wavenumbers) and accepts 1D arrays of the wavenumber, angles, field, thickness and material parameters, e.g. for 2D wavevector grids or field sweeps.
+- :class:`.MacrospinEquilibrium` is 3 to 20 times faster thanks to the analytical gradient and Hessian of the energy, finds the minimum reliably also close to the film normal and when starting from a labile equilibrium, and follows metastable states in hysteresis loops correctly (switching fields of the Stoner-Wohlfarth model). The new method :meth:`~.MacrospinEquilibrium.find_equilibria` finds all equilibria directly, including the global minimum (also available as ``minimize(global_minimum=True)``).
 - New example notebooks: :doc:`_example_nbs/BLS_signal_from_GF_pupil`, :doc:`_example_nbs/BLS_signal_comparison`, :doc:`_example_nbs/BLS_polarization_optics`, :doc:`_example_nbs/FMR_with_PMA` and :doc:`_example_nbs/mode_profiles_numeric`.
 
 Changes requiring updates of your code
@@ -26,6 +27,7 @@ Changes requiring updates of your code
 - The focal field methods of :class:`.bls.ObjectiveLens` return the fields indexed as ``[ix, iy]`` (previously ``[iy, ix]``), consistently with the rest of the :mod:`.bls` module.
 - :meth:`.bls.ObjectiveLens.getPupilField`: the parameters `polarization_type` and `polarization_angle_deg` were renamed to `pol_type` and `pol_angle` (the old names are deprecated and will be removed in version 1.6).
 - :meth:`.DoubleLayerNumeric.GetDispersion` returns complex eigenvectors (see Fixes).
+- :meth:`.MacrospinEquilibrium.minimize` and :meth:`~.MacrospinEquilibrium.hysteresis` use the method ``"trust-exact"`` by default (previously ``"Nelder-Mead"``). `scipy_kwargs` cannot contain ``bounds`` (the angles are not bounded), but may contain ``tol`` and ``options``. Hysteresis loops switch slightly later (correctly, see Fixes), and at symmetric bifurcations (e.g. an in-plane field on a film with perpendicular anisotropy) the magnetization now tilts towards +z.
 
 Fixes
 ^^^^^
@@ -38,6 +40,7 @@ These fixes change the calculated BLS signal with respect to version 1.3.
 - ``GetBlochFunction`` methods weight the Bloch function by ``sqrt(2*n_BE)`` instead of ``n_BE``, in agreement with the PRB paper.
 - :func:`.bls.sph_green_function` used the speed of light 3e9 m/s. Now uses internal constants :data:`.C` and :data:`.MU0`.
 - :meth:`.DoubleLayerNumeric.GetDispersion`: the in-plane amplitudes of the eigenvectors were always zero.
+- :meth:`.MacrospinEquilibrium.hysteresis` switched the magnetization too early (by 1-2 % of the switching field), and :meth:`~.MacrospinEquilibrium.minimize` often reported "Not converged" for correct results.
 - Documentation: the BLS examples were updated and re-run, the eigenvectors of :class:`.SingleLayerNumeric` and :class:`.DoubleLayerNumeric` are documented, new landing page, promotion of `SWTweb <https://ceitecmagnonics.github.io/SWTweb/>`_, and citation of the SpinWaveToolkit paper.
 
 
