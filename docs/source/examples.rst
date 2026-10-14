@@ -17,7 +17,8 @@ Here is a list of examples that demonstrate how to use the SpinWaveToolkit. The 
     _example_nbs/macrospin_equilibrium_histloop
     _example_nbs/FMR_with_PMA
     _example_nbs/mode_profiles_numeric
-    _example_nbs/SAFdispersion_simple
+    _example_nbs/SAF_dispersion_simple
+    _example_nbs/SAF_dispersion_2D
     _example_nbs/BLS_signal_from_GF_focal
     _example_nbs/BLS_signal_from_GF_pupil
     _example_nbs/BLS_signal_from_RT_focal

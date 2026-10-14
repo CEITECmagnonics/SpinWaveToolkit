@@ -376,6 +376,11 @@ class MacrospinEquilibrium:
                 kwargs["hess"] = hess
             res = minimize(fun, np.array([np.pi / 2, 0.0]), **kwargs)
             m = R @ sphr2cart(*res.x)
+            # polish by Newton steps on the sphere (SciPy stops at the
+            # round-off level of the energy, ~1e-7 rad)
+            m_newton = _newton_on_sphere(m, h, A, maxiter=5)
+            if m_newton is not None and m_newton @ m > np.cos(1e-6):
+                m = m_newton
             if abs(res.x[0] - np.pi / 2) > np.pi / 3:
                 continue  # close to a pole of the local frame, repeat around m
             # stability check (Hessian on the sphere)

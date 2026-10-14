@@ -58,6 +58,24 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   `MacrospinEquilibrium.minimize(global_minimum=True)` sets the global minimum.
 - Unit tests of `MacrospinEquilibrium` (analytical derivatives, random systems compared with
   `find_equilibria()` and a dense grid, Stoner-Wohlfarth switching fields, labile equilibria).
+- `DoubleLayerNumeric`: `kxi` and `phi` can be 1D arrays of the same length (calculated
+  elementwise), e.g. flattened 2D grids of wavevectors.  The system matrices for all elements are
+  built and diagonalized at once, and the equilibrium is found only once, so 2D dispersion maps
+  are about 2000 times faster than a loop over the wavevectors.
+- `DoubleLayerNumeric.find_equilibria()`: all in-plane equilibria of the two magnetizations
+  (Newton iterations from a grid of starting points), sorted by energy and classified
+  (0 minimum, 1 maximum, 2 saddle point); `GetPhis(global_minimum=True)`.
+- `DoubleLayerNumeric.GetFreeEnergy(phi1, phi2, theta1, theta2)`: free energy per area for
+  general directions of the two magnetizations (vectorized); `GetFreeEnergyIP()` and
+  `GetFreeEnergyOOP()` are now wrappers of it (the latter with the in-plane equilibrium angles by
+  default instead of hard-coded ones).
+- `DoubleLayerNumeric.GetDispersion(phis=...)`: optional equilibrium angles instead of
+  `GetPhis()`, e.g. to select one of the degenerate scissors states.
+- Example notebook `SAF_dispersion_2D`: 2D dispersion relation of the synthetic antiferromagnet
+  of Adam et al., npj Spintronics 3, 33 (2025) (nonreciprocal along the field, reciprocal
+  perpendicular to it), reproducing their Fig. 3.
+- Unit tests of `DoubleLayerNumeric` (scissors state, all equilibria, analytical derivatives,
+  2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers).
 
 ### Changed
 
@@ -103,6 +121,30 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   methods that use them; `res.x` holds the lab-frame angles.
 - `MacrospinEquilibrium.getHeff()` is evaluated analytically (previously by numerical
   derivatives, which were inaccurate close to the poles).
+- **Breaking:** `DoubleLayerNumeric` measures the in-plane angles `phiAnis1`, `phiAnis2`,
+  `phiInit1`, `phiInit2` and the equilibrium angles returned by `GetPhis()` from the in-plane
+  direction of `Bext` instead of from the wavevector (which is the frame of the other dispersion
+  classes), so that the magnetic configuration does not depend on the wavevector; `phi` (the
+  angle of `Bext` from `kxi`) is unchanged.  The defaults are `phiAnis1 = phiAnis2 = 0`
+  (previously `pi/2`, i.e. the same geometry for the default `phi = pi/2`) and
+  `phiInit1, phiInit2 = pi/2, -pi/2` (unchanged values, now measured from `Bext`).  `GetPhis()`
+  returns the angles in `[-pi, pi)`.  Nothing changes for `phi = 0` (field along the wavevector).
+- **Breaking:** `DoubleLayerNumeric`: layer 1 is the bottom layer (closer to the substrate) and
+  layer 2 the top layer, previously the opposite (as in Gallardo et al.).  For the same
+  parameters, the nonreciprocal dispersion is therefore mirrored (`k -> -k`); swap the two layers
+  (materials, thicknesses, anisotropies and angles) to reproduce previous results.
+- `DoubleLayerNumeric.GetPhis()` uses the analytical gradient and Hessian of the energy with
+  the method `"trust-exact"` (steps limited to 0.3 rad, no bounds) instead of `"Nelder-Mead"`,
+  about 7 times faster; labile starting points (saddle points, maxima) are left along the
+  direction of negative curvature with a deterministic sign.  Previously, the energy was
+  minimized in the frame of each wavevector from fixed initial angles, which selected different
+  (degenerate) scissors states for different directions of the wavevector, so 2D dispersion maps
+  were wrong.
+- `MacrospinEquilibrium.minimize()` and `DoubleLayerNumeric.GetPhis()` polish the result of
+  `scipy.optimize.minimize` by Newton steps on the gradient (precision about 1e-13 rad instead of
+  1e-7 rad, where SciPy stops due to the round-off of the energy).
+- Example `SAF_dispersion_simple`: note on the frame of reference and the layer order (the angles
+  of the two layers are swapped to keep the same physical system and results).
 - Example `macrospin_equilibrium_histloop`: no explicit `scipy_kwargs` in the hysteresis loops,
   demonstration of `find_equilibria()`.
 
@@ -119,6 +161,13 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   `"L-BFGS-B"`).  It now agrees with the Stoner-Wohlfarth astroid.
 - `MacrospinEquilibrium.minimize()` reported "Not converged" for many correct results (the
   tolerance was `1e-20`).
+- `DoubleLayerNumeric`: the anisotropy of the second layer `Ku2` was ignored in the free energy
+  (the equilibrium was found with `Ku` for both layers).
+- `DoubleLayerNumeric.GetLifetime()`: division by zero for `Bext = 0` (an absolute field step is
+  used now); the docstring warns that the formula is not meaningful for the antiparallel and
+  scissors states of a SAF.
+- Example `SAF_dispersion_simple`: the parameters below the plot showed `phi1` instead of
+  `phi2`, and the text referred to a non-existent method `GetPhisSAFM()`.
 - `ObjectiveLens.getFocalField()`: the z component of the focal field was rotated by 90°.
 - `ObjectiveLens`: the prefactors of all focal field methods follow Novotny & Hecht and agree
   with `getPupilField()` (including the phase); for radially and azimuthally polarized beams,

@@ -89,8 +89,13 @@ class TestClass:
         f_dln = np.zeros((nd, refdata.shape[1]))
         notnan = ~np.isnan(refdata[[0, 2, 4]])
         for i in range(nd):
+            # Gallardo's Fig. 2c: Py on top (layer 2 here), Co at the bottom
+            # (layer 1), easy axes and magnetizations perpendicular to k (phi =
+            # pi/2 is the direction of the (zero) field, from which the in-plane
+            # angles are measured): Co antiparallel and Py parallel to it
             dln = SWT.DoubleLayerNumeric(0, co, d[i], refdata[2*i, notnan[i]]*1e6,
-                                         theta=np.pi/2, Ku=Ku, Jbl=J, s=s, material2=nife, Ku2=0)
+                                         theta=np.pi/2, Ku=Ku, Jbl=J, s=s, material2=nife, Ku2=0,
+                                         phiAnis1=0, phiAnis2=0, phiInit1=np.pi, phiInit2=0)
             # only frequencies of the first (acoustic) mode
             f_dln[i, notnan[i]] = dln.GetDispersion()[0][0]/2e9/np.pi
 

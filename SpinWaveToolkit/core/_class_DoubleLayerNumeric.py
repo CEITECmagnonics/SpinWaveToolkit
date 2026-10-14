@@ -5,7 +5,7 @@ Core (private) file for the `DoubleLayerNumeric` class.
 import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import MU0, wrapAngle, distBE
+from SpinWaveToolkit.helpers import MU0, wrapAngle, distBE, sphr2cart
 
 __all__ = ["DoubleLayerNumeric"]
 
@@ -17,24 +17,45 @@ class DoubleLayerNumeric:
 
     The dispersion model uses the approach of Gallardo et al., see:
     https://doi.org/10.1103/PhysRevApplied.12.034012
+    (Supplemental Material).  Layer 1 is the bottom layer (closer to
+    the substrate) and layer 2 the top layer, i.e. the opposite order
+    than in the paper, so the sign of the frequency nonreciprocity is
+    opposite for the same input parameters (equivalent to ``k -> -k``).
 
-    The laboratory coordinate frame of reference is
-    *z || to film normal* and *x || to in-plane wavevector*.
+    .. important::
 
-    Most parameters can be specified as vectors (1d numpy arrays)
-    of the same shape. This functionality is not guaranteed.
+       **Frame of reference.**  Unlike the other dispersion classes,
+       where the in-plane angles are measured from the wavevector
+       (`x || kxi`), the in-plane angles of this class (`phiAnis1`,
+       `phiAnis2`, `phiInit1`, `phiInit2`, and the equilibrium angles
+       returned by :meth:`GetPhis` and :meth:`find_equilibria`) are
+       measured from the in-plane direction of the external field
+       `Bext`.  The direction of the wavevector enters only through
+       `phi`, the angle of `Bext` measured from `kxi`.  This way, the
+       magnetic configuration is independent of the wavevector, and
+       the dispersion can be calculated for arbitrary (also 2D) sets
+       of wavevectors by giving `kxi` and `phi` as arrays of the same
+       length, see :doc:`/_example_nbs/SAF_dispersion_2D`.
+
+    The laboratory coordinate frame of reference is *z || to film
+    normal* (pointing from layer 1 to layer 2) and all angles are
+    counter-clockwise when viewed from above (from the side of
+    layer 2).
 
     Parameters
     ----------
     Bext : float
         (T ) external magnetic field.
     material : Material
-        Instance of `Material` describing the magnetic layer material.
-        Its properties are saved as attributes, but this object is not.
+        Instance of `Material` describing the first (bottom) magnetic
+        layer material.  Its properties are saved as attributes, but
+        this object is not.
     d : float
         (m ) thickness (in z direction) of the first magnetic layer.
     kxi : float or ndarray, optional
-        (rad/m) k-vector (wavenumber), usually a vector.
+        (rad/m) k-vector (wavenumber), usually a vector.  Negative
+        values are allowed; the same wavevector is also described by
+        ``-kxi`` with ``phi + pi``.
     theta : float, optional
         (rad) out of plane angle of Bext, pi/2 is totally in-plane
         magnetization. Beware of (partially) OOP calculations for
@@ -43,6 +64,9 @@ class DoubleLayerNumeric:
         experimental code.
     phi : float or ndarray, optional
         (rad) in-plane angle of Bext from kxi, pi/2 is DE geometry.
+        If an array, must have the same length as `kxi` (or `kxi` is a
+        float), and the dispersion is calculated for each pair of
+        `kxi` and `phi`, e.g. for a 2D grid of wavevectors.
     Ku : float, optional
         (J/m^3) uniaxial anisotropy strength.
     Jbl : float, optional
@@ -52,15 +76,15 @@ class DoubleLayerNumeric:
     s : float, optional
         (m ) spacing layer thickness.
     d2 : float or None
-        (m ) thickness of the second magnetic layer.  If None,
+        (m ) thickness of the second (top) magnetic layer.  If None,
         same as `d`.
+    material2 : Material or None
+        instance of `Material` describing the second (top) magnetic
+        layer.  If None, `material` parameter is used instead.
+        Its properties are saved as attributes, but this object is not.
     Ku2 : float or None
         (J/m^3) uniaxial anisotropy strength of the second layer.
         If None, same as `Ku` (initially).
-    material2 : Material or None
-        instance of `Material` describing the second magnetic
-        layer.  If None, `material` parameter is used instead.
-        Its properties are saved as attributes, but this object is not.
     JblDyn : float or None
         (J/m^2) dynamic bilinear RKKY coupling parameter.
         If None, same as `Jbl`.
@@ -68,11 +92,15 @@ class DoubleLayerNumeric:
         (J/m^2) dynamic biquadratic RKKY coupling parameter.
         If None, same as `Jbq`.
     phiAnis1, phiAnis2 : float, optional
-        (rad) uniaxial anisotropy axis in-plane angle (from kxi) of the
-        first and second layer.
+        (rad) uniaxial anisotropy axis in-plane angle (from Bext) of
+        the first and second layer.  Default is 0 (along Bext).
     phiInit1, phiInit2 : float, optional
-        (rad) initial value of magnetization in-plane angle (from kxi)
-        of the first and second layer, used for energy minimization.
+        (rad) initial value of magnetization in-plane angle (from Bext)
+        of the first and second layer, used for energy minimization
+        (the local minimum of the energy closest to these angles is
+        found, see :meth:`GetPhis`).  Default is ``pi/2`` and ``-pi/2``,
+        i.e. the antiparallel state perpendicular to the field, from
+        which the scissors state is reached.
 
     Attributes
     ----------
@@ -102,6 +130,8 @@ class DoubleLayerNumeric:
     -------
     GetDispersion
     GetPhis
+    find_equilibria
+    GetFreeEnergy
     GetFreeEnergyIP
     GetFreeEnergyOOP
     GetGroupVelocity
@@ -115,16 +145,19 @@ class DoubleLayerNumeric:
     --------
     Example of calculation of the dispersion relation `f(k_xi)`, and
     other important quantities, for the acoustic mode in a 30 nm
-    thick NiFe (Permalloy) bilayer separated by 0.5 nm.
+    thick NiFe (Permalloy) bilayer separated by 0.5 nm, with the easy
+    axes perpendicular to the wavevector (Damon-Eshbach geometry of
+    the antiparallel state).
 
     .. code-block:: python
 
         kxi = np.linspace(1e-6, 150e6, 150)
 
         dln = DoubleLayerNumeric(Bext=0, material=SWT.NiFe, d=30e-9,
-                                 kxi=kxi, theta=np.pi/2, phi=0,
+                                 kxi=kxi, theta=np.pi/2, phi=np.pi/2,
                                  Ku=3e3, Jbl=-1e-3, s=5e-10,
-                                 phiAnis1=np.pi/2, phiAnis2=np.pi/2
+                                 phiAnis1=0, phiAnis2=0,
+                                 phiInit1=0, phiInit2=np.pi
                                  )
         DispPy = dln.GetDispersion()[0][0]*1e-9/(2*np.pi)  # GHz
         vgPy = dln.GetGroupVelocity()*1e-3  # km/s
@@ -154,8 +187,8 @@ class DoubleLayerNumeric:
         Ku2=None,
         JblDyn=None,
         JbqDyn=None,
-        phiAnis1=np.pi / 2,
-        phiAnis2=np.pi / 2,
+        phiAnis1=0.0,
+        phiAnis2=0.0,
         phiInit1=np.pi / 2,
         phiInit2=-np.pi / 2,
     ):
@@ -279,7 +312,7 @@ class DoubleLayerNumeric:
         self._Ku2 = val
         self.Hani2 = 2 * val / self.Ms2 / MU0
 
-    def GetDispersion(self):
+    def GetDispersion(self, phis=None):
         """Gives frequencies for defined k (dispersion relation).
 
         The model formulates a system matrix and then numerically solves
@@ -294,22 +327,35 @@ class DoubleLayerNumeric:
         enough to have higher-order thickness modes in proximity to the
         two base modes.
 
+        The system matrices for all elements of `kxi` (and `phi`) are
+        built and diagonalized at once.  The static magnetic
+        configuration is found first by :meth:`GetPhis` (once, it does
+        not depend on the wavevector).
+
         The returned modes are sorted from low (acoustic) to high
         (optic) frequencies, omitting the negative-frequency modes.
+
+        Parameters
+        ----------
+        phis : array_like or None, optional
+            (rad) in-plane angles ``(phi1, phi2)`` of the magnetization
+            in the two layers measured from Bext, used instead of the
+            equilibrium found by :meth:`GetPhis`, e.g. to select one of
+            several equilibria from :meth:`find_equilibria`.  Default
+            is None.
 
         Returns
         -------
         wV : ndarray
             (rad*Hz) frequencies of the acoustic and optic spin-wave
             modes.  Has a shape of ``(2, N)``, where
-            ``N = kxi.shape[0]``.
+            ``N = kxi.shape[0]`` (or the length of `phi`).
         vV : ndarray
             () complex eigenvectors of the corresponding
             eigenfrequencies, normalized to unit norm.  Has a shape of
-            ``(4, 2, N)``, where ``N = kxi.shape[0]``.  ``vV[2*l]`` and
-            ``vV[2*l+1]`` are the in-plane (perpendicular to the static
-            magnetization) and out-of-plane amplitudes of layer ``l+1``,
-            respectively.
+            ``(4, 2, N)``.  ``vV[2*l]`` and ``vV[2*l+1]`` are the
+            in-plane (perpendicular to the static magnetization) and
+            out-of-plane amplitudes of layer ``l+1``, respectively.
 
         Notes
         -----
@@ -319,354 +365,400 @@ class DoubleLayerNumeric:
         precess in quadrature on an ellipse given by the ratio of their
         moduli.  With the time dependence ``exp(1j*wV*t)`` of the model,
         the dynamic magnetization is ``np.real(vV*np.exp(1j*wV*t))``.
+
+        The frequencies are nonreciprocal (``w(k) != w(-k)``) when the
+        in-plane components of the two magnetizations perpendicular to
+        the wavevector differ, e.g. in the antiparallel state in the
+        Damon-Eshbach geometry.  Layer 1 is the bottom layer, see the
+        class docstring.
         """
-        Ms1 = self.Ms
-        Ms2 = self.Ms2
-        A1 = self.A
-        A2 = self.A2
-        Hu1 = self.Hani
-        Hu2 = self.Hani2
-        d1 = self.d
-        d2 = self.d2
-        phiAnis1 = self.phiAnis1
-        phiAnis2 = self.phiAnis2
-        # Surface anisotropies are currently not implemented
-        Hs1 = 0  # Surface anisotropy of the first layer
-        Hs2 = 0  # Surface anisotropy of the second layer
+        Ms1, Ms2 = self.Ms, self.Ms2
+        A1, A2 = self.A, self.A2
+        Hu1, Hu2 = self.Hani, self.Hani2
+        d1, d2, s = self.d, self.d2, self.s
+        JblD, JbqD = self.JblDyn, self.JbqDyn
+        # (surface anisotropies are currently not implemented)
 
-        phi1, phi2 = wrapAngle(self.GetPhis())
+        psi1, psi2 = self.GetPhis() if phis is None else np.asarray(phis, float)
+        k, phiB = np.broadcast_arrays(
+            np.atleast_1d(self.kxi).astype(float), np.atleast_1d(self.phi).astype(float)
+        )
+        N = k.size
+        phi1 = phiB + psi1  # angles of the magnetizations from the wavevector
+        phi2 = phiB + psi2
+        s1, s2 = np.sin(phi1), np.sin(phi2)
+        cdel = np.cos(psi1 - psi2)
+        sdel2 = np.sin(psi1 - psi2) ** 2
+        c2del = np.cos(2 * (psi1 - psi2))
 
-        ks = self.kxi
-        wV = np.zeros((2, np.size(ks, 0)))
-        vV = np.zeros((4, 2, np.size(ks, 0)), dtype=complex)
-        for idx, k in enumerate(ks):
-            Zet1 = (
-                np.sinh(k * self.d / 2)
-                / (k * self.d / 2)
-                * np.exp(-abs(k) * self.d / 2)
-            )
-            Zet2 = (
-                np.sinh(k * self.d2 / 2)
-                / (k * self.d2 / 2)
-                * np.exp(-abs(k) * self.d2 / 2)
-            )
+        zet1 = _zeta(k, d1)
+        zet2 = _zeta(k, d2)
+        dip = zet1 * zet2 * np.exp(-abs(k) * s)  # interlayer dipolar factor
 
-            Hz1e0 = (
-                self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi1))
-                + Hu1 * np.cos(phi1 - phiAnis1) ** 2
-                + (
-                    self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
-                    + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
-                )
-                / (d1 * Ms1 * MU0)
-            )
-            Hz2e0 = (
-                self.Bext / MU0 * np.cos(wrapAngle(self.phi - phi2))
-                + Hu2 * np.cos(phi2 - phiAnis2) ** 2
-                + (
-                    self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
-                    + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2)) ** 2
-                )
-                / (d2 * Ms2 * MU0)
-            )
+        # static effective fields along the magnetizations, SM eq. (9)
+        Hip = self.Bext * np.sin(self.theta) / MU0  # in-plane field (A/m)
+        Hz1 = (
+            Hip * np.cos(psi1)
+            + Hu1 * np.cos(psi1 - self.phiAnis1) ** 2
+            + (JblD * cdel + 2 * JbqD * cdel**2) / (d1 * Ms1 * MU0)
+        )
+        Hz2 = (
+            Hip * np.cos(psi2)
+            + Hu2 * np.cos(psi2 - self.phiAnis2) ** 2
+            + (JblD * cdel + 2 * JbqD * cdel**2) / (d2 * Ms2 * MU0)
+        )
+        # interlayer exchange terms
+        Jx = JblD + 2 * JbqD * cdel
+        Jy = JblD * cdel + 2 * JbqD * c2del
 
-            AX1Y1 = -Ms1 * Zet1 - Ms1 * A1 * k**2 - Hz1e0 - Hs1
-            AX1X2 = (
-                1j
-                * Ms1
-                * np.sin(phi2)
-                * k
-                * d2
-                / 2
-                * Zet1
-                * Zet2
-                * np.exp(-abs(k) * self.s)
-            )
-            AX1Y2 = Ms1 * abs(k) * d2 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) + (
-                self.JblDyn + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2))
-            ) / (d1 * Ms2 * MU0)
-            AY1X1 = (
-                Ms1 * np.sin(phi1) ** 2 * (1 - Zet1)
-                + Ms1 * A1 * k**2
-                - Hu1 * np.sin(phi1 - phiAnis1) ** 2
-                + Hz1e0
-                - 2
-                * self.JbqDyn
-                / (d1 * Ms1 * MU0)
-                * np.sin(wrapAngle(phi1 - phi2)) ** 2
-            )
-            AY1X2 = Ms1 * np.sin(phi1) * np.sin(phi2) * abs(
-                k
-            ) * d2 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) - (
-                self.JblDyn * np.cos(wrapAngle(phi2 - phi1))
-                + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
-            ) / (
-                d1 * Ms2 * MU0
-            )  # mozna tady
-            AY1Y2 = (
-                -1j
-                * Ms1
-                * np.sin(phi1)
-                * k
-                * d2
-                / 2
-                * Zet1
-                * Zet2
-                * np.exp(-abs(k) * self.s)
-            )
-            AX2X1 = (
-                -1j
-                * Ms2
-                * np.sin(phi1)
-                * k
-                * d1
-                / 2
-                * Zet1
-                * Zet2
-                * np.exp(-abs(k) * self.s)
-            )
-            AX2Y1 = Ms2 * abs(k) * d1 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) + (
-                self.JblDyn + 2 * self.JbqDyn * np.cos(wrapAngle(phi1 - phi2))
-            ) / (d2 * Ms1 * MU0)
-            AX2Y2 = -Ms2 * Zet2 - Ms2 * A2 * k**2 - Hz2e0 + Hs2
-            AY2X1 = Ms2 * np.sin(phi1) * np.sin(phi2) * abs(
-                k
-            ) * d1 / 2 * Zet1 * Zet2 * np.exp(-abs(k) * self.s) - (
-                self.JblDyn * np.cos(wrapAngle(phi1 - phi2))
-                + 2 * self.JbqDyn * np.cos(wrapAngle(2 * (phi1 - phi2)))
-            ) / (
-                d2 * Ms1 * MU0
-            )  # a tady
-            AY2Y1 = (
-                1j
-                * Ms2
-                * np.sin(phi2)
-                * k
-                * d1
-                / 2
-                * Zet1
-                * Zet2
-                * np.exp(-abs(k) * self.s)
-            )
-            AY2X2 = (
-                Ms2 * np.sin(phi2) ** 2 * (1 - Zet2)
-                + Ms2 * A2 * k**2
-                - Hu2 * np.sin(phi2 - phiAnis2) ** 2
-                + Hz2e0
-                - 2
-                * self.JbqDyn
-                / (d2 * Ms2 * MU0)
-                * np.sin(wrapAngle(phi1 - phi2)) ** 2
-            )
+        # System matrices (N, 4, 4) for m = (X1, Y1, X2, Y2), SM eqs. (4)-(7)
+        # with layer 1 at the bottom (the sign of the terms odd in k is
+        # opposite to the paper, where layer 1 is on top)
+        A = np.zeros((N, 4, 4), dtype=complex)
+        A[:, 0, 1] = -Ms1 * zet1 - Ms1 * A1 * k**2 - Hz1
+        A[:, 0, 2] = -1j * Ms1 * s2 * k * d2 / 2 * dip
+        A[:, 0, 3] = Ms1 * abs(k) * d2 / 2 * dip + Jx / (d1 * Ms2 * MU0)
+        A[:, 1, 0] = (
+            Ms1 * s1**2 * (1 - zet1)
+            + Ms1 * A1 * k**2
+            - Hu1 * np.sin(psi1 - self.phiAnis1) ** 2
+            + Hz1
+            - 2 * JbqD * sdel2 / (d1 * Ms1 * MU0)
+        )
+        A[:, 1, 2] = Ms1 * s1 * s2 * abs(k) * d2 / 2 * dip - Jy / (d1 * Ms2 * MU0)
+        A[:, 1, 3] = 1j * Ms1 * s1 * k * d2 / 2 * dip
+        A[:, 2, 0] = 1j * Ms2 * s1 * k * d1 / 2 * dip
+        A[:, 2, 1] = Ms2 * abs(k) * d1 / 2 * dip + Jx / (d2 * Ms1 * MU0)
+        A[:, 2, 3] = -Ms2 * zet2 - Ms2 * A2 * k**2 - Hz2
+        A[:, 3, 0] = Ms2 * s1 * s2 * abs(k) * d1 / 2 * dip - Jy / (d2 * Ms1 * MU0)
+        A[:, 3, 1] = -1j * Ms2 * s2 * k * d1 / 2 * dip
+        A[:, 3, 2] = (
+            Ms2 * s2**2 * (1 - zet2)
+            + Ms2 * A2 * k**2
+            - Hu2 * np.sin(psi2 - self.phiAnis2) ** 2
+            + Hz2
+            - 2 * JbqD * sdel2 / (d2 * Ms2 * MU0)
+        )
 
-            A = np.array(
-                [
-                    [0, AX1Y1, AX1X2, AX1Y2],
-                    [AY1X1, 0, AY1X2, AY1Y2],
-                    [AX2X1, AX2Y1, 0, AX2Y2],
-                    [AY2X1, AY2Y1, AY2X2, 0],
-                ],
-                dtype=complex,
-            )
-            w, v = linalg.eig(A)
-            indi = np.argsort(np.imag(w))[2:]  # sort low-to-high and crop to positive
-            wV[:, idx] = np.imag(w)[indi] * self.gamma * MU0  # eigenvalues (dispersion)
-            vV[:, :, idx] = v[:, indi]  # eigenvectors (mode amplitudes)
-        return wV, vV
+        w, v = linalg.eig(A)  # all matrices at once
+        indi = np.argsort(np.imag(w), axis=-1)[:, 2:]  # low-to-high, positive only
+        wV = np.take_along_axis(np.imag(w), indi, axis=-1).T * self.gamma * MU0
+        vV = np.take_along_axis(v, indi[:, np.newaxis, :], axis=-1)
+        return wV, vV.transpose(1, 2, 0)
 
-    def GetPhis(self):
+    def GetPhis(self, global_minimum=False, scipy_kwargs=None):
         """Gives angles of magnetization in both SAF layers.
         The returned value is in rad.
 
-        Function finds the energy minimum, assuming completely
-        in-plane magnetization.
-        If there are problems with energy minimalization I recomend to
-        try different methods (but Nelder-Mead seems to work in most
-        scenarios).
+        Finds a minimum of the free energy (:meth:`GetFreeEnergy`),
+        assuming completely in-plane magnetization, with the analytical
+        gradient and Hessian of the energy and the trust-region method
+        ``"trust-exact"`` of :py:func:`scipy.optimize.minimize` with
+        steps limited to 0.3 rad.  Starting from `phiInit1`, `phiInit2`,
+        the minimization follows the energy landscape to the local
+        minimum of its basin (e.g. a metastable state in a field sweep,
+        if `phiInit1`, `phiInit2` are updated with the previous result).
+        If the start is a labile equilibrium (saddle point or maximum,
+        e.g. an antiparallel state along the field), the angles are
+        displaced by 1 mrad along the direction of the negative
+        curvature (with the component along `phi1` positive, so that
+        the result is deterministic) and the minimization is repeated.
+
+        Parameters
+        ----------
+        global_minimum : bool, optional
+            If True, the global minimum of the energy is returned
+            instead (from :meth:`find_equilibria`; among degenerate
+            minima, e.g. the two scissors states, the one closest to
+            `phiInit1`, `phiInit2` is chosen).  Default is False.
+        scipy_kwargs : dict or None, optional
+            Dictionary with settings passed to
+            :py:func:`scipy.optimize.minimize` instead of the default
+            ``{"method": "trust-exact", "options": {...}}``.  The
+            gradient and Hessian are passed automatically.  Default is
+            None.
 
         Returns
         -------
-        phis : [float, float]
-            (rad) equilibrium angles of magnetization.
+        phis : ndarray
+            (rad) equilibrium angles ``(phi1, phi2)`` of the
+            magnetization of the two layers, measured from the in-plane
+            direction of Bext, in the interval ``[-pi, pi)``.
         """
-        # phi1x0 = wrapAngle(self.phiAnis1 + 0.1)
-        # phi2x0 = wrapAngle(self.phiAnis2 + 0.1)
-        phi1x0 = wrapAngle(self.phiInit1)
-        phi2x0 = wrapAngle(self.phiInit2)
-        result = minimize(
-            self.GetFreeEnergyIP,
-            x0=[phi1x0, phi2x0],
-            tol=1e-20,
-            method="Nelder-Mead",
-            bounds=((0, 2 * np.pi), (0, 2 * np.pi)),
+        fun, jac, hess, scale, e0 = self.__ip_functions()
+        x = np.array([self.phiInit1, self.phiInit2], dtype=float)
+        if global_minimum:
+            phi1, phi2, eden, eq_type = self.find_equilibria()
+            minima = eq_type == 0
+            if not minima.any():  # (degenerate energy)
+                return wrapAngle(x, -np.pi, np.pi)
+            # among the lowest energy minima, the one closest to the start
+            lowest = minima & (eden <= eden[minima].min() + 1e-9 * scale)
+            dist = np.abs(wrapAngle(phi1 - x[0], -np.pi, np.pi)) + np.abs(
+                wrapAngle(phi2 - x[1], -np.pi, np.pi)
+            )
+            i = np.argmin(np.where(lowest, dist, np.inf))
+            return wrapAngle(np.array([phi1[i], phi2[i]]), -np.pi, np.pi)
+
+        kwargs = (
+            {
+                "method": "trust-exact",
+                "options": {
+                    "initial_trust_radius": 0.1,
+                    "max_trust_radius": 0.3,
+                    "gtol": 1e-10,
+                },
+            }
+            if scipy_kwargs is None
+            else dict(scipy_kwargs)
         )
-        phis = wrapAngle(result.x)
-        return phis
+        for _ in range(10):  # restarts from labile equilibria
+            res = minimize(fun, x, jac=jac, hess=hess, **kwargs)
+            x = res.x
+            # polish by Newton steps on the gradient (SciPy stops at the
+            # round-off level of the energy, ~1e-7 rad)
+            for _ in range(5):
+                g = jac(x)
+                if np.linalg.norm(g) < 1e-15:
+                    break
+                lam, vec = np.linalg.eigh(hess(x))
+                if lam[0] <= 0:
+                    break
+                x = x - np.linalg.solve(hess(x), g)
+            lam, vec = np.linalg.eigh(hess(x))
+            if lam[0] >= -1e-9 * scale / e0:
+                break
+            v = vec[:, 0]  # direction of negative curvature
+            v *= np.sign(v[0]) if abs(v[0]) > 1e-9 else np.sign(v[1])
+            x = x + 1e-3 * v
+        return wrapAngle(x, -np.pi, np.pi)
+
+    def find_equilibria(self):
+        """Find all in-plane equilibria of the magnetization of the two
+        layers.
+
+        The equilibria are the stationary points of the free energy
+        (:meth:`GetFreeEnergy`) with respect to the in-plane angles,
+        found by Newton iterations from a grid of starting points
+        (12 x 12) and classified by the Hessian.  Does not change the
+        state of the object.
+
+        Returns
+        -------
+        phi1, phi2 : ndarray
+            (rad) in-plane angles of the magnetization of the two layers
+            (from Bext, in ``[-pi, pi)``) at the equilibria, sorted by
+            increasing energy, i.e. the first one is the global minimum.
+        eden : ndarray
+            (J/m^2) free energy (per area) of the equilibria.
+        type : ndarray[int]
+            Type of the equilibria: 0 for (local) minima, i.e. stable
+            equilibria, 1 for maxima and 2 for saddle points.
+
+        Notes
+        -----
+        In degenerate cases (e.g. no field and no anisotropy, when the
+        energy depends only on the angle between the layers), the
+        equilibria are not isolated and only some representatives are
+        returned.
+        """
+        _, _, _, scale, _ = self.__ip_functions()
+        n = 12
+        g = np.linspace(0, 2 * np.pi, n, endpoint=False) + np.pi / n
+        P1, P2 = np.meshgrid(g, g, indexing="ij")
+        x = np.stack([P1.ravel(), P2.ravel()])  # (2, n*n)
+        tol = 1e-12 * scale
+        ridge = 1e-12 * scale * np.eye(2)[:, :, np.newaxis]
+        for _ in range(60):
+            grad = self.__ip_grad(x)
+            hess = self.__ip_hess(x) + ridge
+            step = -np.linalg.solve(hess.transpose(2, 0, 1), grad.T[:, :, None])[
+                :, :, 0
+            ].T
+            norm = np.linalg.norm(step, axis=0)
+            step *= np.minimum(1.0, 0.5 / np.maximum(norm, 1e-300))  # limit the step
+            x = x + step
+            if np.all(np.linalg.norm(grad, axis=0) < tol):
+                break
+        grad = self.__ip_grad(x)
+        ok = np.linalg.norm(grad, axis=0) < 1e-8 * scale
+        x = wrapAngle(x[:, ok], -np.pi, np.pi)
+
+        # remove duplicates
+        found = []
+        for p in x.T:
+            if not any(
+                np.abs(wrapAngle(p - q, -np.pi, np.pi)).max() < 1e-6 for q in found
+            ):
+                found.append(p)
+        if not found:
+            return (np.array([]),) * 2 + (np.array([]), np.array([], dtype=int))
+        found = np.array(found).T  # (2, M)
+        eden = self.__ip_energy(found)
+        hess = self.__ip_hess(found).transpose(2, 0, 1)
+        lam = np.linalg.eigvalsh(hess)
+        eq_type = np.where(
+            lam[:, 0] > -1e-9 * scale, 0, np.where(lam[:, 1] < 1e-9 * scale, 1, 2)
+        )
+        order = np.argsort(eden)
+        return found[0, order], found[1, order], eden[order], eq_type[order]
+
+    def GetFreeEnergy(self, phi1, phi2, theta1=np.pi / 2, theta2=np.pi / 2):
+        """Gives the free energy (per area) of the SAF system for the
+        given magnetization directions of the two layers.
+
+        Includes the Zeeman energy, the demagnetizing energy of thin
+        films, the in-plane uniaxial anisotropies, and the bilinear and
+        biquadratic interlayer coupling (surface anisotropies are not
+        implemented), see Gallardo et al., Supplemental Material,
+        eqs. (11), (12).  All inputs can be arrays of the same shape.
+
+        Parameters
+        ----------
+        phi1, phi2 : float or ndarray
+            (rad) in-plane angles of the magnetization of the two layers
+            from the in-plane direction of Bext.
+        theta1, theta2 : float or ndarray, optional
+            (rad) polar angles of the magnetization of the two layers
+            from the film normal.  Default is ``pi/2`` (in-plane).
+
+        Returns
+        -------
+        E : float or ndarray
+            (J/m^2) free energy of the system per unit area.
+        """
+        m1 = sphr2cart(theta1, phi1)
+        m2 = sphr2cart(theta2, phi2)
+        b = sphr2cart(self.theta, 0.0)  # unit vector of Bext (x || its in-plane part)
+        u1 = np.array([np.cos(self.phiAnis1), np.sin(self.phiAnis1), 0.0])
+        u2 = np.array([np.cos(self.phiAnis2), np.sin(self.phiAnis2), 0.0])
+
+        def dot(a, c):
+            return np.einsum("i...,i...->...", a, c)
+
+        m12 = dot(m1, m2)
+        E1 = (
+            -self.Ms * self.Bext * dot(b, m1)
+            - 0.5 * MU0 * self.Ms**2 * np.sin(theta1) ** 2
+            - self.Ku * dot(u1, m1) ** 2
+        )
+        E2 = (
+            -self.Ms2 * self.Bext * dot(b, m2)
+            - 0.5 * MU0 * self.Ms2**2 * np.sin(theta2) ** 2
+            - self.Ku2 * dot(u2, m2) ** 2
+        )
+        return self.d * E1 + self.d2 * E2 - self.Jbl * m12 - self.Jbq * m12**2
 
     def GetFreeEnergyIP(self, phis):
-        """Gives overall energy (density) of SAF system.
-        The returned value is in joules.
-
-        This function is used during fidning of the angles of
-        magnetization.  Only works, when the out-of-plane tilt is not
-        expected.  Function does not minimize the OOP angles, just
-        assumes completely in-plane magnetization.
+        """Gives overall energy (per area) of SAF system for in-plane
+        magnetization, ``GetFreeEnergy(phi1, phi2)``.
 
         Parameters
         ----------
         phis : [float, float]
-            (rad) IP magnetization angles.
+            (rad) IP magnetization angles (from Bext).
 
         Returns
         -------
         E : float
-            (J ) energy density of the system.
+            (J/m^2) free energy of the system per unit area.
         """
-        phiAnis1 = self.phiAnis1  # EA along x direction
-        phiAnis2 = self.phiAnis2  # EA along x direction
-        theta1 = np.pi / 2  # No OOP magnetization
-        theta2 = np.pi / 2
-        Ks1 = 0  # No surface anisotropy
-        Ks2 = 0
+        return self.GetFreeEnergy(phis[0], phis[1])
 
-        phi1, phi2 = phis
-        H = self.Bext / MU0
-        EJ1 = (
-            -self.Jbl
-            * (
-                np.sin(theta1) * np.sin(theta2) * np.cos(wrapAngle(phi1 - phi2))
-                + np.cos(theta1) * np.cos(theta2)
-            )
-            - self.Jbq
-            * (
-                np.sin(theta1) * np.sin(theta2) * np.cos(wrapAngle(phi1 - phi2))
-                + np.cos(theta1) * np.cos(theta2)
-            )
-            ** 2
-        )
-
-        Eaniso1 = (
-            -(MU0 / 2 * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
-            - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis1)) ** 2
-        )
-        Eaniso2 = (
-            -(MU0 / 2 * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
-            - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis2)) ** 2
-        )
-
-        E = (
-            EJ1
-            + self.d
-            * (
-                -self.Ms
-                * MU0
-                * H
-                * (
-                    np.sin(theta1)
-                    * np.sin(self.theta)
-                    * np.cos(wrapAngle(phi1 - self.phi))
-                    + np.cos(theta1) * np.cos(self.theta)
-                )
-                + Eaniso1
-            )
-            + self.d2
-            * (
-                -self.Ms2
-                * MU0
-                * H
-                * (
-                    np.sin(theta2)
-                    * np.sin(self.theta)
-                    * np.cos(wrapAngle(phi2 - self.phi))
-                    + np.cos(theta2) * np.cos(self.theta)
-                )
-                + Eaniso2
-            )
-        )
-        return E
-
-    def GetFreeEnergyOOP(self, thetas):
-        """Gives overall energy (density) of the SAF system.
-        The returned value is in joules.
-
-        This function is used during fidning of the angles of
-        magnetization.  This function assumes fixed in-plane angle of
-        the magnetization.
+    def GetFreeEnergyOOP(self, thetas, phis=None):
+        """Gives overall energy (per area) of the SAF system for the
+        given out-of-plane angles and fixed in-plane angles,
+        ``GetFreeEnergy(phi1, phi2, theta1, theta2)``.
 
         Parameters
         ----------
         thetas : [float, float]
-            (rad) OOP magnetization angles.
+            (rad) OOP magnetization angles (from the film normal).
+        phis : [float, float] or None, optional
+            (rad) IP magnetization angles (from Bext).  If None, the
+            in-plane equilibrium from :meth:`GetPhis` is used.  Default
+            is None.
 
         Returns
         -------
         E : float
-            (J ) energy density of the system.
-
-        Notes
-        -----
-        This method is experimental. There are some unresolved
-        functionalities, such as surface anisotropy terms and uniaxial
-        anisotropy axis direction.
+            (J/m^2) free energy of the system per unit area.
         """
-        # ### WTF is this mess? we should make these as params, but are they valid?
-        phiAnis = np.pi / 2  # EA along x direction
-        phi1 = np.pi / 2  # No OOP magnetization
-        phi2 = -np.pi / 2
-        Ks1 = 0  # No surface anisotropy
-        Ks2 = 0
+        if phis is None:
+            phis = self.GetPhis()
+        return self.GetFreeEnergy(phis[0], phis[1], thetas[0], thetas[1])
 
-        theta1, theta2 = thetas
-        H = self.Bext / MU0
-        EJ1 = (
-            -self.Jbl
-            * (
-                np.sin(theta1) * np.sin(theta2) * np.cos(wrapAngle(phi1 - phi2))
-                + np.cos(theta1) * np.cos(theta2)
-            )
-            - self.Jbq
-            * (
-                np.sin(theta1) * np.sin(theta2) * np.cos(wrapAngle(phi1 - phi2))
-                + np.cos(theta1) * np.cos(theta2)
-            )
-            ** 2
+    def __ip_params(self):
+        """Parameters of the in-plane energy
+        ``E = -Z1 cos(phi1) - Z2 cos(phi2) - K1 cos^2(phi1 - phiAnis1)
+        - K2 cos^2(phi2 - phiAnis2) - Jbl cos(phi1 - phi2)
+        - Jbq cos^2(phi1 - phi2) + E0``.
+        """
+        Bip = self.Bext * np.sin(self.theta)
+        Z1, Z2 = self.d * self.Ms * Bip, self.d2 * self.Ms2 * Bip
+        K1, K2 = self.d * self.Ku, self.d2 * self.Ku2
+        E0 = -0.5 * MU0 * (self.d * self.Ms**2 + self.d2 * self.Ms2**2)
+        return Z1, Z2, K1, K2, E0
+
+    def __ip_energy(self, x):
+        """In-plane energy (J/m^2) for angles ``x = (phi1, phi2)`` (arrays)."""
+        Z1, Z2, K1, K2, E0 = self.__ip_params()
+        p1, p2 = x
+        cd = np.cos(p1 - p2)
+        return (
+            -Z1 * np.cos(p1)
+            - Z2 * np.cos(p2)
+            - K1 * np.cos(p1 - self.phiAnis1) ** 2
+            - K2 * np.cos(p2 - self.phiAnis2) ** 2
+            - self.Jbl * cd
+            - self.Jbq * cd**2
+            + E0
         )
 
-        Eaniso1 = (
-            -(0.5 * MU0 * self.Ms**2 - Ks1) * np.sin(theta1) ** 2
-            - self.Ku * np.sin(theta1) ** 2 * np.cos(wrapAngle(phi1 - phiAnis)) ** 2
-        )
-        Eaniso2 = (
-            -(0.5 * MU0 * self.Ms2**2 - Ks2) * np.sin(theta2) ** 2
-            - self.Ku * np.sin(theta2) ** 2 * np.cos(wrapAngle(phi2 - phiAnis)) ** 2
+    def __ip_grad(self, x):
+        """Gradient (2, ...) of the in-plane energy."""
+        Z1, Z2, K1, K2, _ = self.__ip_params()
+        p1, p2 = x
+        cd, sd = np.cos(p1 - p2), np.sin(p1 - p2)
+        j = sd * (self.Jbl + 2 * self.Jbq * cd)
+        return np.array(
+            [
+                Z1 * np.sin(p1) + K1 * np.sin(2 * (p1 - self.phiAnis1)) + j,
+                Z2 * np.sin(p2) + K2 * np.sin(2 * (p2 - self.phiAnis2)) - j,
+            ]
         )
 
-        E = (
-            EJ1
-            + self.d
-            * (
-                -self.Ms
-                * MU0
-                * H
-                * (
-                    np.sin(theta1) * np.sin(self.theta)
-                    + np.cos(theta1) * np.cos(self.theta)
-                )
-                + Eaniso1
-            )
-            + self.d2
-            * (
-                -self.Ms2
-                * MU0
-                * H
-                * (
-                    np.sin(theta2) * np.sin(self.theta)
-                    + np.cos(theta2) * np.cos(self.theta)
-                )
-                + Eaniso2
-            )
+    def __ip_hess(self, x):
+        """Hessian (2, 2, ...) of the in-plane energy."""
+        Z1, Z2, K1, K2, _ = self.__ip_params()
+        p1, p2 = x
+        c = self.Jbl * np.cos(p1 - p2) + 2 * self.Jbq * np.cos(2 * (p1 - p2))
+        h11 = Z1 * np.cos(p1) + 2 * K1 * np.cos(2 * (p1 - self.phiAnis1)) + c
+        h22 = Z2 * np.cos(p2) + 2 * K2 * np.cos(2 * (p2 - self.phiAnis2)) + c
+        return np.array([[h11, -c], [-c, h22]])
+
+    def __ip_functions(self):
+        """Normalized in-plane energy, gradient and Hessian for
+        `scipy.optimize.minimize`, the energy scale of their variations
+        and the normalization."""
+        Z1, Z2, K1, K2, E0 = self.__ip_params()
+        scale = max(
+            abs(Z1), abs(Z2), 2 * abs(K1), 2 * abs(K2), abs(self.Jbl), 2 * abs(self.Jbq)
         )
-        return E
+        if scale == 0:  # (degenerate energy, no in-plane terms)
+            scale = abs(E0)
+        e0 = scale
+
+        def fun(x):
+            return (self.__ip_energy(x) - E0) / e0
+
+        def jac(x):
+            return self.__ip_grad(x) / e0
+
+        def hess(x):
+            return self.__ip_hess(x) / e0
+
+        return fun, jac, hess, scale, e0
 
     def GetGroupVelocity(self, n=0):
         """Gives (tangential) group velocities for defined k.
@@ -674,7 +766,9 @@ class DoubleLayerNumeric:
         The result is given in m/s
 
         .. warning::
-            Works only when ``kxi.shape[0] >= 2``.
+            Works only when ``kxi.shape[0] >= 2`` and the elements of
+            `kxi` follow each other along a line in k-space (not e.g.
+            for flattened 2D grids of wavevectors).
 
         Parameters
         ----------
@@ -701,6 +795,14 @@ class DoubleLayerNumeric:
         Lifetime is computed as tau = (alpha*w*dw/dw0)^-1.
         The output is in s.
 
+        .. warning::
+            The formula assumes a frequency increasing with the field as
+            for a single layer.  For the antiparallel or scissors states
+            of a SAF, the frequencies of the modes can decrease or not
+            change with the field (e.g. at zero field by symmetry), which
+            gives negative or infinite lifetimes.  Consider the `lifeTime`
+            parameter of :meth:`GetBlochFunction` in such cases.
+
         Parameters
         ----------
         n : {-1, 0, 1}, optional
@@ -713,16 +815,17 @@ class DoubleLayerNumeric:
             (s ) lifetime.
         """
         Bext_ori = self.Bext
-        step = 1e-5
-        self.Bext = Bext_ori * (1 - step)
+        # (absolute step for zero field)
+        dB = 1e-5 * abs(Bext_ori) if Bext_ori != 0 else 1e-6
+        self.Bext = Bext_ori - dB
         dw_lo, _ = self.GetDispersion()
-        self.Bext = Bext_ori * (1 + step)
+        self.Bext = Bext_ori + dB
         dw_hi, _ = self.GetDispersion()
         self.Bext = Bext_ori
         lifetime = (
             (self.alpha * self.GetDispersion()[0] + self.gamma * self.mu0dH0)
             * (dw_hi - dw_lo)
-            / (self.Bext * self.gamma * 2 * step)
+            / (self.gamma * 2 * dB)
         ) ** -1
         if n != -1:
             return lifetime[n]
@@ -832,3 +935,11 @@ class DoubleLayerNumeric:
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""
         return np.sqrt(self.A), np.sqrt(self.A2)
+
+
+def _zeta(k, d):
+    """Thickness-averaged dipolar factor
+    ``zeta(k, d) = sinh(k*d/2)*exp(-|k|*d/2)/(k*d/2) = (1 - exp(-|k|*d))/(|k|*d)``
+    (SM eq. (8)), with ``zeta = 1`` for ``k = 0``."""
+    kd = np.abs(k) * d
+    return np.divide(-np.expm1(-kd), kd, out=np.ones_like(kd), where=kd > 1e-14)
