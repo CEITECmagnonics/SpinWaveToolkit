@@ -62,20 +62,44 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   elementwise), e.g. flattened 2D grids of wavevectors.  The system matrices for all elements are
   built and diagonalized at once, and the equilibrium is found only once, so 2D dispersion maps
   are about 2000 times faster than a loop over the wavevectors.
-- `DoubleLayerNumeric.find_equilibria()`: all in-plane equilibria of the two magnetizations
-  (Newton iterations from a grid of starting points), sorted by energy and classified
-  (0 minimum, 1 maximum, 2 saddle point); `GetPhis(global_minimum=True)`.
+- `DoubleLayerNumeric` supports partially out-of-plane fields (`theta`) and magnetizations:
+  the equilibrium directions of the two magnetizations are found by the new method
+  `GetEquilibrium()` (polar and in-plane angles, analytical gradient and Hessian on the two unit
+  spheres, trust-region minimization from `thetaInit1`, `phiInit1`, `thetaInit2`, `phiInit2`,
+  labile starting points left deterministically), and the system matrix of the dispersion is built
+  from the interaction tensors projected on the directions transverse to the (tilted) static
+  magnetizations, which reproduces the matrix of Gallardo et al. for in-plane magnetizations.
+  The uncoupled limit agrees with `SingleLayer` (n = 0) for tilted magnetization and with the
+  Smit-Beljers formula at k = 0.
+- `DoubleLayerNumeric`: parameters `Ks1`, `Ks2` (J/m^3), the perpendicular (surface-induced)
+  uniaxial anisotropies, i.e. ``M_eff = Ms - 2*Ks/(MU0*Ms)`` (`H_s` of Gallardo et al.), with the
+  attributes `Hs1`, `Hs2`, and `thetaInit1`, `thetaInit2` (initial polar angles of the
+  magnetization, default in-plane).
+- `DoubleLayerNumeric.find_equilibria(in_plane=False)`: all equilibria of the two magnetizations
+  (Newton iterations on the two unit spheres from a grid of starting points, or in the film plane
+  with ``in_plane=True``), sorted by energy and classified (0 minimum, 1 maximum, 2 saddle point);
+  `GetEquilibrium(global_minimum=True)` and `GetPhis(global_minimum=True)`.
 - `DoubleLayerNumeric.GetFreeEnergy(phi1, phi2, theta1, theta2)`: free energy per area for
-  general directions of the two magnetizations (vectorized); `GetFreeEnergyIP()` and
-  `GetFreeEnergyOOP()` are now wrappers of it (the latter with the in-plane equilibrium angles by
-  default instead of hard-coded ones).
-- `DoubleLayerNumeric.GetDispersion(phis=...)`: optional equilibrium angles instead of
-  `GetPhis()`, e.g. to select one of the degenerate scissors states.
+  general directions of the two magnetizations (vectorized).
+- `DoubleLayerNumeric.GetDispersion(angles=...)`: optional static angles ``(theta1, phi1,
+  theta2, phi2)`` instead of the equilibrium of `GetEquilibrium()`, e.g. to select one of the
+  degenerate scissors states.
+- `DoubleLayerNumeric`: each layer precesses with the gyromagnetic ratio of its own material
+  (attribute `gamma2` from `material2`; previously `gamma` of `material` was used for both
+  layers).
+- Example notebooks `SAF_FMR_polar_sweep` (equilibrium and uniform-mode frequencies of a SAF in
+  a field rotated from the normal to the plane, resonance fields at fixed frequency compared with
+  the angle-resolved FMR of Gallardo et al. 2019) and `SAF_dispersion_vs_TetraX` (dispersion of
+  a NiFe/Ru/NiFe SAF in an oblique field with in-plane and perpendicular anisotropies compared
+  with the finite-element calculation of TetraX: equilibria within 0.01 degree, frequencies
+  within 1-2 %).
 - Example notebook `SAF_dispersion_2D`: 2D dispersion relation of the synthetic antiferromagnet
   of Adam et al., npj Spintronics 3, 33 (2025) (nonreciprocal along the field, reciprocal
   perpendicular to it), reproducing their Fig. 3.
 - Unit tests of `DoubleLayerNumeric` (scissors state, all equilibria, analytical derivatives,
-  2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers).
+  2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers,
+  oblique field and perpendicular anisotropy, tilted single layer vs. `SingleLayer` and
+  Smit-Beljers, Kittel with the effective magnetization).
 
 ### Changed
 
@@ -133,7 +157,9 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   layer 2 the top layer, previously the opposite (as in Gallardo et al.).  For the same
   parameters, the nonreciprocal dispersion is therefore mirrored (`k -> -k`); swap the two layers
   (materials, thicknesses, anisotropies and angles) to reproduce previous results.
-- `DoubleLayerNumeric.GetPhis()` uses the analytical gradient and Hessian of the energy with
+- `DoubleLayerNumeric.GetDispersion()` uses the equilibrium of `GetEquilibrium()` (which equals
+  that of `GetPhis()` for in-plane fields); `GetPhis()` remains as the equilibrium restricted to
+  the film plane.  `GetPhis()` uses the analytical gradient and Hessian of the energy with
   the method `"trust-exact"` (steps limited to 0.3 rad, no bounds) instead of `"Nelder-Mead"`,
   about 7 times faster; labile starting points (saddle points, maxima) are left along the
   direction of negative curvature with a deterministic sign.  Previously, the energy was
@@ -152,6 +178,9 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 
 - `ObjectiveLens.getPupilField()`: parameters `polarization_type` and `polarization_angle_deg`,
   renamed to `pol_type` and `pol_angle`; the old names will be removed in version 1.6.
+- `DoubleLayerNumeric.GetFreeEnergyIP()` and `GetFreeEnergyOOP()`, superseded by
+  `GetFreeEnergy()` (and `GetEquilibrium()` for the equilibrium including the out-of-plane
+  angles); they will be removed in version 1.6.
 
 ### Fixed
 
@@ -163,6 +192,12 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   tolerance was `1e-20`).
 - `DoubleLayerNumeric`: the anisotropy of the second layer `Ku2` was ignored in the free energy
   (the equilibrium was found with `Ku` for both layers).
+- `DoubleLayerNumeric`: a partially out-of-plane field (`theta != pi/2`) was silently treated as
+  the smaller in-plane field `Bext*sin(theta)` (in-plane equilibrium and dispersion); the
+  out-of-plane component is now included (see Added).
+- `DoubleLayerNumeric` docstring: the sign convention of `kxi` is documented (time dependence
+  ``exp(1j*w*t)`` with ``exp(1j*kxi*x)``, i.e. a positive `kxi` propagates towards ``-x``,
+  opposite to the convention ``exp(1j*(k*x - w*t))`` of e.g. TetraX).
 - `DoubleLayerNumeric.GetLifetime()`: division by zero for `Bext = 0` (an absolute field step is
   used now); the docstring warns that the formula is not meaningful for the antiparallel and
   scissors states of a SAF.
