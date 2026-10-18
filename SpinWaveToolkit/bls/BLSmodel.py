@@ -81,6 +81,16 @@ def get_signal_RT_focal_3d(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc
     get_signal_RT_focal : A similar function without z-resolution.
     get_signal_RT_pupil, get_signal_GF_focal
 
+    Notes
+    -----
+    The transfer function is the Fourier transform of the products of
+    the two fields, evaluated as a sum over the real-space grid.  The
+    grid step ``dx`` must therefore resolve the wavenumbers of the
+    k-grid of `Chi` (``dx < pi/k_max``, a warning is issued otherwise)
+    and the products of the fields, which contain wavenumbers up to
+    twice the band limit of the fields, i.e. ``dx < pi/(2*k0*NA)`` for
+    the focal fields of an objective lens.
+
     """
     warn(
         "`get_signal_RT_focal_3d` is an experimental function and may be subject to change."
@@ -93,6 +103,7 @@ def get_signal_RT_focal_3d(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc
     x, y = Exy
     kx, ky = KxKyChi
     Nkx, Nky = len(kx), len(ky)
+    _check_focal_grid(x, y, kx, ky)
 
     # Calculate reciprocal space weights for proper integration
     dkx = np.mean(np.gradient(kx)) if Nkx > 1 else 1.0
@@ -419,11 +430,22 @@ def get_signal_RT_focal(Exy, Ei_fields, Ej_fields, KxKyChi, Chi, coherent_exc=Fa
     --------
     get_signal_RT_pupil, get_signal_GF_focal
 
+    Notes
+    -----
+    The transfer function is the Fourier transform of the products of
+    the two fields, evaluated as a sum over the real-space grid.  The
+    grid step ``dx`` must therefore resolve the wavenumbers of the
+    k-grid of `Chi` (``dx < pi/k_max``, a warning is issued otherwise)
+    and the products of the fields, which contain wavenumbers up to
+    twice the band limit of the fields, i.e. ``dx < pi/(2*k0*NA)`` for
+    the focal fields of an objective lens.
+
     """
     # --- Axis and Grid ---
     x, y = Exy
     kx, ky = KxKyChi
     Nkx, Nky = len(kx), len(ky)
+    _check_focal_grid(x, y, kx, ky)
 
     # --- Stack fields into (Nx, Ny, 3) ---
     Ei = np.stack(Ei_fields, axis=-1)
@@ -1231,6 +1253,36 @@ def _signal_GF(
         return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
     else:
         return sigma
+
+
+def _check_focal_grid(x, y, kx, ky, stacklevel=3):
+    """
+    Check that the real-space grid of the fields used by the
+    ``..._focal`` RT functions can represent the k-grid of the
+    susceptibility.
+
+    The transfer function is a sum over the real-space grid, which can
+    only represent wavenumbers up to the Nyquist limit ``pi/dx`` (`dx`
+    the largest grid step).  A warning is issued (with the given
+    `stacklevel`) if the k-grid reaches beyond it, since the transfer
+    function is then aliased.
+    """
+    for name, r, k in (("x", x, kx), ("y", y, ky)):
+        r, k = np.asarray(r), np.asarray(k)
+        if len(r) < 2:
+            continue
+        dr = np.max(np.diff(r))
+        k_max = np.max(np.abs(k))
+        if k_max > np.pi / dr:
+            warn(
+                f"The {name} grid of the fields (step {dr*1e6:.3g} um) cannot resolve wavenumbers "
+                + f"above pi/d{name} = {np.pi/dr*1e-6:.3g} rad/um, but the k{name} grid of the "
+                + f"susceptibility reaches {k_max*1e-6:.3g} rad/um: the transfer function is "
+                + "aliased.  Use a finer real-space grid of the fields (their products contain "
+                + "wavenumbers up to 2*k0*NA).",
+                UserWarning,
+                stacklevel=stacklevel,
+            )
 
 
 def _check_pupil_grid(kx, ky, stacklevel=3):

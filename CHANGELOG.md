@@ -36,6 +36,10 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   note if `k = 0` is not a grid point.  `bls.get_signal_GF_pupil()` additionally warns if the
   incident field is not negligible at the grid boundary and notes if the grid limit is smaller
   than `2*k0*NA` or more than ten times larger.
+- `bls.get_signal_RT_focal()` and `get_signal_RT_focal_3d()` warn if the real-space grid of
+  the fields is too coarse for the k-grid of `Chi` (Nyquist limit `pi/dx` below its largest
+  wavenumber), since the transfer function is then aliased; the sampling requirements are
+  documented.
 - `SingleLayerNumeric`: `kxi`, `phi`, `theta`, `Bext`, `d` and the material parameters can be
   1D arrays of the same length (calculated elementwise), e.g. flattened 2D grids of wavevectors.
 - Example notebooks: `BLS_signal_from_GF_pupil`, `BLS_signal_comparison` ([#63]),
