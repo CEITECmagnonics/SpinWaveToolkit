@@ -45,7 +45,8 @@ These fixes change the calculated BLS signal with respect to version 1.3.
 - :meth:`.DoubleLayerNumeric.GetDispersion`: the in-plane amplitudes of the eigenvectors were always zero.
 - :class:`.DoubleLayerNumeric`: the anisotropy of the second layer `Ku2` was ignored when finding the equilibrium, a partially out-of-plane field was silently treated as the smaller in-plane field, and :meth:`~.DoubleLayerNumeric.GetLifetime` failed for zero field.
 - :meth:`.MacrospinEquilibrium.hysteresis` switched the magnetization too early (by 1-2 % of the switching field), and :meth:`~.MacrospinEquilibrium.minimize` often reported "Not converged" for correct results.
-- Documentation: the BLS examples were updated and re-run, the eigenvectors of :class:`.SingleLayerNumeric` and :class:`.DoubleLayerNumeric` are documented, new landing page, promotion of `SWTweb <https://ceitecmagnonics.github.io/SWTweb/>`_, and citation of the SpinWaveToolkit paper.
+- :class:`.SingleLayer`: setting `phi` after the construction did not update the internal fields (the new value took effect only after another parameter was set).
+- Documentation: the BLS examples were updated and re-run, the eigenvectors of :class:`.SingleLayerNumeric` and :class:`.DoubleLayerNumeric` are documented, new landing page, readable default values in the API reference, promotion of `SWTweb <https://ceitecmagnonics.github.io/SWTweb/>`_, and citation of the SpinWaveToolkit paper.
 
 
 Version 1.3.0

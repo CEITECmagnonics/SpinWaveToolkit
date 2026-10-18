@@ -92,10 +92,11 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   the angle-resolved FMR of Gallardo et al. 2019) and `SAF_dispersion_vs_TetraX` (dispersion of
   a NiFe/Ru/NiFe SAF in an oblique field with in-plane and perpendicular anisotropies compared
   with the finite-element calculation of TetraX: equilibria within 0.01 degree, frequencies
-  within 1-2 %).
+  within 1-2 %; the notebook includes a workaround for TetraX 2.0.0 with SciPy >= 1.18)
+  ([#15]).
 - Example notebook `SAF_dispersion_2D`: 2D dispersion relation of the synthetic antiferromagnet
   of Adam et al., npj Spintronics 3, 33 (2025) (nonreciprocal along the field, reciprocal
-  perpendicular to it), reproducing their Fig. 3.
+  perpendicular to it), reproducing their Fig. 3 ([#15], [#53]).
 - Unit tests of `DoubleLayerNumeric` (scissors state, all equilibria, analytical derivatives,
   2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers,
   oblique field and perpendicular anisotropy, tilted single layer vs. `SingleLayer` and
@@ -137,7 +138,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - `MacrospinEquilibrium.minimize()` uses the analytical gradient and Hessian of the energy
   density and the trust-region method `"trust-exact"` with steps limited to 0.3 rad by default
   (previously `"Nelder-Mead"` with numerical sampling only), i.e. 3 to 20 times faster
-  `minimize()` and `hysteresis()`.  The angles are optimized in a local frame (no singularity at
+  `minimize()` and `hysteresis()` ([#52]).  The angles are optimized in a local frame (no singularity at
   the poles, no bounds), the energy is normalized by `MU0*Ms**2`, and the result is checked to be
   a minimum (labile equilibria are left along the direction of negative curvature, with a
   deterministic choice of the side, towards +z for symmetric bifurcations).  `scipy_kwargs` may
@@ -152,7 +153,8 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   angle of `Bext` from `kxi`) is unchanged.  The defaults are `phiAnis1 = phiAnis2 = 0`
   (previously `pi/2`, i.e. the same geometry for the default `phi = pi/2`) and
   `phiInit1, phiInit2 = pi/2, -pi/2` (unchanged values, now measured from `Bext`).  `GetPhis()`
-  returns the angles in `[-pi, pi)`.  Nothing changes for `phi = 0` (field along the wavevector).
+  returns the angles in `[-pi, pi)`.  Nothing changes for `phi = 0`, i.e. the field along the
+  wavevector ([#53]).
 - **Breaking:** `DoubleLayerNumeric`: layer 1 is the bottom layer (closer to the substrate) and
   layer 2 the top layer, previously the opposite (as in Gallardo et al.).  For the same
   parameters, the nonreciprocal dispersion is therefore mirrored (`k -> -k`); swap the two layers
@@ -161,11 +163,11 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   that of `GetPhis()` for in-plane fields); `GetPhis()` remains as the equilibrium restricted to
   the film plane.  `GetPhis()` uses the analytical gradient and Hessian of the energy with
   the method `"trust-exact"` (steps limited to 0.3 rad, no bounds) instead of `"Nelder-Mead"`,
-  about 7 times faster; labile starting points (saddle points, maxima) are left along the
+  about 7 times faster ([#52]); labile starting points (saddle points, maxima) are left along the
   direction of negative curvature with a deterministic sign.  Previously, the energy was
   minimized in the frame of each wavevector from fixed initial angles, which selected different
   (degenerate) scissors states for different directions of the wavevector, so 2D dispersion maps
-  were wrong.
+  were wrong ([#53]).
 - `MacrospinEquilibrium.minimize()` and `DoubleLayerNumeric.GetPhis()` polish the result of
   `scipy.optimize.minimize` by Newton steps on the gradient (precision about 1e-13 rad instead of
   1e-7 rad, where SciPy stops due to the round-off of the energy).
@@ -199,8 +201,8 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   ``exp(1j*w*t)`` with ``exp(1j*kxi*x)``, i.e. a positive `kxi` propagates towards ``-x``,
   opposite to the convention ``exp(1j*(k*x - w*t))`` of e.g. TetraX).
 - `DoubleLayerNumeric.GetLifetime()`: division by zero for `Bext = 0` (an absolute field step is
-  used now); the docstring warns that the formula is not meaningful for the antiparallel and
-  scissors states of a SAF.
+  used now in such case); the docstring warns that the formula is not meaningful for the antiparallel and
+  scissors states of a SAF (related to [#22]: `DoubleLayerNumeric` only and still incomplete).
 - Example `SAF_dispersion_simple`: the parameters below the plot showed `phi1` instead of
   `phi2`, and the text referred to a non-existent method `GetPhisSAFM()`.
 - `ObjectiveLens.getFocalField()`: the z component of the focal field was rotated by 90°.
@@ -237,8 +239,8 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   (multiplied by `gamma*MU0`), i.e. the in-plane amplitudes were always zero.  It now returns
   the complex eigenvectors with unit norm, ordered as (in-plane, out-of-plane) amplitudes of
   layer 1 and layer 2.
-- Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()`, `SingleLayerNumeric.GetDispersion()`, links to the
-  related examples, and minor fixes.
+- Docstrings: layout of the eigenvectors of `SingleLayerNumeric.GetDispersion()` and
+  `DoubleLayerNumeric.GetDispersion()`, links to the related examples, and minor fixes.
 - Documentation: rendering of default values is simplified using `autodoc_preserve_defaults = True` in `conf.py`. Affects mainly `kxi` parameters in dispersion classes.
 - Documentation: the build has no warnings (no stub pages for the Methods tables of the classes, intentionally unreferenced footnotes and citations), and broken cross-references were fixed.
 
@@ -376,10 +378,12 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 [#8]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/8
 [#12]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/12
 [#13]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/13
+[#15]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/15
 [#16]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/16
 [#18]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/18
 [#20]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/20
 [#21]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/21
+[#22]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/22
 [#24]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/24
 [#25]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/25
 [#26]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/26
@@ -401,6 +405,8 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 [#49]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/49
 [#50]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/50
 [#51]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/51
+[#52]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/52
+[#53]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/53
 [#56]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/56
 [#58]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/58
 [#59]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/59

@@ -410,7 +410,7 @@ class DoubleLayerNumeric:
         modes (each with negative and positive frequency).
         The eigenvectors represent the amplitudes of the dynamic
         magnetization in the individual layers.  The magnetization is
-        assumed uniform across the thickness of each layer, so the
+        assumed **uniform across the thickness** of each layer, so the
         model (and the mode profiles) loses accuracy for layers thick
         enough to have higher-order thickness modes in proximity to the
         two base modes.
