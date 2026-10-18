@@ -406,7 +406,7 @@ class DoubleLayerNumeric:
         The model formulates a system matrix and then numerically solves
         its eigenvalues and eigenvectors. The eigenvalues represent the
         dispersion relation (as the matrix is 4x4 it has 4 eigenvalues).
-        The eigen values represent the acoustic and optic spin-wave
+        The eigen values represent the acoustic and optical spin-wave
         modes (each with negative and positive frequency).
         The eigenvectors represent the amplitudes of the dynamic
         magnetization in the individual layers.  The magnetization is
@@ -420,8 +420,8 @@ class DoubleLayerNumeric:
         configuration is found first by :meth:`GetEquilibrium` (once,
         it does not depend on the wavevector).
 
-        The returned modes are sorted from low (acoustic) to high
-        (optic) frequencies, omitting the negative-frequency modes.
+        The returned modes are sorted from low to high frequencies,
+        omitting the negative-frequency modes.
 
         Parameters
         ----------
@@ -436,7 +436,7 @@ class DoubleLayerNumeric:
         Returns
         -------
         wV : ndarray
-            (rad*Hz) frequencies of the acoustic and optic spin-wave
+            (rad*Hz) frequencies of the acoustic and optical spin-wave
             modes.  Has a shape of ``(2, N)``, where
             ``N = kxi.shape[0]`` (or the length of `phi`).
         vV : ndarray
@@ -450,6 +450,12 @@ class DoubleLayerNumeric:
 
         Notes
         -----
+        Typically in an antiparallel or scissor state, the
+        lower-frequency mode is the acoustic one (in-phase precession of
+        the two layers, and the higher-frequency mode is the optical one
+        (out-of-phase precession).  In a parallel state, the character
+        of the modes is reversed.
+
         The mode amplitudes are complex.  Up to a common (arbitrary)
         phase of each eigenvector, the in-plane amplitudes are real and
         the out-of-plane amplitudes imaginary, i.e. the components
