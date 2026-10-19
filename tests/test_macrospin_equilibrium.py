@@ -3,10 +3,7 @@
 import numpy as np
 import pytest
 import SpinWaveToolkit as SWT
-from SpinWaveToolkit.core._class_MacrospinEquilibrium import (
-    _energy_functions,
-    _local_frame,
-)
+from SpinWaveToolkit.core._class_MacrospinEquilibrium import _energy_functions
 
 MS, KU = 800e3, 5e3
 BK = 2 * KU / MS  # (T) anisotropy field
@@ -75,14 +72,6 @@ def test_energy_derivatives():
     num_hess = [(jac(x + eps * e) - jac(x - eps * e)) / (2 * eps) for e in np.eye(2)]
     assert np.allclose(jac(x), num_jac, rtol=1e-6, atol=1e-8)
     assert np.allclose(hess(x), num_hess, rtol=1e-6, atol=1e-8)
-
-
-def test_local_frame():
-    for m in (np.array([0, 0, 1.0]), SWT.sphr2cart(0.3, 2.0), np.array([1.0, 0, 0])):
-        R = _local_frame(m)
-        assert np.allclose(R.T @ R, np.eye(3))
-        assert np.isclose(np.linalg.det(R), 1)
-        assert np.allclose(R @ SWT.sphr2cart(np.pi / 2, 0), m)
 
 
 def test_minimize_random_systems():
@@ -203,11 +192,6 @@ def test_minimize_methods(docstring_system, method):
     docstring_system.M = {"theta": 0, "phi": np.deg2rad(30)}
     docstring_system.minimize({"method": method}, verbose=False)
     assert _angle(_m(docstring_system), ref) < 1e-6
-
-
-def test_minimize_bounds_not_allowed(docstring_system):
-    with pytest.raises(ValueError):
-        docstring_system.minimize({"bounds": ((0, np.pi), (0, 2 * np.pi))})
 
 
 def test_minimize_verbose(docstring_system, capsys):

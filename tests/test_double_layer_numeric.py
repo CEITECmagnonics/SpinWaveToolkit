@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from scipy.optimize import brentq
 import SpinWaveToolkit as SWT
-from SpinWaveToolkit.core._class_DoubleLayerNumeric import _local_frame, _zeta
+from SpinWaveToolkit.core._class_DoubleLayerNumeric import _zeta
+from SpinWaveToolkit.core._sphere import local_frame
 from SpinWaveToolkit.helpers import MU0
 
 # SAF of Adam et al., npj Spintronics 3, 33 (2025): CoFeB(17)/Ru(0.7)/CoFeB(17)
@@ -212,9 +213,8 @@ def test_energy_derivatives():
         saf.GetFreeEnergy(0.7, 2.9), saf._DoubleLayerNumeric__ip_energy(x)
     )
     # general (local frames)
-    R1, R2 = _local_frame(SWT.sphr2cart(1.0, 0.4)), _local_frame(
-        SWT.sphr2cart(2.0, -1.0)
-    )
+    R1 = local_frame(SWT.sphr2cart(1.0, 0.4))
+    R2 = local_frame(SWT.sphr2cart(2.0, -1.0))
     fun, jac, hess = saf._DoubleLayerNumeric__local_functions(R1, R2, 1.0)
     x = np.array([1.3, 0.2, 1.7, -0.3])
     num_g = [(fun(x + eps * e) - fun(x - eps * e)) / (2 * eps) for e in np.eye(4)]

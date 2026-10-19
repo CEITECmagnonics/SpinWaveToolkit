@@ -6,31 +6,19 @@ import numpy as np
 from scipy.optimize import minimize
 from tqdm import tqdm
 from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr
+from SpinWaveToolkit.core._sphere import (
+    angle_frame,
+    angle_hessian,
+    classify,
+    local_frame,
+    minimize_kwargs,
+    move,
+    newton_spheres,
+    project,
+    tangent_bases,
+)
 
 __all__ = ["MacrospinEquilibrium"]
-
-# methods of `scipy.optimize.minimize` that use the gradient and the Hessian
-_JAC_METHODS = {
-    "cg",
-    "bfgs",
-    "newton-cg",
-    "l-bfgs-b",
-    "tnc",
-    "slsqp",
-    "dogleg",
-    "trust-ncg",
-    "trust-krylov",
-    "trust-exact",
-    "trust-constr",
-}
-_HESS_METHODS = {
-    "newton-cg",
-    "dogleg",
-    "trust-ncg",
-    "trust-krylov",
-    "trust-exact",
-    "trust-constr",
-}
 
 
 class MacrospinEquilibrium:
@@ -342,65 +330,41 @@ class MacrospinEquilibrium:
             self.__save_energies()
             return
 
-        kwargs = {} if scipy_kwargs is None else dict(scipy_kwargs)
-        if "bounds" in kwargs:
-            raise ValueError(
-                "`scipy_kwargs` cannot contain `bounds`, the angles are not bounded."
-            )
-        kwargs.setdefault("method", "trust-exact")
-        method = kwargs["method"]
-        name = method.lower() if isinstance(method, str) else None
-        if "tol" not in kwargs and "options" not in kwargs:
-            if name == "trust-exact":
-                kwargs["options"] = {
-                    "initial_trust_radius": 0.1,
-                    "max_trust_radius": 0.3,
-                    "gtol": 1e-10,
-                }
-            elif name == "l-bfgs-b":
-                kwargs["options"] = {"ftol": 1e-15, "gtol": 1e-10}
-            else:
-                kwargs["tol"] = 1e-12
-        use_jac = name is None or name in _JAC_METHODS
-        use_hess = name in _HESS_METHODS
-
         h, A = self.__reduced_params()
         scale = max(1.0, np.abs(A).max(), np.linalg.norm(h))
+        grad_hess = _sphere_functions(h, A)
         m = sphr2cart(self.M["theta"], self.M["phi"])
         for _ in range(10):  # restarts in a new local frame or from saddle points
-            R = _local_frame(m)
+            R = local_frame(m)
             fun, jac, hess = _energy_functions(R.T @ h, R.T @ A @ R)
-            if use_jac:
-                kwargs["jac"] = jac
-            if use_hess:
-                kwargs["hess"] = hess
+            kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
             res = minimize(fun, np.array([np.pi / 2, 0.0]), **kwargs)
             m = R @ sphr2cart(*res.x)
             # polish by Newton steps on the sphere (SciPy stops at the
             # round-off level of the energy, ~1e-7 rad)
-            m_newton = _newton_on_sphere(m, h, A, maxiter=5)
-            if m_newton is not None and m_newton @ m > np.cos(1e-6):
-                m = m_newton
+            (mn,), gnorm = newton_spheres([m[:, None]], grad_hess, 5, scale)
+            if gnorm[0] < 1e-9 * scale and mn[:, 0] @ m > np.cos(1e-6):
+                m = mn[:, 0]
             if abs(res.x[0] - np.pi / 2) > np.pi / 3:
                 continue  # close to a pole of the local frame, repeat around m
             # stability check (Hessian on the sphere)
-            T = _tangent_basis(m)
-            Ht = T.T @ A @ T - (m @ (A @ m - h)) * np.eye(2)
-            lam, vec = np.linalg.eigh(Ht)
+            T = tangent_bases(m[:, None])
+            _, H = grad_hess([m[:, None]], [T])
+            lam, vec = np.linalg.eigh(H[:, :, 0])
             if lam[0] >= -1e-9 * scale:
                 break
-            s = T @ vec[:, 0]  # direction of negative curvature
+            s = T[:, :, 0] @ vec[:, 0]  # direction of negative curvature
             for c in (2, 1, 0):  # deterministic sign
                 if abs(s[c]) > 1e-9:
                     s *= np.sign(s[c])
                     break
-            m = m * np.cos(1e-3) + s * np.sin(1e-3)
+            m = move(m, s, 1e-3)
         res.x = np.array(cart2sphr(*m)[:2])
         # SciPy may stop at the round-off level of the gradient before
         # reaching its tolerance, such a result is accepted
-        if not res.success and np.linalg.norm(_tangent_basis(m).T @ (A @ m - h)) < (
-            1e-7 * scale  # (limited by the round-off of the energy)
-        ):
+        g = tangent_bases(m[:, None])[:, :, 0].T @ (A @ m - h)
+        if not res.success and np.linalg.norm(g) < 1e-7 * scale:
+            # (limited by the round-off of the energy)
             res.success = True
             res.message += " (Accepted, the gradient is at the round-off level.)"
         self.res = res
@@ -455,6 +419,7 @@ class MacrospinEquilibrium:
         self.recalc_params()
         h, A = self.__reduced_params()
         scale = max(1.0, np.abs(A).max(), np.linalg.norm(h))
+        grad_hess = _sphere_functions(h, A)
 
         # candidates from the quadratic eigenvalue problem
         # (A - lam)^2 g = h h^T g, linearized with d = (A - lam) g
@@ -473,36 +438,27 @@ class MacrospinEquilibrium:
         cands += list(V.T) + list(-V.T)
         if np.linalg.norm(h) > 0:
             cands += [h, -h]
+        cands = np.array(cands).T
+        cands /= np.linalg.norm(cands, axis=0)
 
+        # refine all candidates at once and remove the duplicates
+        (m,), gnorm = newton_spheres([cands], grad_hess, 50, scale)
         found = []
-        for m in cands:
-            m = _newton_on_sphere(m / np.linalg.norm(m), h, A)
-            if m is None:
-                continue
-            if any(m @ f > 1 - 1e-12 for f in found):
-                continue
-            found.append(m)
+        for c in m[:, gnorm < 1e-9 * scale].T:
+            if not any(c @ f > 1 - 1e-12 for f in found):
+                found.append(c)
+        found = np.array(found).T  # (3, M)
 
-        eden_red = np.array([-h @ m + 0.5 * m @ A @ m for m in found])
-        eq_type = []
-        for m in found:
-            T = _tangent_basis(m)
-            Ht = T.T @ A @ T - (m @ (A @ m - h)) * np.eye(2)
-            lam = np.linalg.eigvalsh(Ht)
-            if lam[0] > -1e-9 * scale:
-                eq_type.append(0)  # minimum
-            elif lam[1] < 1e-9 * scale:
-                eq_type.append(1)  # maximum
-            else:
-                eq_type.append(2)  # saddle point
+        eden_red = -h @ found + 0.5 * np.einsum("in,ij,jn->n", found, A, found)
+        _, H = grad_hess([found], [tangent_bases(found)])
+        eq_type = classify(H, scale)
         order = np.argsort(eden_red)
-        found = np.array(found)[order]
-        theta, phi = cart2sphr(*found.T)[:2]
+        theta, phi = cart2sphr(*found[:, order])[:2]
         return (
             theta,
             wrapAngle(phi),
             eden_red[order] * MU0 * self.Ms**2,
-            np.array(eq_type)[order],
+            eq_type[order],
         )
 
     def eval_energy(self, m, components=False):
@@ -650,77 +606,31 @@ class MacrospinEquilibrium:
         return self.M["theta"], self.M["phi"]
 
 
-def _local_frame(m):
-    """Rotation matrix whose first column is the unit vector `m`, i.e.
-    `m` lies on the equator (``theta = pi/2, phi = 0``) of the local
-    frame.
-    """
-    e = np.zeros(3)
-    e[np.argmin(np.abs(m))] = 1.0
-    u = e - (e @ m) * m
-    u /= np.linalg.norm(u)
-    return np.column_stack((m, u, np.cross(m, u)))
-
-
-def _tangent_basis(m):
-    """Orthonormal basis (3x2 matrix) of the tangent plane at `m`."""
-    return _local_frame(m)[:, 1:]
-
-
 def _energy_functions(h, A):
     """Reduced energy density ``-h.m + m.A.m/2`` of ``m(theta, phi)``
     and its analytical gradient and Hessian with respect to the angles.
     """
 
-    def frame(x):
-        st, ct = np.sin(x[0]), np.cos(x[0])
-        sp, cp = np.sin(x[1]), np.cos(x[1])
-        m = np.array([st * cp, st * sp, ct])
-        m_t = np.array([ct * cp, ct * sp, -st])  # dm/dtheta
-        m_p = np.array([-st * sp, st * cp, 0.0])  # dm/dphi
-        return m, m_t, m_p, (st, ct, sp, cp)
-
     def fun(x):
-        m = frame(x)[0]
+        m = angle_frame(*x)[0]
         return -h @ m + 0.5 * m @ A @ m
 
     def jac(x):
-        m, m_t, m_p, _ = frame(x)
-        g = A @ m - h
-        return np.array([g @ m_t, g @ m_p])
+        m, J, _ = angle_frame(*x)
+        return J.T @ (A @ m - h)
 
     def hess(x):
-        m, m_t, m_p, (st, ct, sp, cp) = frame(x)
-        g = A @ m - h
-        m_tp = np.array([-ct * sp, ct * cp, 0.0])
-        m_pp = np.array([-st * cp, -st * sp, 0.0])
-        h_tt = m_t @ A @ m_t - g @ m  # (d2m/dtheta2 = -m)
-        h_tp = m_t @ A @ m_p + g @ m_tp
-        h_pp = m_p @ A @ m_p + g @ m_pp
-        return np.array([[h_tt, h_tp], [h_tp, h_pp]])
+        m, J, D = angle_frame(*x)
+        return angle_hessian(J, D, A @ m - h, A)
 
     return fun, jac, hess
 
 
-def _newton_on_sphere(m, h, A, maxiter=50):
-    """Newton iterations for a stationary point of ``-h.m + m.A.m/2`` on
-    the unit sphere, starting from the unit vector `m`.  Returns the
-    stationary point, or None if not converged."""
-    scale = max(1.0, np.abs(A).max(), np.linalg.norm(h))
-    for _ in range(maxiter):
-        r = A @ m - h
-        T = _tangent_basis(m)
-        g = T.T @ r  # gradient in the tangent plane
-        if np.linalg.norm(g) < 1e-13 * scale:
-            return m
-        Ht = T.T @ A @ T - (m @ r) * np.eye(2)
-        s = -np.linalg.lstsq(Ht, g, rcond=None)[0]
-        step = np.linalg.norm(s)
-        if step > 0.5:  # limit the step (far from a stationary point)
-            s *= 0.5 / step
-        m = m + T @ s
-        m /= np.linalg.norm(m)
-    r = A @ m - h
-    if np.linalg.norm(_tangent_basis(m).T @ r) < 1e-9 * scale:
-        return m
-    return None
+def _sphere_functions(h, A):
+    """Gradient and Hessian of the reduced energy ``-h.m + m.A.m/2`` on
+    the unit sphere in the tangent bases, as used by `newton_spheres`."""
+
+    def grad_hess(ms, Ts):
+        return project(ms, Ts, [A @ ms[0] - h[:, None]], [[A]])
+
+    return grad_hess

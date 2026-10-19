@@ -7,6 +7,17 @@ import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
 from SpinWaveToolkit.helpers import MU0, wrapAngle, distBE, sphr2cart, cart2sphr
+from SpinWaveToolkit.core._sphere import (
+    angle_frame,
+    angle_hessian,
+    classify,
+    local_frame,
+    minimize_kwargs,
+    move,
+    newton_spheres,
+    project,
+    tangent_bases,
+)
 
 __all__ = ["DoubleLayerNumeric"]
 
@@ -603,10 +614,14 @@ class DoubleLayerNumeric:
             initial angles is chosen).  Default is False.
         scipy_kwargs : dict or None, optional
             Dictionary with settings passed to
-            :py:func:`scipy.optimize.minimize` instead of the default
-            ``{"method": "trust-exact", "options": {...}}``.  The
-            gradient and Hessian are passed automatically.  Default is
-            None.
+            :py:func:`scipy.optimize.minimize`, e.g. ``{"method":
+            "Nelder-Mead"}``.  Cannot contain ``bounds`` (the angles are
+            periodic).  The analytical gradient (``jac``) and Hessian
+            (``hess``) are passed automatically to the methods that use
+            them, and tolerances for a precision of about 1e-8 rad are
+            used unless ``tol`` or ``options`` are given.  If None,
+            ``{"method": "trust-exact"}`` with the trust radius limited
+            to 0.3 rad is used.  Default is None.
 
         Returns
         -------
@@ -642,48 +657,32 @@ class DoubleLayerNumeric:
             i = np.argmin(np.where(lowest, dist, np.inf))
             return np.array([th1[i], ph1[i], th2[i], ph2[i]])
 
-        kwargs = (
-            {
-                "method": "trust-exact",
-                "options": {
-                    "initial_trust_radius": 0.1,
-                    "max_trust_radius": 0.3,
-                    "gtol": 1e-10,
-                },
-            }
-            if scipy_kwargs is None
-            else dict(scipy_kwargs)
-        )
         for _ in range(20):  # restarts in new local frames or from labile points
-            R1, R2 = _local_frame(m1), _local_frame(m2)
+            R1, R2 = local_frame(m1), local_frame(m2)
             fun, jac, hess = self.__local_functions(R1, R2, scale)
-            res = minimize(
-                fun,
-                np.array([np.pi / 2, 0.0, np.pi / 2, 0.0]),
-                jac=jac,
-                hess=hess,
-                **kwargs,
-            )
+            kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
+            res = minimize(fun, np.array([np.pi / 2, 0.0, np.pi / 2, 0.0]), **kwargs)
             x = res.x
             m1, m2 = R1 @ sphr2cart(x[0], x[1]), R2 @ sphr2cart(x[2], x[3])
             if max(abs(x[0] - np.pi / 2), abs(x[2] - np.pi / 2)) > np.pi / 3:
                 continue  # far from the equator of a local frame, re-center
             # polish by Newton steps on the spheres (SciPy stops at the
             # round-off level of the energy)
-            n1, n2, _ = self.__newton_spheres(m1[:, None], m2[:, None], 5, scale)
+            ms = [m1[:, None], m2[:, None]]
+            (n1, n2), _ = newton_spheres(ms, self.__grad_hess, 5, scale)
             if n1[:, 0] @ m1 > np.cos(1e-6) and n2[:, 0] @ m2 > np.cos(1e-6):
                 m1, m2 = n1[:, 0], n2[:, 0]
+                ms = [n1, n2]
             # stability check by the Hessian on the spheres
-            T1, T2 = _tangent_bases(m1[:, None]), _tangent_bases(m2[:, None])
-            _, H = self.__sphere_grad_hess(m1[:, None], m2[:, None], T1, T2)
+            Ts = [tangent_bases(m) for m in ms]
+            _, H = self.__grad_hess(ms, Ts)
             lam, vec = np.linalg.eigh(H[:, :, 0])
             if lam[0] >= -1e-9 * scale:
                 break
             # displacement along the negative curvature, deterministic sign
-            s1, s2 = T1[:, :, 0] @ vec[:2, 0], T2[:, :, 0] @ vec[2:, 0]
+            s1, s2 = Ts[0][:, :, 0] @ vec[:2, 0], Ts[1][:, :, 0] @ vec[2:, 0]
             sign = _displacement_sign(m1, s1, m2, s2)
-            m1 = _move(m1, sign * s1, 1e-3)
-            m2 = _move(m2, sign * s2, 1e-3)
+            m1, m2 = move(m1, sign * s1, 1e-3), move(m2, sign * s2, 1e-3)
         return self.__angles(m1, m2)
 
     def GetPhis(self, global_minimum=False, scipy_kwargs=None):
@@ -710,10 +709,14 @@ class DoubleLayerNumeric:
             is False.
         scipy_kwargs : dict or None, optional
             Dictionary with settings passed to
-            :py:func:`scipy.optimize.minimize` instead of the default
-            ``{"method": "trust-exact", "options": {...}}``.  The
-            gradient and Hessian are passed automatically.  Default is
-            None.
+            :py:func:`scipy.optimize.minimize`, e.g. ``{"method":
+            "Nelder-Mead"}``.  Cannot contain ``bounds`` (the angles are
+            periodic).  The analytical gradient (``jac``) and Hessian
+            (``hess``) are passed automatically to the methods that use
+            them, and tolerances for a precision of about 1e-8 rad are
+            used unless ``tol`` or ``options`` are given.  If None,
+            ``{"method": "trust-exact"}`` with the trust radius limited
+            to 0.3 rad is used.  Default is None.
 
         Returns
         -------
@@ -737,20 +740,9 @@ class DoubleLayerNumeric:
             i = np.argmin(np.where(lowest, dist, np.inf))
             return wrapAngle(np.array([phi1[i], phi2[i]]), -np.pi, np.pi)
 
-        kwargs = (
-            {
-                "method": "trust-exact",
-                "options": {
-                    "initial_trust_radius": 0.1,
-                    "max_trust_radius": 0.3,
-                    "gtol": 1e-10,
-                },
-            }
-            if scipy_kwargs is None
-            else dict(scipy_kwargs)
-        )
+        kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
         for _ in range(10):  # restarts from labile equilibria
-            res = minimize(fun, x, jac=jac, hess=hess, **kwargs)
+            res = minimize(fun, x, **kwargs)
             x = res.x
             # polish by Newton steps on the gradient (SciPy stops at the
             # round-off level of the energy, ~1e-7 rad)
@@ -813,8 +805,8 @@ class DoubleLayerNumeric:
         scale = self.__energy_scale()
         dirs = _fibonacci_sphere(24)  # (3, 24)
         i1, i2 = np.meshgrid(np.arange(24), np.arange(24), indexing="ij")
-        m1, m2 = dirs[:, i1.ravel()], dirs[:, i2.ravel()]
-        m1, m2, gnorm = self.__newton_spheres(m1, m2, 60, scale)
+        ms = [dirs[:, i1.ravel()], dirs[:, i2.ravel()]]
+        (m1, m2), gnorm = newton_spheres(ms, self.__grad_hess, 60, scale)
         ok = gnorm < 1e-8 * scale
         m1, m2 = m1[:, ok], m2[:, ok]
 
@@ -828,15 +820,10 @@ class DoubleLayerNumeric:
         m1 = np.array([p for p, _ in found]).T  # (3, M)
         m2 = np.array([q for _, q in found]).T
         eden = self.__vec_energy(m1, m2) + self.__energy_const()
-        T1, T2 = _tangent_bases(m1), _tangent_bases(m2)
-        _, H = self.__sphere_grad_hess(m1, m2, T1, T2)
-        lam = np.linalg.eigvalsh(H.transpose(2, 0, 1))
-        eq_type = np.where(
-            lam[:, 0] > -1e-9 * scale, 0, np.where(lam[:, -1] < 1e-9 * scale, 1, 2)
-        )
+        _, H = self.__grad_hess([m1, m2], [tangent_bases(m1), tangent_bases(m2)])
+        eq_type = classify(H, scale)
         order = np.argsort(eden)
-        th1, ph1 = self.__angles(m1[:, order], m2[:, order])[:2]
-        th2, ph2 = self.__angles(m1[:, order], m2[:, order])[2:]
+        th1, ph1, th2, ph2 = self.__angles(m1[:, order], m2[:, order])
         return th1, ph1, th2, ph2, eden[order], eq_type[order]
 
     def __find_equilibria_ip(self):
@@ -875,11 +862,7 @@ class DoubleLayerNumeric:
             return (np.array([]),) * 5 + (np.array([], dtype=int),)
         found = np.array(found).T  # (2, M)
         eden = self.__ip_energy(found)
-        hess = self.__ip_hess(found).transpose(2, 0, 1)
-        lam = np.linalg.eigvalsh(hess)
-        eq_type = np.where(
-            lam[:, 0] > -1e-9 * scale, 0, np.where(lam[:, 1] < 1e-9 * scale, 1, 2)
-        )
+        eq_type = classify(self.__ip_hess(found), scale)
         order = np.argsort(eden)
         theta = np.full(len(order), np.pi / 2)
         return (
@@ -1067,45 +1050,13 @@ class DoubleLayerNumeric:
         H12 = -j * np.eye(3)[:, :, None] - 2 * self.Jbq * m2[:, None] * m1[None, :]
         return H11, H12, H22
 
-    def __sphere_grad_hess(self, m1, m2, T1, T2):
+    def __grad_hess(self, ms, Ts):
         """Gradient ``(4, N)`` and Hessian ``(4, 4, N)`` of the energy on
-        the two unit spheres, in the tangent bases ``T1``, ``T2`` with
-        shape ``(3, 2, N)``."""
-        G1, G2 = self.__vec_grad(m1, m2)
-        H11, H12, H22 = self.__vec_hess(m1, m2)
-        N = m1.shape[1]
-        g = np.concatenate(
-            [np.einsum("ikn,in->kn", T1, G1), np.einsum("ikn,in->kn", T2, G2)]
-        )
-        I2 = np.eye(2)[:, :, None]
-        H = np.zeros((4, 4, N))
-        H[:2, :2] = np.einsum("ikn,ijn,jln->kln", T1, H11, T1) - np.sum(m1 * G1, 0) * I2
-        H[2:, 2:] = np.einsum("ikn,ijn,jln->kln", T2, H22, T2) - np.sum(m2 * G2, 0) * I2
-        H[:2, 2:] = np.einsum("ikn,ijn,jln->kln", T1, H12, T2)
-        H[2:, :2] = H[:2, 2:].transpose(1, 0, 2)
-        return g, H
-
-    def __newton_spheres(self, m1, m2, maxiter, scale):
-        """Newton iterations for stationary points of the energy on the
-        two unit spheres, vectorized over the columns of ``m1``, ``m2``
-        (shape ``(3, N)``).  Returns the points and the gradient norms."""
-        ridge = 1e-12 * scale * np.eye(4)[:, :, None]
-        for _ in range(maxiter):
-            T1, T2 = _tangent_bases(m1), _tangent_bases(m2)
-            g, H = self.__sphere_grad_hess(m1, m2, T1, T2)
-            gnorm = np.linalg.norm(g, axis=0)
-            if np.all(gnorm < 1e-13 * scale):
-                break
-            step = -np.linalg.solve((H + ridge).transpose(2, 0, 1), g.T[:, :, None])[
-                :, :, 0
-            ].T
-            norm = np.linalg.norm(step, axis=0)
-            step *= np.minimum(1.0, 0.5 / np.maximum(norm, 1e-300))  # limit the step
-            m1 = _normalize(m1 + np.einsum("ikn,kn->in", T1, step[:2]))
-            m2 = _normalize(m2 + np.einsum("ikn,kn->in", T2, step[2:]))
-        T1, T2 = _tangent_bases(m1), _tangent_bases(m2)
-        g, _ = self.__sphere_grad_hess(m1, m2, T1, T2)
-        return m1, m2, np.linalg.norm(g, axis=0)
+        the two unit spheres in the tangent bases ``Ts`` at the unit
+        vectors ``ms`` (as used by `newton_spheres`)."""
+        G1, G2 = self.__vec_grad(*ms)
+        H11, H12, H22 = self.__vec_hess(*ms)
+        return project(ms, Ts, [G1, G2], [[H11, H12], [H12.transpose(1, 0, 2), H22]])
 
     def __local_functions(self, R1, R2, scale):
         """Normalized energy, gradient and Hessian with respect to the
@@ -1113,42 +1064,24 @@ class DoubleLayerNumeric:
         matrices with the current magnetization directions as the first
         columns, i.e. at the equator ``(pi/2, 0)``)."""
 
-        def frame(R, t, p):
-            """Unit vector, its Jacobian (3, 2) and second derivatives
-            (tt, tp, pp) with respect to the local angles."""
-            st, ct, sp, cp = np.sin(t), np.cos(t), np.sin(p), np.cos(p)
-            m = R @ np.array([st * cp, st * sp, ct])
-            J = R @ np.array([[ct * cp, -st * sp], [ct * sp, st * cp], [-st, 0.0]])
-            d2 = [
-                -m,
-                R @ np.array([-ct * sp, ct * cp, 0.0]),
-                R @ np.array([-st * cp, -st * sp, 0.0]),
-            ]
-            return m, J, d2
-
         def fun(x):
-            m1, m2 = frame(R1, x[0], x[1])[0], frame(R2, x[2], x[3])[0]
+            m1, m2 = angle_frame(x[0], x[1], R1)[0], angle_frame(x[2], x[3], R2)[0]
             return self.__vec_energy(m1[:, None], m2[:, None])[0] / scale
 
         def jac(x):
-            m1, J1, _ = frame(R1, x[0], x[1])
-            m2, J2, _ = frame(R2, x[2], x[3])
+            m1, J1, _ = angle_frame(x[0], x[1], R1)
+            m2, J2, _ = angle_frame(x[2], x[3], R2)
             G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
             return np.concatenate([J1.T @ G1[:, 0], J2.T @ G2[:, 0]]) / scale
 
         def hess(x):
-            m1, J1, D1 = frame(R1, x[0], x[1])
-            m2, J2, D2 = frame(R2, x[2], x[3])
+            m1, J1, D1 = angle_frame(x[0], x[1], R1)
+            m2, J2, D2 = angle_frame(x[2], x[3], R2)
             G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
             H11, H12, H22 = self.__vec_hess(m1[:, None], m2[:, None])
             H = np.zeros((4, 4))
-            for sl, J, D, G, Hb in (
-                (slice(0, 2), J1, D1, G1[:, 0], H11[:, :, 0]),
-                (slice(2, 4), J2, D2, G2[:, 0], H22[:, :, 0]),
-            ):
-                H[sl, sl] = J.T @ Hb @ J + np.array(
-                    [[G @ D[0], G @ D[1]], [G @ D[1], G @ D[2]]]
-                )
+            H[:2, :2] = angle_hessian(J1, D1, G1[:, 0], H11[:, :, 0])
+            H[2:, 2:] = angle_hessian(J2, D2, G2[:, 0], H22[:, :, 0])
             H[:2, 2:] = J1.T @ H12[:, :, 0] @ J2
             H[2:, :2] = H[:2, 2:].T
             return H / scale
@@ -1428,30 +1361,6 @@ def _zeta(k, d):
     return np.divide(-np.expm1(-kd), kd, out=np.ones_like(kd), where=kd > 1e-14)
 
 
-def _normalize(m):
-    """Unit vectors along the columns of ``m`` with shape ``(3, N)``."""
-    return m / np.linalg.norm(m, axis=0)
-
-
-def _tangent_bases(m):
-    """Orthonormal bases ``(3, 2, N)`` of the tangent planes of the unit
-    sphere at the unit vectors ``m`` with shape ``(3, N)``."""
-    N = m.shape[1]
-    e = np.zeros((3, N))
-    e[np.argmin(np.abs(m), axis=0), np.arange(N)] = 1.0
-    u = _normalize(e - np.sum(e * m, axis=0) * m)
-    v = np.cross(m, u, axis=0)
-    return np.stack([u, v], axis=1)
-
-
-def _local_frame(m):
-    """Rotation matrix whose first column is the unit vector ``m``, i.e.
-    ``m`` lies at the equator ``(theta, phi) = (pi/2, 0)`` of the local
-    spherical coordinates."""
-    T = _tangent_bases(m[:, None])[:, :, 0]
-    return np.column_stack((m, T[:, 0], T[:, 1]))
-
-
 def _transverse_basis(m):
     """Basis ``(3, 2)`` transverse to the unit vector ``m``: the in-plane
     direction perpendicular to ``m`` (``z x m``) and ``m x e1`` (the film
@@ -1461,15 +1370,6 @@ def _transverse_basis(m):
         e1 = np.array([0.0, 1.0, 0.0])
     e1 /= np.linalg.norm(e1)
     return np.column_stack((e1, np.cross(m, e1)))
-
-
-def _move(m, s, angle):
-    """Unit vector ``m`` displaced by ``angle`` along the tangent vector ``s``."""
-    s = s - (s @ m) * m
-    norm = np.linalg.norm(s)
-    if norm < 1e-300:
-        return m
-    return m * np.cos(angle) + s / norm * np.sin(angle)
 
 
 def _displacement_sign(m1, s1, m2, s2):
