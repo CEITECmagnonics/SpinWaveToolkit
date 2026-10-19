@@ -53,20 +53,16 @@ class DoubleLayerNumeric:
        `phiAnis2`, `phiInit1`, `phiInit2`, and the equilibrium angles
        returned by :meth:`GetEquilibrium`, :meth:`GetPhis` and
        :meth:`find_equilibria`) are measured from the in-plane direction
-       of the external field `Bext`.  The direction of the wavevector
-       enters only through `phi`, the angle of `Bext` measured from
-       `kxi`.  This way, the magnetic configuration is independent of
-       the wavevector, and the dispersion can be calculated for
-       arbitrary (also 2D) sets of wavevectors by giving `kxi` and
-       `phi` as arrays of the same length, see
-       :doc:`/_example_nbs/SAF_dispersion_2D`.
-
-    The laboratory coordinate frame of reference is *z || to film
-    normal* (pointing from layer 1 to layer 2), the polar angles
-    (`theta`, `thetaInit1`, `thetaInit2` and the equilibrium angles) are
-    measured from this normal, and all in-plane angles are
-    counter-clockwise when viewed from above (from the side of
-    layer 2).
+       of the external field `Bext`, counter-clockwise when viewed from
+       above (from the side of layer 2).  The polar angles (`theta`,
+       `thetaInit1`, `thetaInit2` and the equilibrium angles) are
+       measured from the film normal `z`, which points from layer 1 to
+       layer 2.  The direction of the wavevector enters only through
+       `phi`, the angle of `Bext` measured from `kxi`.  This way, the
+       magnetic configuration is independent of the wavevector, and the
+       dispersion can be calculated for arbitrary (also 2D) sets of
+       wavevectors by giving `kxi` and `phi` as arrays of the same
+       length, see :doc:`/_example_nbs/SAF_dispersion_2D`.
 
     Parameters
     ----------
@@ -81,13 +77,9 @@ class DoubleLayerNumeric:
     kxi : float or ndarray, optional
         (rad/m) k-vector (wavenumber), usually a vector.  Negative
         values are allowed; the same wavevector is also described by
-        ``-kxi`` with ``phi + pi``.  Note that the model (as Gallardo
-        et al.) uses the time dependence ``exp(1j*w*t)`` together with
-        the spatial dependence ``exp(1j*kxi*x)``, so a positive `kxi`
-        describes a wave propagating towards ``-x``; with the common
-        convention ``exp(1j*(k*x - w*t))`` (e.g. in TetraX), the sign of
-        the wavevector is opposite, which matters for the nonreciprocal
-        dispersion, see :doc:`/_example_nbs/SAF_dispersion_vs_TetraX`.
+        ``-kxi`` with ``phi + pi``.  A positive `kxi` describes a wave
+        propagating towards ``-x`` (time dependence ``exp(1j*w*t)`` as
+        in Gallardo et al.), see the Notes of :meth:`GetDispersion`.
     theta : float, optional
         (rad) polar angle of Bext from the film normal, pi/2 is an
         in-plane field.  Default is pi/2.
@@ -158,12 +150,6 @@ class DoubleLayerNumeric:
         (T ) inhomogeneous broadening (of `material`, used by
         :meth:`GetLifetime` together with `alpha` and `gamma` of the
         first layer only).
-    w0 : float
-        (rad*Hz) parameter in Kalinikos-Slavin equation,
-        ``w0 = MU0*gamma*Hext``.
-    wM : float
-        (rad*Hz) parameter in Kalinikos-Slavin equation,
-        ``wM = MU0*gamma*Ms``.
     A, A2 : float
         (m^2) parameter in Kalinikos-Slavin equation,
         ``A = Aex*2/(Ms**2*MU0)``.
@@ -467,10 +453,10 @@ class DoubleLayerNumeric:
 
         Notes
         -----
-        Typically in an antiparallel or scissor state, the
+        Typically in an antiparallel or scissors state, the
         lower-frequency mode is the acoustic one (in-phase precession of
-        the two layers, and the higher-frequency mode is the optical one
-        (out-of-phase precession).  In a parallel state, the character
+        the two layers) and the higher-frequency mode the optical one
+        (out-of-phase precession); in a parallel state, the character
         of the modes is reversed.
 
         The mode amplitudes are complex.  Up to a common (arbitrary)
@@ -483,21 +469,24 @@ class DoubleLayerNumeric:
         The frequencies are nonreciprocal (``w(k) != w(-k)``) when the
         in-plane components of the two magnetizations perpendicular to
         the wavevector differ, e.g. in the antiparallel state in the
-        Damon-Eshbach geometry.  Layer 1 is the bottom layer, see the
-        class docstring.
+        Damon-Eshbach geometry.  Layer 1 is the bottom layer (see the
+        class docstring), and the model uses the time dependence
+        ``exp(1j*w*t)`` with ``exp(1j*kxi*x)`` (as Gallardo et al.), so
+        a positive `kxi` propagates towards ``-x``; with the common
+        convention ``exp(1j*(k*x - w*t))`` (e.g. in TetraX) the sign of
+        the wavevector is opposite, see
+        :doc:`/_example_nbs/SAF_dispersion_vs_TetraX`.
 
         The system matrix is built from the tensors of the interactions
-        (thickness-averaged dipolar fields of the layer itself and of
-        the other layer, exchange, anisotropies, interlayer exchange)
         projected on the two directions transverse to the static
-        magnetization of each layer, which reproduces the matrix of
-        Gallardo et al. for in-plane magnetizations and extends it to
-        tilted ones.  The rows of each layer are multiplied by its own
-        gyromagnetic ratio (`gamma`, `gamma2`), i.e. the eigenvalues are
-        the frequencies directly.  The dynamic interlayer coupling parameters
-        `JblDyn`, `JbqDyn` are used in the system matrix (also in the
-        static field along the magnetizations), the static ones `Jbl`,
-        `Jbq` in the equilibrium.
+        magnetization of each layer (see the class Notes), which
+        reproduces the matrix of Gallardo et al. for in-plane
+        magnetizations and extends it to tilted ones; the rows of each
+        layer are multiplied by its gyromagnetic ratio (`gamma`,
+        `gamma2`), so the eigenvalues are the frequencies directly.  The
+        dynamic interlayer coupling parameters `JblDyn`, `JbqDyn` enter
+        the system matrix (also the static field along the
+        magnetizations), the static ones `Jbl`, `Jbq` the equilibrium.
         """
         Ms1, Ms2 = self.Ms, self.Ms2
         d1, d2, s = self.d, self.d2, self.s
@@ -596,20 +585,12 @@ class DoubleLayerNumeric:
         """Gives the equilibrium directions of the magnetization in both
         SAF layers (polar and in-plane angles).
 
-        Finds a minimum of the free energy (:meth:`GetFreeEnergy`) with
-        respect to the four angles, with the analytical gradient and
-        Hessian of the energy and the trust-region method
-        ``"trust-exact"`` of :py:func:`scipy.optimize.minimize` with
-        steps limited to 0.3 rad.  Starting from `thetaInit1`,
-        `phiInit1`, `thetaInit2`, `phiInit2`, the minimization follows
-        the energy landscape to the local minimum of its basin (e.g. a
-        metastable state in a field sweep, if the initial angles are
-        updated with the previous result).  If the start is a labile
-        equilibrium (saddle point or maximum, e.g. an antiparallel state
-        along the field), the magnetizations are displaced by 1 mrad
-        along the direction of the negative curvature (with the in-plane
-        component of layer 1 towards positive `phi1`, so that the result
-        is deterministic) and the minimization is repeated.
+        A local minimum of the free energy (:meth:`GetFreeEnergy`) with
+        respect to the four angles is found starting from `thetaInit1`,
+        `phiInit1`, `thetaInit2`, `phiInit2`, i.e. the minimization
+        follows the energy landscape to the minimum of the basin of the
+        starting point (e.g. a metastable state in a field sweep, if the
+        initial angles are updated with the previous result).
 
         Parameters
         ----------
@@ -639,20 +620,27 @@ class DoubleLayerNumeric:
 
         Notes
         -----
-        The angles used in the minimization are measured in local frames,
-        in which the current magnetization directions lie on the
-        equator, so that the poles of the spherical coordinates (the
-        film normal) are not singular.  For an in-plane field without
-        perpendicular anisotropy exceeding the demagnetizing energy,
-        the magnetizations stay in the film plane and the result equals
-        that of :meth:`GetPhis`.
+        The energy is minimized with its analytical gradient and Hessian
+        by the trust-region method ``"trust-exact"`` of
+        :py:func:`scipy.optimize.minimize` with steps limited to 0.3 rad
+        (see `scipy_kwargs`), in local spherical coordinates with the
+        current magnetization directions at the equator, so that the
+        poles (the film normal) are not singular.  If the start is a
+        labile equilibrium (saddle point or maximum, e.g. an
+        antiparallel state along the field), the magnetizations are
+        displaced by 1 mrad along the direction of the negative
+        curvature (with the in-plane component of layer 1 towards
+        positive `phi1`, so that the result is deterministic) and the
+        minimization is repeated.  For an in-plane field without
+        perpendicular anisotropy exceeding the demagnetizing energy, the
+        magnetizations stay in the film plane and the result equals that
+        of :meth:`GetPhis`.
         """
         return self.__minimize(False, global_minimum, scipy_kwargs)
 
     def GetPhis(self, global_minimum=False, scipy_kwargs=None):
         """Gives the in-plane angles of magnetization in both SAF layers
         for the magnetization restricted to the film plane.
-        The returned value is in rad.
 
         Same minimization as in :meth:`GetEquilibrium`, but restricted
         to the film plane, i.e. over the two in-plane angles only

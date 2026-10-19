@@ -271,11 +271,6 @@ class MacrospinEquilibrium:
 
         Notes
         -----
-        The used minimize function finds a local minimum based on the
-        initial conditions.  This can be used for calculating hysteresis
-        loops and field sweeps.  For the global minimum, use
-        ``global_minimum=True`` or :meth:`find_equilibria`.
-
         The energy density is a quadratic function of the magnetization
         unit vector `m`, ``E = -Ms*Bext*(b.m) + MU0*Ms**2/2 * m.N.m``,
         where ``N`` is the sum of the demagnetization and anisotropy
