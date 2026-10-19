@@ -1251,8 +1251,7 @@ def _signal_GF(
     # and optionally other intermediate results for further analysis or custom processing.
     if full_output:
         return sigma, Px, Py, Pz, Qx, Qy, Ex_scat, Ey_scat, Xi, Yi
-    else:
-        return sigma
+    return sigma
 
 
 def _check_focal_grid(x, y, kx, ky, stacklevel=3):
@@ -1312,7 +1311,7 @@ def _check_pupil_grid(kx, ky, stacklevel=3):
         if not np.isclose(k[0], -k[-1], rtol=0, atol=1e-3 * abs(dk)):
             raise ValueError(
                 f"The {name} grid must be symmetric with respect to k = 0 (limits with the same "
-                + f"magnitude) for valid discrete convolution, got limits "
+                + "magnitude) for valid discrete convolution, got limits "
                 + f"{k[0]:.4g} and {k[-1]:.4g} rad/m."
             )
         if len(k) % 2 == 0:

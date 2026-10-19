@@ -56,6 +56,34 @@ class ObjectiveLens:
         self.f0 = f0
         self.f = f
 
+    def _apodization(self, sin_theta, sin_theta_max):
+        """Gaussian apodization of the incident beam (filling factor `f0`)
+        at the focusing angle ``theta``,
+        ``exp(-(sin(theta)/sin(theta_max))**2 / f0**2)`` (Novotny & Hecht,
+        eq. (3.59))."""
+        return np.exp(-((sin_theta / sin_theta_max) ** 2) / self.f0**2)
+
+    def _kernel(self, theta_max, g):
+        """Angular weight ``fw(theta) * sqrt(cos(theta)) * g(theta)`` of a
+        focal-field integral (apodization `fw` of the incident beam and
+        the aplanatic factor ``sqrt(cos)``), without the Bessel function
+        and the defocus phase."""
+        sin_max = np.sin(theta_max)
+        return lambda t: (
+            self._apodization(np.sin(t), sin_max) * np.sqrt(np.cos(t)) * g(t)
+        )
+
+    def _focusing_params(self):
+        """Maximum focusing angle ``theta_max = arcsin(NA)`` and the
+        prefactor ``1j*k0*f/2 * exp(-1j*k0*f)`` of the focal field of a
+        Gaussian beam (Novotny & Hecht, eq. (3.66); unit amplitude of the
+        incident field, refractive indices of the medium and the lens
+        equal to 1)."""
+        # ### n1 and n2 were removed in the commit after ac4d835bd56d802fa391d91e3540225c175df94c
+        # since they were not used correctly anyway (they were always equal to 1)
+        k0 = 2 * np.pi / self.wavelength
+        return np.arcsin(self.NA), 1j * k0 * self.f / 2 * np.exp(-1j * k0 * self.f)
+
     def _focal_field(self, z, rho_max, N, rtol, kernels, coef, assemble):
         """
         Focal field from integrals over the focusing angle with
@@ -302,31 +330,15 @@ class ObjectiveLens:
         ``rho_max**2 * rtol**(-3/4)`` for large `rho_max` (or with the
         number of distinct radii of the output grid, if smaller).
         """
-        E0 = 1  # Amplitude of the incident electric field
-        n1, n2 = (
-            1,
-            1,
-        )  # Refractive indices of the medium and the lens - not properly implemented
-        k0 = 2 * np.pi / self.wavelength * n2  # wavenumber of the light
-        theta_max = np.arcsin(self.NA / n2)  # Maximum angle of the light cone
-
-        def fw(theta):  # Apodization function
-            return np.exp(
-                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
-            )
-
+        # Prefactor according to Novotny & Hecht, eq. (3.66)
+        theta_max, common_factor = self._focusing_params()
         # Angular weights of the integrals I00, I01, I02 (without the Bessel
         # functions and the defocus phase)
         kernels = [
-            (0, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) * (1 + np.cos(t))),
-            (1, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 2),
-            (2, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) * (1 - np.cos(t))),
+            (0, self._kernel(theta_max, lambda t: np.sin(t) * (1 + np.cos(t)))),
+            (1, self._kernel(theta_max, lambda t: np.sin(t) ** 2)),
+            (2, self._kernel(theta_max, lambda t: np.sin(t) * (1 - np.cos(t)))),
         ]
-
-        # Prefactor according to Novotny & Hecht, eq. (3.66)
-        common_factor = (
-            1j * k0 * self.f / 2 * np.sqrt(n1 / n2) * E0 * np.exp(-1j * k0 * self.f)
-        )
 
         def assemble(I, cos_phi, sin_phi):
             I00, I01, I02 = I
@@ -387,34 +399,16 @@ class ObjectiveLens:
         evaluated exactly.  The numerical sampling is the same as in
         :meth:`getFocalField`.
         """
-        k0 = 2 * np.pi / self.wavelength
-        E0 = 1
-        theta_max = np.arcsin(self.NA)
-        n1, n2 = 1, 1
-        w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
-
-        def fw(theta):  # Apodization function
-            return np.exp(
-                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
-            )
-
+        # Prefactor according to Novotny & Hecht, eq. (3.70): f**2/(2*w0) with
+        # the waist w0 = f0*f*sin(theta_max) of the incident doughnut beam
+        theta_max, prefactor = self._focusing_params()
+        common_factor = prefactor / (self.f0 * np.sin(theta_max))
         # Angular weights of the integrals Irad and I10 (without the Bessel
         # functions and the defocus phase)
         kernels = [
-            (1, lambda t: fw(t) * np.cos(t) ** (3 / 2) * np.sin(t) ** 2),
-            (0, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 3),
+            (1, self._kernel(theta_max, lambda t: np.cos(t) * np.sin(t) ** 2)),
+            (0, self._kernel(theta_max, lambda t: np.sin(t) ** 3)),
         ]
-
-        # Prefactor according to Novotny & Hecht, eq. (3.70)
-        common_factor = (
-            1j
-            * k0
-            * self.f**2
-            / (2 * w0)
-            * np.sqrt(n1 / n2)
-            * E0
-            * np.exp(-1j * k0 * self.f)
-        )
 
         def assemble(I, cos_phi, sin_phi):
             Irad, I10 = I
@@ -476,32 +470,14 @@ class ObjectiveLens:
         evaluated exactly.  The numerical sampling is the same as in
         :meth:`getFocalField`.
         """
-        k0 = 2 * np.pi / self.wavelength
-        E0 = 1
-        theta_max = np.arcsin(self.NA)
-        n1, n2 = 1, 1
-        w0 = self.f0 * self.f * np.sin(theta_max)  # incident beam waist
-
-        def fw(theta):  # Apodization function
-            return np.exp(
-                -1 / (self.f0**2) * (np.sin(theta) ** 2) / (np.sin(theta_max) ** 2)
-            )
-
+        # Prefactor according to Novotny & Hecht, eq. (3.72), here with the
+        # incident polarization along (-sin(phi), cos(phi)): f**2/(2*w0) with
+        # the waist w0 = f0*f*sin(theta_max) of the incident doughnut beam
+        theta_max, prefactor = self._focusing_params()
+        common_factor = prefactor / (self.f0 * np.sin(theta_max))
         # Angular weight of the integral Iazm (without the Bessel function
         # and the defocus phase)
-        kernels = [(1, lambda t: fw(t) * np.sqrt(np.cos(t)) * np.sin(t) ** 2)]
-
-        # Prefactor according to Novotny & Hecht, eq. (3.72), here
-        # with incident polarization along (-sin(phi), cos(phi))
-        common_factor = (
-            1j
-            * k0
-            * self.f**2
-            / (2 * w0)
-            * np.sqrt(n1 / n2)
-            * E0
-            * np.exp(-1j * k0 * self.f)
-        )
+        kernels = [(1, self._kernel(theta_max, lambda t: np.sin(t) ** 2))]
 
         def assemble(I, cos_phi, sin_phi):
             (Iazm,) = I
@@ -700,7 +676,7 @@ class ObjectiveLens:
         # --- APODIZATION (ILLUMINATION PROFILE) ---
         # Gaussian amplitude weighting (filling factor f0) and
         # 1/sqrt(cos) factor (sine condition + Cartesian Jacobian mapping)
-        fw = np.exp(-((sin_theta / np.sin(theta_max)) ** 2) / self.f0**2)
+        fw = self._apodization(sin_theta, np.sin(theta_max))
         amplitude_factor = fw / np.sqrt(cos_theta)
 
         # Defocus propagator (phase term for defocus z in the medium)
