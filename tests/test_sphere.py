@@ -98,10 +98,13 @@ def test_newton_spheres_and_classify():
 
 
 def test_move():
-    m = SWT.sphr2cart(0.3, 1.0)
-    m2 = move(m, RNG.normal(size=3), 1e-3)
-    assert np.isclose(np.linalg.norm(m2), 1) and np.isclose(np.arccos(m @ m2), 1e-3)
-    assert np.allclose(move(m, m, 1e-3), m)  # (no tangent component)
+    for m in M.T:  # (|m|^2 is not exactly 1 in floating point for some of them)
+        m2 = move(m, RNG.normal(size=3), 1e-3)
+        assert np.isclose(np.linalg.norm(m2), 1)
+        assert np.isclose(np.arccos(np.clip(m @ m2, -1, 1)), 1e-3)
+        # no tangent component (up to round-off): no displacement
+        assert np.array_equal(move(m, m, 1e-3), m)
+        assert np.array_equal(move(m, -2.5 * m, 1e-3), m)
 
 
 def test_minimize_kwargs():

@@ -6,7 +6,13 @@ from warnings import warn
 import numpy as np
 from numpy import linalg
 from scipy.optimize import minimize
-from SpinWaveToolkit.helpers import MU0, wrapAngle, distBE, sphr2cart, cart2sphr
+from SpinWaveToolkit.helpers import (
+    MU0,
+    wrapAngle,
+    bloch_function,
+    sphr2cart,
+    cart2sphr,
+)
 from SpinWaveToolkit.core._sphere import (
     angle_frame,
     angle_hessian,
@@ -1159,15 +1165,28 @@ class DoubleLayerNumeric:
         """
         return 1 / self.GetGroupVelocity(n=n)
 
-    def GetBlochFunction(self, n=0, Nf=200, temp=None, mu=None, lifeTime=None):
+    def GetBlochFunction(
+        self,
+        n=0,
+        Nf=200,
+        temp=None,
+        mu=None,
+        lifetime=None,
+        w=None,
+        margin=0.1,
+        lifeTime=None,
+    ):
         """Gives Bloch function for given mode.
 
-        Bloch function is calculated with margin of 10% of
-        the lowest and the highest frequency (including
+        The Bloch function is calculated by
+        :func:`~SpinWaveToolkit.bloch_function` from the dispersion and
+        the lifetime of the mode, on a frequency axis with a `margin`
+        around the lowest and the highest frequency (including the
         Gilbert broadening).
 
-        As there might be problems with lifetime calculation for the
-        double layers, you can set fixed one as input parameter.
+        As the lifetime formula of :meth:`GetLifetime` may not be
+        meaningful for the antiparallel or scissors states, a fixed
+        lifetime can be given by `lifetime`.
 
         Parameters
         ----------
@@ -1185,37 +1204,49 @@ class DoubleLayerNumeric:
             Otherwise, the Bloch function is weighted by
             ``sqrt(2*n_BE)``, where ``n_BE`` is the Bose-Einstein
             distribution (see :func:`~SpinWaveToolkit.distBE`).
-        lifetime : float, optional
-            (s ) fixed lifetime to bypass its dispersion calculation.
+        lifetime : float or array_like or None, optional
+            (s ) lifetime of the mode used instead of the one from
+            :meth:`GetLifetime`, a single value or one per wavevector
+            (e.g. a measured value, or when the calculated lifetime is
+            not meaningful).  Default is None.
+        w : array_like or None, optional
+            (rad*Hz) frequency axis of the Bloch function.  If None,
+            `Nf` equidistant points covering the frequencies of the mode
+            (broadened by the lifetime) with a margin are used.  Default
+            is None.
+        margin : float, optional
+            () relative margin of the constructed frequency axis (if `w`
+            is None), i.e. the fraction of the broadened frequency range
+            of the mode added below and above it.  Default is 0.1.
+        lifeTime : float or None, optional
+            Deprecated name of `lifetime`, to be removed in
+            :mod:`SpinWaveToolkit` v1.6.
+
+            .. version-deprecated:: 1.4.0
+               Use `lifetime` instead.
 
         Returns
         -------
         w : ndarray
-            (rad*Hz) frequency axis for the 2D Bloch function.
+            (rad*Hz) frequency axis of the 2D Bloch function (the given
+            `w`, or the constructed axis of `Nf` points).
         blochFunc : ndarray
             () 2D Bloch function for given `w` and `kxi` with shape
             ``(Nf, kxi.shape[0])``.
         """
-        w, _ = self.GetDispersion()
-        if lifeTime is None:
-            lifeTime = self.GetLifetime(n=n)
-        else:
-            lifeTime = lifeTime * np.ones(len(self.kxi))
-        w00 = w[n]
-
-        w = np.linspace(
-            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
-            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
-            Nf,
-        )
-        wMat = np.tile(w, (len(lifeTime), 1)).T
-        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
-
-        if temp is not None and mu is not None:
-            # amplitude ~ sqrt(2*n_BE), i.e. BLS intensity ~ n_BE
-            blochFunc *= np.sqrt(2 * distBE(w, temp=temp, mu=mu))[:, np.newaxis]
-
-        return w, blochFunc
+        if lifeTime is not None:
+            warn(
+                "`lifeTime` is deprecated and will be removed in SpinWaveToolkit "
+                + "v1.6. Use `lifetime` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if lifetime is None:
+                lifetime = lifeTime
+        w_k = self.GetDispersion()[0][n]
+        if lifetime is None:
+            lifetime = self.GetLifetime(n=n)
+        return bloch_function(w_k, lifetime, Nf, temp, mu, w, margin)
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""

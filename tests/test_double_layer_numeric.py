@@ -475,5 +475,5 @@ class TestDispersion:
             assert q.shape == (30,) and np.all(np.isfinite(q))
         for q in (dln.GetLifetime(), dln.GetDecLen(), dln.GetLifetime(n=-1)[1]):
             assert q.shape == (30,)
-        w, bloch = dln.GetBlochFunction(Nf=50, lifeTime=1e-9)
+        w, bloch = dln.GetBlochFunction(Nf=50, lifetime=1e-9)
         assert bloch.shape == (50, 30) and np.all(np.isfinite(bloch))

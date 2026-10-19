@@ -64,6 +64,7 @@ Functions
     ~bisect
     ~roots
     ~distBE
+    ~bloch_function
     ~sphr2cart
     ~cart2sphr
 

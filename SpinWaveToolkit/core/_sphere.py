@@ -175,8 +175,8 @@ def classify(H, scale):
 def move(m, s, angle):
     """Unit vector `m` displaced by `angle` (rad) along the tangent
     component of the vector `s`."""
-    s = s - (s @ m) * m
-    norm = np.linalg.norm(s)
-    if norm < 1e-300:
+    s_t = s - (s @ m) * m
+    norm = np.linalg.norm(s_t)
+    if norm <= 1e-12 * np.linalg.norm(s):  # (no tangent component, round-off)
         return m
-    return m * np.cos(angle) + s / norm * np.sin(angle)
+    return m * np.cos(angle) + s_t / norm * np.sin(angle)

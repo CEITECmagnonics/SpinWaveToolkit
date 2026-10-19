@@ -3,7 +3,7 @@ Core (private) file for the `SingleLayer` class.
 """
 
 import numpy as np
-from SpinWaveToolkit.helpers import MU0, roots, sphr2cart, distBE
+from SpinWaveToolkit.helpers import MU0, roots, sphr2cart, bloch_function
 
 __all__ = ["SingleLayer"]
 
@@ -952,11 +952,23 @@ class SingleLayer:
         """
         return 1 / self.GetGroupVelocity(n=n, nT=nT)
 
-    def GetBlochFunction(self, n=0, nT=0, Nf=200, temp=None, mu=None):
+    def GetBlochFunction(
+        self,
+        n=0,
+        nT=0,
+        Nf=200,
+        temp=None,
+        mu=None,
+        lifetime=None,
+        w=None,
+        margin=0.1,
+    ):
         """Gives Bloch function for given mode.
 
-        Bloch function is calculated with margin of 10% of
-        the lowest and the highest frequency (including
+        The Bloch function is calculated by
+        :func:`~SpinWaveToolkit.bloch_function` from the dispersion and
+        the lifetime of the mode, on a frequency axis with a `margin`
+        around the lowest and the highest frequency (including the
         Gilbert broadening).
 
         Parameters
@@ -976,31 +988,34 @@ class SingleLayer:
             Otherwise, the Bloch function is weighted by
             ``sqrt(2*n_BE)``, where ``n_BE`` is the Bose-Einstein
             distribution (see :func:`~SpinWaveToolkit.distBE`).
+        lifetime : float or array_like or None, optional
+            (s ) lifetime of the mode used instead of the one from
+            :meth:`GetLifetime`, a single value or one per wavevector
+            (e.g. a measured value, or when the calculated lifetime is
+            not meaningful).  Default is None.
+        w : array_like or None, optional
+            (rad*Hz) frequency axis of the Bloch function.  If None,
+            `Nf` equidistant points covering the frequencies of the mode
+            (broadened by the lifetime) with a margin are used.  Default
+            is None.
+        margin : float, optional
+            () relative margin of the constructed frequency axis (if `w`
+            is None), i.e. the fraction of the broadened frequency range
+            of the mode added below and above it.  Default is 0.1.
 
         Returns
         -------
         w : ndarray
-            (rad*Hz) frequency axis for the 2D Bloch function.
+            (rad*Hz) frequency axis of the 2D Bloch function (the given
+            `w`, or the constructed axis of `Nf` points).
         blochFunc : ndarray
             () 2D Bloch function for given `w` and `kxi` with shape
             ``(Nf, kxi.shape[0])``.
         """
-        w00 = self.GetDispersion(n=n, nT=nT)
-        lifeTime = self.GetLifetime(n=n, nT=nT)
-
-        w = np.linspace(
-            (np.min(w00) - 2 * np.pi * 1 / np.max(lifeTime)) * 0.9,
-            (np.max(w00) + 2 * np.pi * 1 / np.max(lifeTime)) * 1.1,
-            Nf,
-        )
-        wMat = np.tile(w, (len(lifeTime), 1)).T
-        blochFunc = 1 / ((wMat - w00) ** 2 + (2 / lifeTime) ** 2)
-
-        if temp is not None and mu is not None:
-            # amplitude ~ sqrt(2*n_BE), i.e. BLS intensity ~ n_BE
-            blochFunc *= np.sqrt(2 * distBE(w, temp=temp, mu=mu))[:, np.newaxis]
-
-        return w, blochFunc
+        w_k = self.GetDispersion(n=n, nT=nT)
+        if lifetime is None:
+            lifetime = self.GetLifetime(n=n, nT=nT)
+        return bloch_function(w_k, lifetime, Nf, temp, mu, w, margin)
 
     def GetExchangeLen(self):
         """Calculate exchange length in meters from the parameter `A`."""

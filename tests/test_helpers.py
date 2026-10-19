@@ -31,6 +31,42 @@ def test_distBE():
     assert np.allclose(SWT.distBE(-w, temp=300, mu=0), n)  # symmetric in w
 
 
+def test_bloch_function():
+    """Shapes; the frequency axis covers the mode frequencies; each peak
+    sits at the mode frequency and decays monotonically on both sides;
+    longer lifetimes give narrower peaks; a single lifetime equals the
+    same lifetime for all wavevectors; a given axis is used as is; the
+    thermal weighting is a decreasing function of the frequency only."""
+    w_k = 2 * np.pi * np.linspace(5e9, 10e9, 6)
+    tau = np.linspace(1e-9, 3e-9, 6)
+    w, bloch = SWT.bloch_function(w_k, tau, Nf=2001)
+    assert w.shape == (2001,) and bloch.shape == (2001, 6)
+    assert w[0] < w_k.min() and w[-1] > w_k.max() and np.all(np.diff(w) > 0)
+    assert np.all(bloch > 0)
+    peaks = np.argmax(bloch, axis=0)
+    assert np.all(np.abs(w[peaks] - w_k) <= w[1] - w[0])
+    for i, p in enumerate(peaks):
+        assert np.all(np.diff(bloch[:p, i]) >= 0) and np.all(np.diff(bloch[p:, i]) <= 0)
+    widths = np.sum(bloch > 0.5 * bloch.max(axis=0), axis=0)  # (points above half)
+    assert np.all(np.diff(widths) < 0)
+    # the axis never starts below zero, and a larger margin widens it
+    w_soft, _ = SWT.bloch_function(2 * np.pi * np.array([0.1e9, 1e9]), 1e-9, Nf=11)
+    assert w_soft[0] == 0 and w_soft[-1] > 2 * np.pi * 1e9
+    w_wide, _ = SWT.bloch_function(w_k, tau, Nf=2001, margin=0.5)
+    assert w_wide[0] < w[0] and w_wide[-1] > w[-1]
+    with pytest.raises(ValueError):
+        SWT.bloch_function(w_k, tau, margin=-0.1)
+    # a single lifetime, and a given frequency axis
+    w1, b1 = SWT.bloch_function(w_k, 2e-9, w=w)
+    w2, b2 = SWT.bloch_function(w_k, np.full(6, 2e-9), w=w)
+    assert np.array_equal(w1, w) and np.array_equal(b1, b2)
+    # the thermal weighting depends on the frequency only
+    temp, mu = 300, -1e9 * SWT.H
+    _, bloch_be = SWT.bloch_function(w_k, tau, Nf=2001, temp=temp, mu=mu)
+    ratio = bloch_be / bloch
+    assert np.allclose(ratio, ratio[:, :1]) and np.all(np.diff(ratio[:, 0]) < 0)
+
+
 def test_roots():
     xs = SWT.roots(np.sin, 0.5, 10, dx=0.1, eps=1e-9)
     assert np.allclose(xs, [np.pi, 2 * np.pi, 3 * np.pi], atol=1e-8)

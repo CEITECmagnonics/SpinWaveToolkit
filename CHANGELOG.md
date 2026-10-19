@@ -42,6 +42,12 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   documented.
 - `SingleLayerNumeric`: `kxi`, `phi`, `theta`, `Bext`, `d` and the material parameters can be
   1D arrays of the same length (calculated elementwise), e.g. flattened 2D grids of wavevectors.
+- `bloch_function()`: the Bloch function of a spin-wave mode from its dispersion and lifetime (a
+  single value or one per wavevector), optionally on a given frequency axis, for dispersions from
+  any source, e.g. TetraX ([#31]).  The `GetBlochFunction()` methods of the dispersion classes
+  use it and accept the new parameters `lifetime` (a fixed lifetime, a single value or one per
+  wavevector, instead of `GetLifetime()`), `w` (a given frequency axis) and `margin` (relative
+  margin of the constructed frequency axis).
 - Example notebooks: `BLS_signal_from_GF_pupil`, `BLS_signal_comparison` ([#63]),
   `BLS_polarization_optics`, `FMR_with_PMA` ([#13]) and `mode_profiles_numeric` ([#42]).
 - Mentions of [SWTweb](https://ceitecmagnonics.github.io/SWTweb/) added to `README.md` and documentation ([#59], [#70]).
@@ -88,6 +94,11 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - `DoubleLayerNumeric.GetDispersion(angles=...)`: optional static angles ``(theta1, phi1,
   theta2, phi2)`` instead of the equilibrium of `GetEquilibrium()`, e.g. to select one of the
   degenerate scissors states.
+- The frequency axis of the Bloch functions (`bloch_function()`, `GetBlochFunction()` of all
+  dispersion classes) spans the mode frequencies broadened by the shortest lifetime (previously
+  the longest) with a margin relative to this range (parameter `margin` of `bloch_function()`,
+  default 10 %; previously the end points were scaled by 0.9 and 1.1), and never extends to
+  negative frequencies ([#22], Bloch function part).
 - `DoubleLayerNumeric`: each layer precesses with the gyromagnetic ratio of its own material
   (attribute `gamma2` from `material2`; previously `gamma` of `material` was used for both
   layers).
@@ -187,6 +198,8 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - `DoubleLayerNumeric.GetFreeEnergyIP()` and `GetFreeEnergyOOP()`, superseded by
   `GetFreeEnergy()` (and `GetEquilibrium()` for the equilibrium including the out-of-plane
   angles); they will be removed in version 1.6.
+- `DoubleLayerNumeric.GetBlochFunction()`: parameter `lifeTime`, renamed to `lifetime` (as in
+  the other classes); the old name will be removed in version 1.6.
 
 ### Fixed
 
@@ -392,6 +405,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 [#25]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/25
 [#26]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/26
 [#27]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/27
+[#31]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/31
 [#32]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/32
 [#34]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/34
 [#35]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/35
