@@ -38,6 +38,11 @@ def test_tangent_bases():
     assert np.allclose(np.einsum("ikn,iln->kln", T, T), np.eye(2)[:, :, None])
     assert np.allclose(np.einsum("ikn,in->kn", T, M), 0)
     assert np.allclose(np.cross(T[:, 0], T[:, 1], axis=0), M)  # right-handed
+    # in-plane: the azimuthal direction only
+    T = tangent_bases(M[:, 1:], in_plane=True)
+    assert T.shape == (3, 1, 6)
+    assert np.allclose(np.linalg.norm(T[:, 0], axis=0), 1) and np.allclose(T[2], 0)
+    assert np.allclose(np.sum(T[:, 0] * M[:, 1:], axis=0), 0)
 
 
 def test_local_frame():
@@ -60,7 +65,7 @@ def test_angle_frame_derivatives():
             mp, Jp, _ = angle_frame(*(x + eps * e), rot)
             mm, Jm, _ = angle_frame(*(x - eps * e), rot)
             assert np.allclose(J[:, k], (mp - mm) / (2 * eps), atol=1e-9)
-            assert np.allclose((Jp - Jm) / (2 * eps), D[k : k + 2].T, atol=1e-9)
+            assert np.allclose((Jp - Jm) / (2 * eps), D[k].T, atol=1e-9)
     h, A = RNG.normal(size=3), RNG.normal(size=(3, 3))
     A = A + A.T
     m, J, D = angle_frame(np.pi / 2, 0.0, R)
@@ -72,7 +77,8 @@ def test_angle_frame_derivatives():
 def test_newton_spheres_and_classify():
     """Stationary points of m.A.m/2 with A = diag(1, 2, 3) from random
     starts: the axes, with minima along x, saddle points along y and
-    maxima along z."""
+    maxima along z; restricted to the film plane, minima along x and
+    maxima along y."""
     A, h = np.diag([1.0, 2.0, 3.0]), np.zeros(3)
     starts = SWT.sphr2cart(RNG.uniform(0.1, 3.0, 40), RNG.uniform(-3, 3, 40))
     (m,), gnorm = newton_spheres([starts], _quadratic(h, A), 50, 3.0)
@@ -81,6 +87,14 @@ def test_newton_spheres_and_classify():
     assert np.allclose(np.abs(m[axis, np.arange(40)]), 1)
     _, H = _quadratic(h, A)([m], [tangent_bases(m)])
     assert np.array_equal(classify(H, 3.0), np.array([0, 2, 1])[axis])
+    # restricted to the film plane (from in-plane starts)
+    starts = SWT.sphr2cart(np.pi / 2, RNG.uniform(-3, 3, 40))
+    (m,), gnorm = newton_spheres([starts], _quadratic(h, A), 50, 3.0, in_plane=True)
+    assert np.all(gnorm < 1e-12) and np.allclose(m[2], 0)
+    axis = np.argmax(np.abs(m), axis=0)
+    assert np.all(axis < 2) and np.allclose(np.abs(m[axis, np.arange(40)]), 1)
+    _, H = _quadratic(h, A)([m], [tangent_bases(m, in_plane=True)])
+    assert np.array_equal(classify(H, 3.0), axis)
 
 
 def test_move():

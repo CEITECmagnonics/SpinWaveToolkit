@@ -112,8 +112,12 @@ class TestEquilibrium:
         assert np.allclose(minima, [[-ALPHA, ALPHA], [ALPHA, -ALPHA]], atol=1e-8)
         assert np.isclose(eden[0], saf.GetFreeEnergy(ALPHA, -ALPHA))
         # zero torque at all equilibria
-        grad = saf._DoubleLayerNumeric__ip_grad(np.array([phi1, phi2]))
-        assert np.abs(grad).max() < 1e-12 * abs(JBL)
+        m1, m2 = SWT.sphr2cart(th1, phi1), SWT.sphr2cart(th2, phi2)
+        G1, G2 = saf._DoubleLayerNumeric__vec_grad(m1, m2)
+        torque = np.abs(np.cross(m1, G1, axis=0)[2]) + np.abs(
+            np.cross(m2, G2, axis=0)[2]
+        )
+        assert torque.max() < 1e-10 * abs(JBL)
 
     def test_find_equilibria_general(self):
         """All stationary points on the two spheres: the in-plane ones
@@ -193,34 +197,32 @@ class TestEquilibrium:
 
 def test_energy_derivatives():
     """Analytical gradient and Hessian agree with finite differences,
-    for the in-plane energy and for the energy in the local frames of
-    the two magnetizations (all interactions active)."""
+    for the energy in the local frames of the two magnetizations and
+    restricted to the film plane (all interactions active)."""
     saf = _saf(
         Ku=5e3, Ku2=2e3, Jbq=-0.1e-3, phiAnis1=0.4, phiAnis2=1.1, Ks1=1e4, Ks2=3e4
     )
     saf.theta = 0.9
     eps = 1e-6
-    # in-plane
-    E = lambda x: saf.GetFreeEnergy(x[0], x[1])
-    grad = saf._DoubleLayerNumeric__ip_grad
-    hess = saf._DoubleLayerNumeric__ip_hess
-    x = np.array([0.7, 2.9])
-    num_g = [(E(x + eps * e) - E(x - eps * e)) / (2 * eps) for e in np.eye(2)]
-    num_h = [(grad(x + eps * e) - grad(x - eps * e)) / (2 * eps) for e in np.eye(2)]
-    assert np.allclose(grad(x), num_g, rtol=1e-6)
-    assert np.allclose(hess(x), num_h, rtol=1e-6)
-    assert np.isclose(
-        saf.GetFreeEnergy(0.7, 2.9), saf._DoubleLayerNumeric__ip_energy(x)
-    )
-    # general (local frames)
+    angle_functions = saf._DoubleLayerNumeric__angle_functions
     R1 = local_frame(SWT.sphr2cart(1.0, 0.4))
     R2 = local_frame(SWT.sphr2cart(2.0, -1.0))
-    fun, jac, hess = saf._DoubleLayerNumeric__local_functions(R1, R2, 1.0)
-    x = np.array([1.3, 0.2, 1.7, -0.3])
-    num_g = [(fun(x + eps * e) - fun(x - eps * e)) / (2 * eps) for e in np.eye(4)]
-    num_h = [(jac(x + eps * e) - jac(x - eps * e)) / (2 * eps) for e in np.eye(4)]
-    assert np.allclose(jac(x), num_g, rtol=1e-6, atol=1e-12)
-    assert np.allclose(hess(x), num_h, rtol=1e-6, atol=1e-12)
+    for in_plane, x in (
+        (False, np.array([1.3, 0.2, 1.7, -0.3])),
+        (True, np.array([0.7, 2.9])),
+    ):
+        fun, jac, hess = angle_functions(R1, R2, 1.0, in_plane)
+        basis = np.eye(len(x))
+        num_g = [(fun(x + eps * e) - fun(x - eps * e)) / (2 * eps) for e in basis]
+        num_h = [(jac(x + eps * e) - jac(x - eps * e)) / (2 * eps) for e in basis]
+        assert np.allclose(jac(x), num_g, rtol=1e-6, atol=1e-12)
+        assert np.allclose(hess(x), num_h, rtol=1e-6, atol=1e-12)
+    # the in-plane energy is the free energy (up to its constant)
+    fun = angle_functions(None, None, 1.0, True)[0]
+    assert np.isclose(
+        fun([0.7, 2.9]) - fun([0.1, 1.0]),
+        saf.GetFreeEnergy(0.7, 2.9) - saf.GetFreeEnergy(0.1, 1.0),
+    )
 
 
 def test_free_energy():

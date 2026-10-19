@@ -641,63 +641,17 @@ class DoubleLayerNumeric:
         the magnetizations stay in the film plane and the result equals
         that of :meth:`GetPhis`.
         """
-        m1 = sphr2cart(self.thetaInit1, self.phiInit1)
-        m2 = sphr2cart(self.thetaInit2, self.phiInit2)
-        scale = self.__energy_scale()
-
-        if global_minimum:
-            th1, ph1, th2, ph2, eden, eq_type = self.find_equilibria()
-            minima = eq_type == 0
-            if not minima.any():  # (degenerate energy)
-                return self.__angles(m1, m2)
-            lowest = minima & (eden <= eden[minima].min() + 1e-9 * scale)
-            c1 = sphr2cart(th1, ph1).T @ m1
-            c2 = sphr2cart(th2, ph2).T @ m2
-            dist = np.arccos(np.clip(c1, -1, 1)) + np.arccos(np.clip(c2, -1, 1))
-            i = np.argmin(np.where(lowest, dist, np.inf))
-            return np.array([th1[i], ph1[i], th2[i], ph2[i]])
-
-        for _ in range(20):  # restarts in new local frames or from labile points
-            R1, R2 = local_frame(m1), local_frame(m2)
-            fun, jac, hess = self.__local_functions(R1, R2, scale)
-            kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
-            res = minimize(fun, np.array([np.pi / 2, 0.0, np.pi / 2, 0.0]), **kwargs)
-            x = res.x
-            m1, m2 = R1 @ sphr2cart(x[0], x[1]), R2 @ sphr2cart(x[2], x[3])
-            if max(abs(x[0] - np.pi / 2), abs(x[2] - np.pi / 2)) > np.pi / 3:
-                continue  # far from the equator of a local frame, re-center
-            # polish by Newton steps on the spheres (SciPy stops at the
-            # round-off level of the energy)
-            ms = [m1[:, None], m2[:, None]]
-            (n1, n2), _ = newton_spheres(ms, self.__grad_hess, 5, scale)
-            if n1[:, 0] @ m1 > np.cos(1e-6) and n2[:, 0] @ m2 > np.cos(1e-6):
-                m1, m2 = n1[:, 0], n2[:, 0]
-                ms = [n1, n2]
-            # stability check by the Hessian on the spheres
-            Ts = [tangent_bases(m) for m in ms]
-            _, H = self.__grad_hess(ms, Ts)
-            lam, vec = np.linalg.eigh(H[:, :, 0])
-            if lam[0] >= -1e-9 * scale:
-                break
-            # displacement along the negative curvature, deterministic sign
-            s1, s2 = Ts[0][:, :, 0] @ vec[:2, 0], Ts[1][:, :, 0] @ vec[2:, 0]
-            sign = _displacement_sign(m1, s1, m2, s2)
-            m1, m2 = move(m1, sign * s1, 1e-3), move(m2, sign * s2, 1e-3)
-        return self.__angles(m1, m2)
+        return self.__minimize(False, global_minimum, scipy_kwargs)
 
     def GetPhis(self, global_minimum=False, scipy_kwargs=None):
         """Gives the in-plane angles of magnetization in both SAF layers
         for the magnetization restricted to the film plane.
         The returned value is in rad.
 
-        Same as :meth:`GetEquilibrium`, but the minimization of the free
-        energy runs over the two in-plane angles only (the magnetization
-        is forced into the film plane, which is the equilibrium for
-        in-plane fields without strong perpendicular anisotropy).  The
-        two in-plane angles are optimized with the analytical gradient
-        and Hessian, starting from `phiInit1`, `phiInit2`; labile
-        starting points are left along the direction of the negative
-        curvature (with the component along `phi1` positive).
+        Same minimization as in :meth:`GetEquilibrium`, but restricted
+        to the film plane, i.e. over the two in-plane angles only
+        (starting from `phiInit1`, `phiInit2`), which is the equilibrium
+        for in-plane fields without strong perpendicular anisotropy.
 
         Parameters
         ----------
@@ -725,42 +679,7 @@ class DoubleLayerNumeric:
             magnetization of the two layers, measured from the in-plane
             direction of Bext, in the interval ``[-pi, pi)``.
         """
-        fun, jac, hess, scale, e0 = self.__ip_functions()
-        x = np.array([self.phiInit1, self.phiInit2], dtype=float)
-        if global_minimum:
-            _, phi1, _, phi2, eden, eq_type = self.find_equilibria(in_plane=True)
-            minima = eq_type == 0
-            if not minima.any():  # (degenerate energy)
-                return wrapAngle(x, -np.pi, np.pi)
-            # among the lowest energy minima, the one closest to the start
-            lowest = minima & (eden <= eden[minima].min() + 1e-9 * scale)
-            dist = np.abs(wrapAngle(phi1 - x[0], -np.pi, np.pi)) + np.abs(
-                wrapAngle(phi2 - x[1], -np.pi, np.pi)
-            )
-            i = np.argmin(np.where(lowest, dist, np.inf))
-            return wrapAngle(np.array([phi1[i], phi2[i]]), -np.pi, np.pi)
-
-        kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
-        for _ in range(10):  # restarts from labile equilibria
-            res = minimize(fun, x, **kwargs)
-            x = res.x
-            # polish by Newton steps on the gradient (SciPy stops at the
-            # round-off level of the energy, ~1e-7 rad)
-            for _ in range(5):
-                g = jac(x)
-                if np.linalg.norm(g) < 1e-15:
-                    break
-                lam, vec = np.linalg.eigh(hess(x))
-                if lam[0] <= 0:
-                    break
-                x = x - np.linalg.solve(hess(x), g)
-            lam, vec = np.linalg.eigh(hess(x))
-            if lam[0] >= -1e-9 * scale / e0:
-                break
-            v = vec[:, 0]  # direction of negative curvature
-            v *= np.sign(v[0]) if abs(v[0]) > 1e-9 else np.sign(v[1])
-            x = x + 1e-3 * v
-        return wrapAngle(x, -np.pi, np.pi)
+        return self.__minimize(True, global_minimum, scipy_kwargs)[[1, 3]]
 
     def find_equilibria(self, in_plane=False):
         """Find all equilibria of the magnetization of the two layers.
@@ -800,13 +719,16 @@ class DoubleLayerNumeric:
         equilibria are not isolated and only some representatives are
         returned.
         """
-        if in_plane:
-            return self.__find_equilibria_ip()
         scale = self.__energy_scale()
-        dirs = _fibonacci_sphere(24)  # (3, 24)
-        i1, i2 = np.meshgrid(np.arange(24), np.arange(24), indexing="ij")
-        ms = [dirs[:, i1.ravel()], dirs[:, i2.ravel()]]
-        (m1, m2), gnorm = newton_spheres(ms, self.__grad_hess, 60, scale)
+        if in_plane:  # 12 x 12 in-plane angles
+            g = np.linspace(0, 2 * np.pi, 12, endpoint=False) + np.pi / 12
+            P1, P2 = np.meshgrid(g, g, indexing="ij")
+            ms = [_in_plane(P1.ravel()), _in_plane(P2.ravel())]
+        else:  # 24 x 24 directions
+            dirs = _fibonacci_sphere(24)
+            i1, i2 = np.meshgrid(np.arange(24), np.arange(24), indexing="ij")
+            ms = [dirs[:, i1.ravel()], dirs[:, i2.ravel()]]
+        (m1, m2), gnorm = newton_spheres(ms, self.__grad_hess, 60, scale, in_plane)
         ok = gnorm < 1e-8 * scale
         m1, m2 = m1[:, ok], m2[:, ok]
 
@@ -820,59 +742,71 @@ class DoubleLayerNumeric:
         m1 = np.array([p for p, _ in found]).T  # (3, M)
         m2 = np.array([q for _, q in found]).T
         eden = self.__vec_energy(m1, m2) + self.__energy_const()
-        _, H = self.__grad_hess([m1, m2], [tangent_bases(m1), tangent_bases(m2)])
-        eq_type = classify(H, scale)
+        Ts = [tangent_bases(m, in_plane) for m in (m1, m2)]
+        eq_type = classify(self.__grad_hess([m1, m2], Ts)[1], scale)
         order = np.argsort(eden)
         th1, ph1, th2, ph2 = self.__angles(m1[:, order], m2[:, order])
         return th1, ph1, th2, ph2, eden[order], eq_type[order]
 
-    def __find_equilibria_ip(self):
-        """In-plane stationary points by Newton iterations from a 12 x 12
-        grid of in-plane angles (see :meth:`find_equilibria`)."""
-        _, _, _, scale, _ = self.__ip_functions()
-        n = 12
-        g = np.linspace(0, 2 * np.pi, n, endpoint=False) + np.pi / n
-        P1, P2 = np.meshgrid(g, g, indexing="ij")
-        x = np.stack([P1.ravel(), P2.ravel()])  # (2, n*n)
-        tol = 1e-12 * scale
-        ridge = 1e-12 * scale * np.eye(2)[:, :, np.newaxis]
-        for _ in range(60):
-            grad = self.__ip_grad(x)
-            hess = self.__ip_hess(x) + ridge
-            step = -np.linalg.solve(hess.transpose(2, 0, 1), grad.T[:, :, None])[
-                :, :, 0
-            ].T
-            norm = np.linalg.norm(step, axis=0)
-            step *= np.minimum(1.0, 0.5 / np.maximum(norm, 1e-300))  # limit the step
-            x = x + step
-            if np.all(np.linalg.norm(grad, axis=0) < tol):
-                break
-        grad = self.__ip_grad(x)
-        ok = np.linalg.norm(grad, axis=0) < 1e-8 * scale
-        x = wrapAngle(x[:, ok], -np.pi, np.pi)
+    def __minimize(self, in_plane, global_minimum, scipy_kwargs):
+        """Minimization of the energy from the initial angles (see
+        :meth:`GetEquilibrium`), restricted to the film plane if
+        `in_plane`.  Returns the angles ``(theta1, phi1, theta2, phi2)``."""
+        if in_plane:
+            m1, m2 = _in_plane(self.phiInit1), _in_plane(self.phiInit2)
+        else:
+            m1 = sphr2cart(self.thetaInit1, self.phiInit1)
+            m2 = sphr2cart(self.thetaInit2, self.phiInit2)
+        scale = self.__energy_scale()
 
-        # remove duplicates
-        found = []
-        for p in x.T:
-            if not any(
-                np.abs(wrapAngle(p - q, -np.pi, np.pi)).max() < 1e-6 for q in found
-            ):
-                found.append(p)
-        if not found:
-            return (np.array([]),) * 5 + (np.array([], dtype=int),)
-        found = np.array(found).T  # (2, M)
-        eden = self.__ip_energy(found)
-        eq_type = classify(self.__ip_hess(found), scale)
-        order = np.argsort(eden)
-        theta = np.full(len(order), np.pi / 2)
-        return (
-            theta,
-            found[0, order],
-            theta,
-            found[1, order],
-            eden[order],
-            eq_type[order],
-        )
+        if global_minimum:
+            th1, ph1, th2, ph2, eden, eq_type = self.find_equilibria(in_plane)
+            minima = eq_type == 0
+            if not minima.any():  # (degenerate energy)
+                return self.__angles(m1, m2)
+            # among the lowest minima, the one closest to the initial angles
+            lowest = minima & (eden <= eden[minima].min() + 1e-9 * scale)
+            c1 = sphr2cart(th1, ph1).T @ m1
+            c2 = sphr2cart(th2, ph2).T @ m2
+            dist = np.arccos(np.clip(c1, -1, 1)) + np.arccos(np.clip(c2, -1, 1))
+            i = np.argmin(np.where(lowest, dist, np.inf))
+            return np.array([th1[i], ph1[i], th2[i], ph2[i]])
+
+        for _ in range(20):  # restarts in new local frames or from labile points
+            if in_plane:  # (in-plane angles in the lab frame, no singularity)
+                R1 = R2 = None
+                x0 = self.__angles(m1, m2)[[1, 3]]
+            else:  # (local frames with the magnetizations at the equator)
+                R1, R2 = local_frame(m1), local_frame(m2)
+                x0 = np.array([np.pi / 2, 0.0, np.pi / 2, 0.0])
+            fun, jac, hess = self.__angle_functions(R1, R2, scale, in_plane)
+            res = minimize(fun, x0, **minimize_kwargs(scipy_kwargs, jac, hess))
+            x = res.x
+            if in_plane:
+                m1, m2 = _in_plane(x[0]), _in_plane(x[1])
+            else:
+                m1, m2 = R1 @ sphr2cart(x[0], x[1]), R2 @ sphr2cart(x[2], x[3])
+                if max(abs(x[0] - np.pi / 2), abs(x[2] - np.pi / 2)) > np.pi / 3:
+                    continue  # far from the equator of a local frame, re-center
+            # polish by Newton steps (SciPy stops at the round-off level
+            # of the energy)
+            ms = [m1[:, None], m2[:, None]]
+            (n1, n2), _ = newton_spheres(ms, self.__grad_hess, 5, scale, in_plane)
+            if n1[:, 0] @ m1 > np.cos(1e-6) and n2[:, 0] @ m2 > np.cos(1e-6):
+                m1, m2 = n1[:, 0], n2[:, 0]
+                ms = [n1, n2]
+            # stability check by the Hessian on the spheres (or circles)
+            Ts = [tangent_bases(m, in_plane) for m in ms]
+            _, H = self.__grad_hess(ms, Ts)
+            lam, vec = np.linalg.eigh(H[:, :, 0])
+            if lam[0] >= -1e-9 * scale:
+                break
+            # displacement along the negative curvature, deterministic sign
+            k = Ts[0].shape[1]
+            s1, s2 = Ts[0][:, :, 0] @ vec[:k, 0], Ts[1][:, :, 0] @ vec[k:, 0]
+            sign = _displacement_sign(m1, s1, m2, s2)
+            m1, m2 = move(m1, sign * s1, 1e-3), move(m2, sign * s2, 1e-3)
+        return self.__angles(m1, m2)
 
     # ------------------------------------------------------------------
     # free energy
@@ -1058,32 +992,42 @@ class DoubleLayerNumeric:
         H11, H12, H22 = self.__vec_hess(*ms)
         return project(ms, Ts, [G1, G2], [[H11, H12], [H12.transpose(1, 0, 2), H22]])
 
-    def __local_functions(self, R1, R2, scale):
+    def __angle_functions(self, R1, R2, scale, in_plane):
         """Normalized energy, gradient and Hessian with respect to the
-        spherical angles in the local frames ``R1``, ``R2`` (rotation
-        matrices with the current magnetization directions as the first
-        columns, i.e. at the equator ``(pi/2, 0)``)."""
+        spherical angles ``(theta1, phi1, theta2, phi2)`` in the local
+        frames ``R1``, ``R2`` (rotation matrices with the current
+        magnetization directions as the first columns, i.e. at the
+        equator ``(pi/2, 0)``), or with respect to the in-plane angles
+        ``(phi1, phi2)`` in the film plane if `in_plane`."""
+
+        def frames(x):
+            """Unit vectors and their derivatives (see `angle_frame`)."""
+            if in_plane:  # (azimuthal derivatives only)
+                return [
+                    (m, J[:, 1:], D[1:, 1:])
+                    for m, J, D in (angle_frame(np.pi / 2, p) for p in x)
+                ]
+            return [angle_frame(x[0], x[1], R1), angle_frame(x[2], x[3], R2)]
 
         def fun(x):
-            m1, m2 = angle_frame(x[0], x[1], R1)[0], angle_frame(x[2], x[3], R2)[0]
+            (m1, _, _), (m2, _, _) = frames(x)
             return self.__vec_energy(m1[:, None], m2[:, None])[0] / scale
 
         def jac(x):
-            m1, J1, _ = angle_frame(x[0], x[1], R1)
-            m2, J2, _ = angle_frame(x[2], x[3], R2)
+            (m1, J1, _), (m2, J2, _) = frames(x)
             G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
             return np.concatenate([J1.T @ G1[:, 0], J2.T @ G2[:, 0]]) / scale
 
         def hess(x):
-            m1, J1, D1 = angle_frame(x[0], x[1], R1)
-            m2, J2, D2 = angle_frame(x[2], x[3], R2)
+            (m1, J1, D1), (m2, J2, D2) = frames(x)
             G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
             H11, H12, H22 = self.__vec_hess(m1[:, None], m2[:, None])
-            H = np.zeros((4, 4))
-            H[:2, :2] = angle_hessian(J1, D1, G1[:, 0], H11[:, :, 0])
-            H[2:, 2:] = angle_hessian(J2, D2, G2[:, 0], H22[:, :, 0])
-            H[:2, 2:] = J1.T @ H12[:, :, 0] @ J2
-            H[2:, :2] = H[:2, 2:].T
+            k = J1.shape[1]
+            H = np.zeros((2 * k, 2 * k))
+            H[:k, :k] = angle_hessian(J1, D1, G1[:, 0], H11[:, :, 0])
+            H[k:, k:] = angle_hessian(J2, D2, G2[:, 0], H22[:, :, 0])
+            H[:k, k:] = J1.T @ H12[:, :, 0] @ J2
+            H[k:, :k] = H[:k, k:].T
             return H / scale
 
         return fun, jac, hess
@@ -1097,78 +1041,6 @@ class DoubleLayerNumeric:
         return np.array(
             [th1, wrapAngle(ph1, -np.pi, np.pi), th2, wrapAngle(ph2, -np.pi, np.pi)]
         )
-
-    # --- in-plane energy ----------------------------------------------
-    def __ip_params(self):
-        """Parameters of the in-plane energy
-        ``E = -Z1 cos(phi1) - Z2 cos(phi2) - K1 cos^2(phi1 - phiAnis1)
-        - K2 cos^2(phi2 - phiAnis2) - Jbl cos(phi1 - phi2)
-        - Jbq cos^2(phi1 - phi2) + E0``.
-        """
-        Bip = self.Bext * np.sin(self.theta)
-        Z1, Z2 = self.d * self.Ms * Bip, self.d2 * self.Ms2 * Bip
-        K1, K2 = self.d * self.Ku, self.d2 * self.Ku2
-        return Z1, Z2, K1, K2, self.__energy_const()
-
-    def __ip_energy(self, x):
-        """In-plane energy (J/m^2) for angles ``x = (phi1, phi2)`` (arrays)."""
-        Z1, Z2, K1, K2, E0 = self.__ip_params()
-        p1, p2 = x
-        cd = np.cos(p1 - p2)
-        return (
-            -Z1 * np.cos(p1)
-            - Z2 * np.cos(p2)
-            - K1 * np.cos(p1 - self.phiAnis1) ** 2
-            - K2 * np.cos(p2 - self.phiAnis2) ** 2
-            - self.Jbl * cd
-            - self.Jbq * cd**2
-            + E0
-        )
-
-    def __ip_grad(self, x):
-        """Gradient (2, ...) of the in-plane energy."""
-        Z1, Z2, K1, K2, _ = self.__ip_params()
-        p1, p2 = x
-        cd, sd = np.cos(p1 - p2), np.sin(p1 - p2)
-        j = sd * (self.Jbl + 2 * self.Jbq * cd)
-        return np.array(
-            [
-                Z1 * np.sin(p1) + K1 * np.sin(2 * (p1 - self.phiAnis1)) + j,
-                Z2 * np.sin(p2) + K2 * np.sin(2 * (p2 - self.phiAnis2)) - j,
-            ]
-        )
-
-    def __ip_hess(self, x):
-        """Hessian (2, 2, ...) of the in-plane energy."""
-        Z1, Z2, K1, K2, _ = self.__ip_params()
-        p1, p2 = x
-        c = self.Jbl * np.cos(p1 - p2) + 2 * self.Jbq * np.cos(2 * (p1 - p2))
-        h11 = Z1 * np.cos(p1) + 2 * K1 * np.cos(2 * (p1 - self.phiAnis1)) + c
-        h22 = Z2 * np.cos(p2) + 2 * K2 * np.cos(2 * (p2 - self.phiAnis2)) + c
-        return np.array([[h11, -c], [-c, h22]])
-
-    def __ip_functions(self):
-        """Normalized in-plane energy, gradient and Hessian for
-        `scipy.optimize.minimize`, the energy scale of their variations
-        and the normalization."""
-        Z1, Z2, K1, K2, E0 = self.__ip_params()
-        scale = max(
-            abs(Z1), abs(Z2), 2 * abs(K1), 2 * abs(K2), abs(self.Jbl), 2 * abs(self.Jbq)
-        )
-        if scale == 0:  # (degenerate energy, no in-plane terms)
-            scale = abs(E0)
-        e0 = scale
-
-        def fun(x):
-            return (self.__ip_energy(x) - E0) / e0
-
-        def jac(x):
-            return self.__ip_grad(x) / e0
-
-        def hess(x):
-            return self.__ip_hess(x) / e0
-
-        return fun, jac, hess, scale, e0
 
     # ------------------------------------------------------------------
     # derived quantities
@@ -1359,6 +1231,11 @@ def _zeta(k, d):
     (SM eq. (8)), with ``zeta = 1`` for ``k = 0``."""
     kd = np.abs(k) * d
     return np.divide(-np.expm1(-kd), kd, out=np.ones_like(kd), where=kd > 1e-14)
+
+
+def _in_plane(phi):
+    """In-plane unit vectors ``(3, ...)`` at the in-plane angles `phi`."""
+    return np.array([np.cos(phi), np.sin(phi), np.zeros_like(phi)])
 
 
 def _transverse_basis(m):
