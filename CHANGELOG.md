@@ -62,6 +62,9 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   the new `coverage_comment.yml` workflow.
 - Badges in `README.md` (PyPI version, Python versions, downloads, license, tests, coverage,
   documentation, paper DOI, code style).
+- Documentation: every example page ends with a download link to the notebook (with its outputs)
+  and a link to it on GitHub (`nbsphinx_epilog` in `conf.py`; the notebooks are copied next to
+  the pages by nbsphinx, nothing is executed during the build).
 - `MacrospinEquilibrium.find_equilibria()`: all equilibria found directly as the solutions of a
   6x6 eigenvalue problem, sorted by energy (i.e. including the global minimum), with their type
   (0 minimum, 1 maximum, 2 saddle point);

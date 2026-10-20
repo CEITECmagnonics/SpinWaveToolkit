@@ -102,6 +102,23 @@ html_theme_options = {
     "pygments_dark_style": "a11y-dark",
 }
 nbsphinx_codecell_lexer = "python3"  # to override the possible invalid lexer ipython3
+# Download link at the bottom of each example notebook page.  nbsphinx copies
+# the notebook file next to the HTML page, so no execution is needed.
+nbsphinx_epilog = r"""
+{% set nbname = env.docname.split('/')|last %}
+
+.. raw:: html
+
+    <div class="admonition note">
+      <p class="admonition-title">Download</p>
+      <p>
+        <a href="{{ nbname|e }}.ipynb" class="reference download internal" download>
+          {{ nbname|e }}.ipynb</a> (this notebook, with outputs); also on
+        <a class="reference external"
+           href="https://github.com/CEITECmagnonics/SpinWaveToolkit/blob/master/examples/{{ nbname|e }}.ipynb">GitHub</a>.
+      </p>
+    </div>
+"""
 
 
 # -- Extension configuration -------------------------------------------------
