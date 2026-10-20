@@ -48,18 +48,17 @@ class DoubleLayerNumeric:
 
     .. important::
 
-       **Frame of reference.**  Unlike the other dispersion classes,
-       where the in-plane angles are measured from the wavevector
-       (`x || kxi`), the in-plane angles of this class (`phiAnis1`,
+       **Frame of reference.**  As in the other dispersion classes,
+       `phi` is the in-plane angle of `Bext` from the wavevector `kxi`.
+       Unlike them, the other in-plane angles of this class (`phiAnis1`,
        `phiAnis2`, `phiInit1`, `phiInit2`, and the equilibrium angles
        returned by :meth:`GetEquilibrium`, :meth:`GetPhis` and
        :meth:`find_equilibria`) are measured from the in-plane direction
-       of the external field `Bext`, counter-clockwise when viewed from
-       above (from the side of layer 2).  The polar angles (`theta`,
-       `thetaInit1`, `thetaInit2` and the equilibrium angles) are
-       measured from the film normal `z`, which points from layer 1 to
-       layer 2.  The direction of the wavevector enters only through
-       `phi`, the angle of `Bext` measured from `kxi`.  This way, the
+       of `Bext` (i.e. from `phi`) instead of from `kxi`,
+       counter-clockwise when viewed from above (from the side of
+       layer 2).  The polar angles (`theta`, `thetaInit1`, `thetaInit2`
+       and the equilibrium angles) are measured from the film normal
+       `z`, which points from layer 1 to layer 2.  This way, the
        magnetic configuration is independent of the wavevector, and the
        dispersion can be calculated for arbitrary (also 2D) sets of
        wavevectors by giving `kxi` and `phi` as arrays of the same
@@ -86,10 +85,9 @@ class DoubleLayerNumeric:
         in-plane field.  Default is pi/2.
     phi : float or ndarray, optional
         (rad) in-plane angle of Bext (of its in-plane projection) from
-        kxi, pi/2 is DE geometry.  If an array, must have the same
-        length as `kxi` (or `kxi` is a float), and the dispersion is
-        calculated for each pair of `kxi` and `phi`, e.g. for a 2D grid
-        of wavevectors.
+        kxi.  If an array, must have the same length as `kxi` (or `kxi`
+        is a float), and the dispersion is calculated for each pair of
+        `kxi` and `phi`, e.g. for a 2D grid of wavevectors.
     Ku : float, optional
         (J/m^3) in-plane uniaxial anisotropy strength.
     Jbl : float, optional
