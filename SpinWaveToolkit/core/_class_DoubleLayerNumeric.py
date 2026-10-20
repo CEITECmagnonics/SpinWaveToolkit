@@ -43,8 +43,8 @@ class DoubleLayerNumeric:
     magnetizations of the two layers, which are found by minimizing the
     free energy.  Layer 1 is the bottom layer (closer to the substrate)
     and layer 2 the top layer, i.e. the opposite order than in the
-    paper, so the sign of the frequency nonreciprocity is opposite for
-    the same input parameters (equivalent to ``k -> -k``).
+    paper, and a positive `kxi` propagates towards ``+x`` (the paper uses
+    the opposite time convention), see `kxi`.
 
     .. important::
 
@@ -78,8 +78,9 @@ class DoubleLayerNumeric:
         (rad/m) k-vector (wavenumber), usually a vector.  Negative
         values are allowed; the same wavevector is also described by
         ``-kxi`` with ``phi + pi``.  A positive `kxi` describes a wave
-        propagating towards ``-x`` (time dependence ``exp(1j*w*t)`` as
-        in Gallardo et al.), see the Notes of :meth:`GetDispersion`.
+        propagating towards ``+x`` (common convention
+        ``exp(1j*(kxi*x - w*t))``), see the Notes of
+        :meth:`GetDispersion`.
     theta : float, optional
         (rad) polar angle of Bext from the film normal, pi/2 is an
         in-plane field.  Default is pi/2.
@@ -462,19 +463,18 @@ class DoubleLayerNumeric:
         phase of each eigenvector, the in-plane amplitudes are real and
         the out-of-plane amplitudes imaginary, i.e. the components
         precess in quadrature on an ellipse given by the ratio of their
-        moduli.  With the time dependence ``exp(1j*wV*t)`` of the model,
-        the dynamic magnetization is ``np.real(vV*np.exp(1j*wV*t))``.
+        moduli.  The dynamic magnetization of a mode is
+        ``np.real(vV*np.exp(1j*(wV*t - kxi*x)))``.
 
         The frequencies are nonreciprocal (``w(k) != w(-k)``) when the
         in-plane components of the two magnetizations perpendicular to
         the wavevector differ, e.g. in the antiparallel state in the
         Damon-Eshbach geometry.  Layer 1 is the bottom layer (see the
-        class docstring), and the model uses the time dependence
-        ``exp(1j*w*t)`` with ``exp(1j*kxi*x)`` (as Gallardo et al.), so
-        a positive `kxi` propagates towards ``-x``; with the common
-        convention ``exp(1j*(k*x - w*t))`` (e.g. in TetraX) the sign of
-        the wavevector is opposite, see
-        :doc:`/_example_nbs/SAF_dispersion_vs_TetraX`.
+        class docstring) and a positive `kxi` propagates towards ``+x``
+        (``exp(1j*(kxi*x - w*t))``, as e.g. in TetraX, see
+        :doc:`/_example_nbs/SAF_dispersion_vs_TetraX`); Gallardo et al.
+        use the time dependence ``exp(1j*w*t)``, i.e. the opposite sign
+        of the wavevector, so their maps appear mirrored.
 
         The system matrix is built from the tensors of the interactions
         projected on the two directions transverse to the static
@@ -541,10 +541,10 @@ class DoubleLayerNumeric:
             - 2 * JbqD / (MU0 * Ms2**2 * d2) * np.outer(m1, m1)
         )
         # (layer 1 at the bottom: its stray field in layer 2 and vice versa)
-        N12 = d2 / 2 * dip * (kabs * (kk - zz) - 1j * kc * kz) - (
+        N12 = d2 / 2 * dip * (kabs * (kk - zz) + 1j * kc * kz) - (
             Jx + 2 * JbqD * np.outer(m2, m1)
         ) / (MU0 * Ms1 * Ms2 * d1)
-        N21 = d1 / 2 * dip * (kabs * (kk - zz) + 1j * kc * kz) - (
+        N21 = d1 / 2 * dip * (kabs * (kk - zz) - 1j * kc * kz) - (
             Jx + 2 * JbqD * np.outer(m1, m2)
         ) / (MU0 * Ms1 * Ms2 * d2)
 

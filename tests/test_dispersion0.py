@@ -12,21 +12,20 @@ class TestClass:
         bext = 50e-3
         kxi = np.linspace(0, 25e6, 200)
         kxi[np.argmin(kxi)] += 1e-3
-        theta = np.pi/2  # IP magnetization
-        phi = np.pi/2  # DE
+        theta = np.pi / 2  # IP magnetization
+        phi = np.pi / 2  # DE
         bc = 1  # totally unpinned
 
-        sl = SWT.SingleLayer(bext, mat, d, kxi, theta, phi,
-                             boundary_cond=bc)
-        f_sl = sl.GetDispersion()*1e-9/np.pi/2
-        sln = SWT.SingleLayerNumeric(bext, mat, d, kxi, theta, phi,
-                                     boundary_cond=bc)
-        f_sln = sln.GetDispersion()[0]*1e-9/np.pi/2
+        sl = SWT.SingleLayer(bext, mat, d, kxi, theta, phi, boundary_cond=bc)
+        f_sl = sl.GetDispersion() * 1e-9 / np.pi / 2
+        sln = SWT.SingleLayerNumeric(bext, mat, d, kxi, theta, phi, boundary_cond=bc)
+        f_sln = sln.GetDispersion()[0] * 1e-9 / np.pi / 2
         slsc = SWT.SingleLayerSCcoupled(bext, mat, d, kxi, np.inf)
-        f_slsc = slsc.GetDispersion()*1e-9/np.pi/2
+        f_slsc = slsc.GetDispersion() * 1e-9 / np.pi / 2
         zeroth = 0  # select the lowest mode
         if show:
             import matplotlib.pyplot as plt
+
             plt.plot(kxi, f_sl, label="SL")
             plt.plot(kxi, f_sln[zeroth], label="SLN")
             plt.plot(kxi, f_slsc, label="SLSC")
@@ -36,9 +35,9 @@ class TestClass:
 
         assert np.all(np.isclose(f_sl, f_sln[zeroth], f_slsc, atol=4e-3))
 
-        vg_sl = sl.GetGroupVelocity()*1e-3
-        vg_sln = sln.GetGroupVelocity(zeroth)*1e-3
-        vg_slsc = slsc.GetGroupVelocity()*1e-3
+        vg_sl = sl.GetGroupVelocity() * 1e-3
+        vg_sln = sln.GetGroupVelocity(zeroth) * 1e-3
+        vg_slsc = slsc.GetGroupVelocity() * 1e-3
         if show:
             plt.plot(kxi, vg_sl, label="SL")
             plt.plot(kxi, vg_sln, label="SLN")
@@ -49,9 +48,9 @@ class TestClass:
 
         assert np.all(np.isclose(vg_sl, vg_sln, vg_slsc, atol=4e-3))
 
-        dec_sl = sl.GetDecLen()*1e6
-        dec_sln = sln.GetDecLen(zeroth)*1e6
-        dec_slsc = slsc.GetDecLen()*1e6
+        dec_sl = sl.GetDecLen() * 1e6
+        dec_sln = sln.GetDecLen(zeroth) * 1e6
+        dec_slsc = slsc.GetDecLen() * 1e6
         if show:
             plt.plot(kxi, dec_sl, label="SL")
             plt.plot(kxi, dec_sln, label="SLN")
@@ -70,21 +69,26 @@ class TestClass:
         """
         show = False  # plot calculated params? (useful for debugging)
 
-        refdata = np.genfromtxt("tests/testdata/testdata_SAF_Gallardo2019.txt",
-                                delimiter=";", dtype=float).T
+        refdata = np.genfromtxt(
+            "tests/testdata/testdata_SAF_Gallardo2019.txt", delimiter=";", dtype=float
+        ).T
         nd = 3
 
-        nife = SWT.Material(Ms=658e3,
-                            Aex=5.47e-9**2*SWT.MU0*658e3**2/2,  # l_ex to Aex
-                            alpha=1e-3,  # some random value
-                            gamma=1.7587e11)
-        co = SWT.Material(Ms=1150e3,
-                          Aex=5.88e-9**2*SWT.MU0*1150e3**2/2,  # l_ex to Aex
-                          alpha=1e-3,  # some random value
-                          gamma=1.7587e11)
+        nife = SWT.Material(
+            Ms=658e3,
+            Aex=5.47e-9**2 * SWT.MU0 * 658e3**2 / 2,  # l_ex to Aex
+            alpha=1e-3,  # some random value
+            gamma=1.7587e11,
+        )
+        co = SWT.Material(
+            Ms=1150e3,
+            Aex=5.88e-9**2 * SWT.MU0 * 1150e3**2 / 2,  # l_ex to Aex
+            alpha=1e-3,  # some random value
+            gamma=1.7587e11,
+        )
         s = 1e-9
-        d = np.array((2, 5, 20))*1e-9
-        Ku = 69.6e-3*1150e3/2  # H_u to K_u for Co layer
+        d = np.array((2, 5, 20)) * 1e-9
+        Ku = 69.6e-3 * 1150e3 / 2  # H_u to K_u for Co layer
         J = -1.5e-3  # interlayer coupling (bilinear)
         f_dln = np.zeros((nd, refdata.shape[1]))
         notnan = ~np.isnan(refdata[[0, 2, 4]])
@@ -93,23 +97,49 @@ class TestClass:
             # (layer 1), easy axes and magnetizations perpendicular to k (phi =
             # pi/2 is the direction of the (zero) field, from which the in-plane
             # angles are measured): Co antiparallel and Py parallel to it
-            dln = SWT.DoubleLayerNumeric(0, co, d[i], refdata[2*i, notnan[i]]*1e6,
-                                         theta=np.pi/2, Ku=Ku, Jbl=J, s=s, material2=nife, Ku2=0,
-                                         phiAnis1=0, phiAnis2=0, phiInit1=np.pi, phiInit2=0)
+            dln = SWT.DoubleLayerNumeric(
+                0,
+                co,
+                d[i],
+                refdata[2 * i, notnan[i]] * 1e6,
+                theta=np.pi / 2,
+                Ku=Ku,
+                Jbl=J,
+                s=s,
+                material2=nife,
+                Ku2=0,
+                phiAnis1=0,
+                phiAnis2=0,
+                phiInit1=0,
+                phiInit2=np.pi,
+            )
             # only frequencies of the first (acoustic) mode
-            f_dln[i, notnan[i]] = dln.GetDispersion()[0][0]/2e9/np.pi
+            f_dln[i, notnan[i]] = dln.GetDispersion()[0][0] / 2e9 / np.pi
 
         if show:
             import matplotlib.pyplot as plt
+
             for i in range(nd):
-                plt.plot(refdata[2*i], refdata[i*2+1], "--", lw=2,
-                         label=f"Gallardo, d={d[i]*1e9}nm")
-                plt.plot(refdata[2*i, notnan[i]], f_dln[i, notnan[i]],
-                         label=f"SWT, d={d[i]*1e9}nm")
+                plt.plot(
+                    refdata[2 * i],
+                    refdata[i * 2 + 1],
+                    "--",
+                    lw=2,
+                    label=f"Gallardo, d={d[i]*1e9}nm",
+                )
+                plt.plot(
+                    refdata[2 * i, notnan[i]],
+                    f_dln[i, notnan[i]],
+                    label=f"SWT, d={d[i]*1e9}nm",
+                )
             plt.xlabel("k (rad/µm)")
             plt.ylabel("f(k) (GHz)")
             plt.legend(loc="lower left")
             plt.show()
 
         for i in range(nd):
-            assert np.all(np.isclose(refdata[2*i+1, notnan[i]], f_dln[i, notnan[i]], atol=15e-3))
+            assert np.all(
+                np.isclose(
+                    refdata[2 * i + 1, notnan[i]], f_dln[i, notnan[i]], atol=15e-3
+                )
+            )

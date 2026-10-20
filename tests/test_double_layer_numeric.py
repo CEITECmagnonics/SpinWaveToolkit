@@ -264,7 +264,7 @@ def test_zeta():
 class TestDispersion:
     def test_adam_2d_map(self, grid):
         """2D dispersion of the Adam et al. SAF at 50 mT along x: uniform
-        mode at 6.34 GHz, minimum at negative kx (bottom layer 1 has the
+        mode at 6.34 GHz, minimum at positive kx (bottom layer 1 has the
         positive-y component), reciprocal in ky, nonreciprocal in kx."""
         kx, KX, KY, K, PHI = grid
         saf = _saf(kxi=K.ravel(), phi=PHI.ravel())
@@ -275,13 +275,13 @@ class TestDispersion:
         assert abs(f[0, 10, 10] - 6.34) < 0.05  # (Adam et al.: 6.34 GHz)
         assert np.abs(f[0] - f[0][::-1]).max() < 1e-6  # f(kx, ky) = f(kx, -ky)
         i20 = np.argmin(abs(kx - 20e6))
-        assert f[0, 10, 20 - i20] < 4.5 and f[0, 10, i20] > 12  # nonreciprocal in kx
-        assert KX.ravel()[f[0].argmin()] < -10e6
-        assert f[0, 10, 20 - i20] < f[0, 10, 10]  # f(-20, 0) < f(0, 0) < f(0, 20)
+        assert f[0, 10, i20] < 4.5 and f[0, 10, 20 - i20] > 12  # nonreciprocal in kx
+        assert KX.ravel()[f[0].argmin()] > 10e6
+        assert f[0, 10, i20] < f[0, 10, 10]  # f(+20, 0) < f(0, 0) < f(0, 20)
         assert f[0, 10, 10] < f[0, i20, 10]
         # the reference values of the Gallardo matrix for in-plane magnetizations
         assert np.allclose(
-            [f[0, 10, 20 - i20], f[0, 10, i20], f[0, -1, 10]],
+            [f[0, 10, i20], f[0, 10, 20 - i20], f[0, -1, 10]],
             [4.119, 13.493, 12.192],
             atol=2e-3,
         )

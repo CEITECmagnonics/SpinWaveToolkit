@@ -171,9 +171,11 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   returns the angles in `[-pi, pi)`.  Nothing changes for `phi = 0`, i.e. the field along the
   wavevector ([#53]).
 - **Breaking:** `DoubleLayerNumeric`: layer 1 is the bottom layer (closer to the substrate) and
-  layer 2 the top layer, previously the opposite (as in Gallardo et al.).  For the same
-  parameters, the nonreciprocal dispersion is therefore mirrored (`k -> -k`); swap the two layers
-  (materials, thicknesses, anisotropies and angles) to reproduce previous results.
+  layer 2 the top layer, previously the opposite (as in Gallardo et al.), and a positive `kxi` is
+  a wave propagating towards `+x` (common convention `exp(1j*(k*x - w*t))`, as in TetraX;
+  previously the convention `exp(1j*(w*t + k*x))` of Gallardo et al.).  Each change alone
+  mirrors the nonreciprocal dispersion (`k -> -k`), so the frequencies for the same parameters
+  are unchanged; only their meaning (layer order, propagation direction) is.
 - `DoubleLayerNumeric.GetDispersion()` uses the equilibrium of `GetEquilibrium()` (which equals
   that of `GetPhis()` for in-plane fields); `GetPhis()` remains as the equilibrium restricted to
   the film plane.  `GetPhis()` uses the analytical gradient and Hessian of the energy with
@@ -214,9 +216,6 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - `DoubleLayerNumeric`: a partially out-of-plane field (`theta != pi/2`) was silently treated as
   the smaller in-plane field `Bext*sin(theta)` (in-plane equilibrium and dispersion); the
   out-of-plane component is now included (see Added).
-- `DoubleLayerNumeric` docstring: the sign convention of `kxi` is documented (time dependence
-  ``exp(1j*w*t)`` with ``exp(1j*kxi*x)``, i.e. a positive `kxi` propagates towards ``-x``,
-  opposite to the convention ``exp(1j*(k*x - w*t))`` of e.g. TetraX).
 - `DoubleLayerNumeric.GetLifetime()`: division by zero for `Bext = 0` (an absolute field step is
   used now in such case); the docstring warns that the formula is not meaningful for the antiparallel and
   scissors states of a SAF (related to [#22]: `DoubleLayerNumeric` only and still incomplete).
