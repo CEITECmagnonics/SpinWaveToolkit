@@ -1,0 +1,10 @@
+# Normalize text files and use LF in the working tree
+* text=auto eol=lf
+
+# Notebooks explicitly LF
+*.ipynb text eol=lf
+
+# Windows-only scripts genuinely need CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
