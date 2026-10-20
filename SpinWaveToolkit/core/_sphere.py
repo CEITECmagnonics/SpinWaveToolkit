@@ -64,6 +64,23 @@ def minimize_kwargs(scipy_kwargs, jac, hess):
     return kwargs
 
 
+def _norms(v):
+    """Euclidean norms of the columns of ``v`` with shape ``(k, N)``."""
+    return np.sqrt(np.sum(v * v, axis=0))
+
+
+def _cross(a, b):
+    """Cross products of the columns of ``a`` and ``b`` with shape ``(3, N)``
+    (``np.cross`` has a large overhead for small arrays)."""
+    return np.array(
+        [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ]
+    )
+
+
 def tangent_bases(m, in_plane=False):
     """Orthonormal bases ``(3, 2, N)`` of the tangent planes of the unit
     sphere at the unit vectors `m` with shape ``(3, N)``; the basis
@@ -72,13 +89,13 @@ def tangent_bases(m, in_plane=False):
     ``(3, 1, N)``, which restricts the sphere to the film plane."""
     N = m.shape[1]
     if in_plane:
-        u = np.stack([-m[1], m[0], np.zeros(N)])
-        return (u / np.linalg.norm(u, axis=0))[:, None, :]
+        u = np.array([-m[1], m[0], np.zeros(N)])
+        return (u / _norms(u))[:, None, :]
     e = np.zeros((3, N))
     e[np.argmin(np.abs(m), axis=0), np.arange(N)] = 1.0
     u = e - np.sum(e * m, axis=0) * m
-    u /= np.linalg.norm(u, axis=0)
-    return np.stack([u, np.cross(m, u, axis=0)], axis=1)
+    u /= _norms(u)
+    return np.stack([u, _cross(m, u)], axis=1)
 
 
 def local_frame(m):
@@ -104,12 +121,26 @@ def angle_frame(theta, phi, R=None):
     return R @ m, R @ J, D @ R.T
 
 
+def memoize_last(f):
+    """`f(x)` evaluated once for consecutive calls with the same array
+    `x` (the energy, its gradient and Hessian are requested at the same
+    point by `scipy.optimize.minimize`)."""
+    cache = {}
+
+    def g(x):
+        if "x" not in cache or not np.array_equal(x, cache["x"]):
+            cache["x"], cache["value"] = np.array(x), f(x)
+        return cache["value"]
+
+    return g
+
+
 def angle_hessian(J, D, G, H):
     """Hessian ``(k, k)`` with respect to ``k`` spherical angles of an
     energy with the gradient `G` ``(3,)`` and the Hessian `H` ``(3, 3)``
     with respect to the unit vector, from its derivatives `J` ``(3, k)``
     and `D` ``(k, k, 3)`` (see `angle_frame`)."""
-    return J.T @ H @ J + np.einsum("abj,j->ab", D, G)
+    return J.T @ H @ J + D @ G
 
 
 def project(ms, Ts, Gs, Hs):
@@ -125,8 +156,11 @@ def project(ms, Ts, Gs, Hs):
     Ik = np.eye(k)[:, :, None]
     for a in range(L):
         for b in range(L):
-            Hab = np.broadcast_to(np.asarray(Hs[a][b]).reshape(3, 3, -1), (3, 3, N))
-            block = np.einsum("ikn,ijn,jln->kln", Ts[a], Hab, Ts[b])
+            Hab = np.asarray(Hs[a][b])
+            if Hab.ndim == 2:  # (the same block for all columns)
+                block = np.einsum("ikn,ij,jln->kln", Ts[a], Hab, Ts[b])
+            else:
+                block = np.einsum("ikn,ijn,jln->kln", Ts[a], Hab, Ts[b])
             if a == b:  # (curvature of the sphere)
                 block = block - np.sum(ms[a] * Gs[a], axis=0) * Ik
             H[k * a : k * (a + 1), k * b : k * (b + 1)] = block
@@ -147,19 +181,19 @@ def newton_spheres(ms, grad_hess, maxiter, scale, in_plane=False):
     for _ in range(maxiter):
         Ts = [tangent_bases(m, in_plane) for m in ms]
         g, H = grad_hess(ms, Ts)
-        if np.all(np.linalg.norm(g, axis=0) < 1e-13 * scale):
-            break
+        gnorm = _norms(g)
+        if np.all(gnorm < 1e-13 * scale):
+            return ms, gnorm
         step = -np.linalg.solve((H + ridge).transpose(2, 0, 1), g.T[:, :, None])
         step = step[:, :, 0].T
-        norm = np.linalg.norm(step, axis=0)
-        step *= np.minimum(1.0, 0.5 / np.maximum(norm, 1e-300))
+        step *= np.minimum(1.0, 0.5 / np.maximum(_norms(step), 1e-300))
         ms = [
             m + np.einsum("ikn,kn->in", T, step[k * a : k * (a + 1)])
             for a, (m, T) in enumerate(zip(ms, Ts))
         ]
-        ms = [m / np.linalg.norm(m, axis=0) for m in ms]
+        ms = [m / _norms(m) for m in ms]
     g, _ = grad_hess(ms, [tangent_bases(m, in_plane) for m in ms])
-    return ms, np.linalg.norm(g, axis=0)
+    return ms, _norms(g)
 
 
 def classify(H, scale):

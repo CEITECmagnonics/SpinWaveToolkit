@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from scipy.optimize import brentq
 import SpinWaveToolkit as SWT
-from SpinWaveToolkit.core._class_DoubleLayerNumeric import _zeta
+from SpinWaveToolkit.core._class_DoubleLayerNumeric import _angle_functions, _zeta
 from SpinWaveToolkit.core._sphere import local_frame
 from SpinWaveToolkit.helpers import MU0
 
@@ -113,7 +113,7 @@ class TestEquilibrium:
         assert np.isclose(eden[0], saf.GetFreeEnergy(ALPHA, -ALPHA))
         # zero torque at all equilibria
         m1, m2 = SWT.sphr2cart(th1, phi1), SWT.sphr2cart(th2, phi2)
-        G1, G2 = saf._DoubleLayerNumeric__vec_grad(m1, m2)
+        G1, G2 = saf._DoubleLayerNumeric__energy().grad(m1, m2)
         torque = np.abs(np.cross(m1, G1, axis=0)[2]) + np.abs(
             np.cross(m2, G2, axis=0)[2]
         )
@@ -138,7 +138,7 @@ class TestEquilibrium:
         assert np.allclose(sorted(phi1[eq_type == 0]), [-ALPHA, ALPHA], atol=1e-8)
         # zero torque at all equilibria
         m1, m2 = SWT.sphr2cart(th1, phi1), SWT.sphr2cart(th2, phi2)
-        G1, G2 = saf._DoubleLayerNumeric__vec_grad(m1, m2)
+        G1, G2 = saf._DoubleLayerNumeric__energy().grad(m1, m2)
         torque = np.linalg.norm(np.cross(m1, G1, axis=0), axis=0)
         torque2 = np.linalg.norm(np.cross(m2, G2, axis=0), axis=0)
         assert max(torque.max(), torque2.max()) < 1e-10 * abs(JBL)
@@ -204,23 +204,23 @@ def test_energy_derivatives():
     )
     saf.theta = 0.9
     eps = 1e-6
-    angle_functions = saf._DoubleLayerNumeric__angle_functions
+    energy = saf._DoubleLayerNumeric__energy()
     R1 = local_frame(SWT.sphr2cart(1.0, 0.4))
     R2 = local_frame(SWT.sphr2cart(2.0, -1.0))
     for in_plane, x in (
         (False, np.array([1.3, 0.2, 1.7, -0.3])),
         (True, np.array([0.7, 2.9])),
     ):
-        fun, jac, hess = angle_functions(R1, R2, 1.0, in_plane)
+        fun, jac, hess = _angle_functions(energy, R1, R2, in_plane)
         basis = np.eye(len(x))
         num_g = [(fun(x + eps * e) - fun(x - eps * e)) / (2 * eps) for e in basis]
         num_h = [(jac(x + eps * e) - jac(x - eps * e)) / (2 * eps) for e in basis]
         assert np.allclose(jac(x), num_g, rtol=1e-6, atol=1e-12)
         assert np.allclose(hess(x), num_h, rtol=1e-6, atol=1e-12)
     # the in-plane energy is the free energy (up to its constant)
-    fun = angle_functions(None, None, 1.0, True)[0]
+    fun = _angle_functions(energy, None, None, True)[0]
     assert np.isclose(
-        fun([0.7, 2.9]) - fun([0.1, 1.0]),
+        (fun([0.7, 2.9]) - fun([0.1, 1.0])) * energy.scale,
         saf.GetFreeEnergy(0.7, 2.9) - saf.GetFreeEnergy(0.1, 1.0),
     )
 

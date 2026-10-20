@@ -18,6 +18,7 @@ from SpinWaveToolkit.core._sphere import (
     angle_hessian,
     classify,
     local_frame,
+    memoize_last,
     minimize_kwargs,
     move,
     newton_spheres,
@@ -713,7 +714,8 @@ class DoubleLayerNumeric:
         equilibria are not isolated and only some representatives are
         returned.
         """
-        scale = self.__energy_scale()
+        energy = self.__energy()
+        scale = energy.scale
         if in_plane:  # 12 x 12 in-plane angles
             g = np.linspace(0, 2 * np.pi, 12, endpoint=False) + np.pi / 12
             P1, P2 = np.meshgrid(g, g, indexing="ij")
@@ -722,7 +724,7 @@ class DoubleLayerNumeric:
             dirs = _fibonacci_sphere(24)
             i1, i2 = np.meshgrid(np.arange(24), np.arange(24), indexing="ij")
             ms = [dirs[:, i1.ravel()], dirs[:, i2.ravel()]]
-        (m1, m2), gnorm = newton_spheres(ms, self.__grad_hess, 60, scale, in_plane)
+        (m1, m2), gnorm = newton_spheres(ms, energy.grad_hess, 60, scale, in_plane)
         ok = gnorm < 1e-8 * scale
         m1, m2 = m1[:, ok], m2[:, ok]
 
@@ -735,9 +737,9 @@ class DoubleLayerNumeric:
             return (np.array([]),) * 5 + (np.array([], dtype=int),)
         m1 = np.array([p for p, _ in found]).T  # (3, M)
         m2 = np.array([q for _, q in found]).T
-        eden = self.__vec_energy(m1, m2) + self.__energy_const()
+        eden = energy(m1, m2) + self.__energy_const()
         Ts = [tangent_bases(m, in_plane) for m in (m1, m2)]
-        eq_type = classify(self.__grad_hess([m1, m2], Ts)[1], scale)
+        eq_type = classify(energy.grad_hess([m1, m2], Ts)[1], scale)
         order = np.argsort(eden)
         th1, ph1, th2, ph2 = self.__angles(m1[:, order], m2[:, order])
         return th1, ph1, th2, ph2, eden[order], eq_type[order]
@@ -751,7 +753,8 @@ class DoubleLayerNumeric:
         else:
             m1 = sphr2cart(self.thetaInit1, self.phiInit1)
             m2 = sphr2cart(self.thetaInit2, self.phiInit2)
-        scale = self.__energy_scale()
+        energy = self.__energy()
+        scale = energy.scale
 
         if global_minimum:
             th1, ph1, th2, ph2, eden, eq_type = self.find_equilibria(in_plane)
@@ -773,7 +776,7 @@ class DoubleLayerNumeric:
             else:  # (local frames with the magnetizations at the equator)
                 R1, R2 = local_frame(m1), local_frame(m2)
                 x0 = np.array([np.pi / 2, 0.0, np.pi / 2, 0.0])
-            fun, jac, hess = self.__angle_functions(R1, R2, scale, in_plane)
+            fun, jac, hess = _angle_functions(energy, R1, R2, in_plane)
             res = minimize(fun, x0, **minimize_kwargs(scipy_kwargs, jac, hess))
             x = res.x
             if in_plane:
@@ -785,13 +788,13 @@ class DoubleLayerNumeric:
             # polish by Newton steps (SciPy stops at the round-off level
             # of the energy)
             ms = [m1[:, None], m2[:, None]]
-            (n1, n2), _ = newton_spheres(ms, self.__grad_hess, 5, scale, in_plane)
+            (n1, n2), _ = newton_spheres(ms, energy.grad_hess, 5, scale, in_plane)
             if n1[:, 0] @ m1 > np.cos(1e-6) and n2[:, 0] @ m2 > np.cos(1e-6):
                 m1, m2 = n1[:, 0], n2[:, 0]
                 ms = [n1, n2]
             # stability check by the Hessian on the spheres (or circles)
             Ts = [tangent_bases(m, in_plane) for m in ms]
-            _, H = self.__grad_hess(ms, Ts)
+            _, H = energy.grad_hess(ms, Ts)
             lam, vec = np.linalg.eigh(H[:, :, 0])
             if lam[0] >= -1e-9 * scale:
                 break
@@ -829,9 +832,9 @@ class DoubleLayerNumeric:
         E : float or ndarray
             (J/m^2) free energy of the system per unit area.
         """
-        m1 = sphr2cart(theta1, phi1)
-        m2 = sphr2cart(theta2, phi2)
-        return self.__vec_energy(m1, m2) + self.__energy_const()
+        m1, m2 = np.broadcast_arrays(sphr2cart(theta1, phi1), sphr2cart(theta2, phi2))
+        energy = self.__energy()(m1.reshape(3, -1), m2.reshape(3, -1))
+        return energy.reshape(m1.shape[1:]) + self.__energy_const()
 
     def GetFreeEnergyIP(self, phis):
         """Gives overall energy (per area) of SAF system for in-plane
@@ -912,16 +915,18 @@ class DoubleLayerNumeric:
         N2 = (1 - self.Hs2 / self.Ms2) * zz - self.Hani2 / self.Ms2 * np.outer(u2, u2)
         return b, N1, N2
 
-    def __vec_params(self):
-        """Linear and quadratic coefficients of the energy per area,
-        ``E = -h1.m1 + m1.A1.m1/2 - h2.m2 + m2.A2.m2/2 - Jbl c - Jbq c**2``.
-        """
+    def __energy(self):
+        """Free energy per area as a function of the two unit vectors (an
+        `_Energy` object with the current parameters)."""
         b, N1, N2 = self.__static_tensors()
-        h1 = self.d * self.Ms * self.Bext * b
-        h2 = self.d2 * self.Ms2 * self.Bext * b
-        A1 = self.d * MU0 * self.Ms**2 * N1
-        A2 = self.d2 * MU0 * self.Ms2**2 * N2
-        return h1, h2, A1, A2
+        return _Energy(
+            self.d * self.Ms * self.Bext * b,
+            self.d2 * self.Ms2 * self.Bext * b,
+            self.d * MU0 * self.Ms**2 * N1,
+            self.d2 * MU0 * self.Ms2**2 * N2,
+            self.Jbl,
+            self.Jbq,
+        )
 
     def __energy_const(self):
         """Constant of the energy per area in the form of Gallardo et al.
@@ -930,101 +935,6 @@ class DoubleLayerNumeric:
         return -self.d * (0.5 * MU0 * self.Ms**2 - self.Ks1) - self.d2 * (
             0.5 * MU0 * self.Ms2**2 - self.Ks2
         )
-
-    def __energy_scale(self):
-        """Scale (J/m^2) of the variations of the energy per area."""
-        h1, h2, A1, A2 = self.__vec_params()
-        scale = max(
-            np.linalg.norm(h1),
-            np.linalg.norm(h2),
-            np.abs(A1).max(),
-            np.abs(A2).max(),
-            abs(self.Jbl),
-            2 * abs(self.Jbq),
-        )
-        return scale if scale > 0 else 1.0
-
-    def __vec_energy(self, m1, m2):
-        """Energy per area (without the constant) for unit vectors
-        ``m1``, ``m2`` with shape ``(3, ...)``."""
-        h1, h2, A1, A2 = self.__vec_params()
-        c = np.einsum("i...,i...->...", m1, m2)
-        return (
-            -np.einsum("i,i...->...", h1, m1)
-            + 0.5 * np.einsum("i...,ij,j...->...", m1, A1, m1)
-            - np.einsum("i,i...->...", h2, m2)
-            + 0.5 * np.einsum("i...,ij,j...->...", m2, A2, m2)
-            - self.Jbl * c
-            - self.Jbq * c**2
-        )
-
-    def __vec_grad(self, m1, m2):
-        """Gradients ``(3, ...)`` of the energy with respect to ``m1``, ``m2``."""
-        h1, h2, A1, A2 = self.__vec_params()
-        c = np.einsum("i...,i...->...", m1, m2)
-        j = self.Jbl + 2 * self.Jbq * c
-        G1 = -h1[:, None] + np.einsum("ij,j...->i...", A1, m1) - j * m2
-        G2 = -h2[:, None] + np.einsum("ij,j...->i...", A2, m2) - j * m1
-        return G1, G2
-
-    def __vec_hess(self, m1, m2):
-        """Blocks ``(3, 3, ...)`` of the Hessian of the energy with respect
-        to ``m1``, ``m2`` (``H21 = H12^T``)."""
-        _, _, A1, A2 = self.__vec_params()
-        c = np.einsum("i...,i...->...", m1, m2)
-        j = self.Jbl + 2 * self.Jbq * c
-        H11 = A1[:, :, None] - 2 * self.Jbq * m2[:, None] * m2[None, :]
-        H22 = A2[:, :, None] - 2 * self.Jbq * m1[:, None] * m1[None, :]
-        H12 = -j * np.eye(3)[:, :, None] - 2 * self.Jbq * m2[:, None] * m1[None, :]
-        return H11, H12, H22
-
-    def __grad_hess(self, ms, Ts):
-        """Gradient ``(4, N)`` and Hessian ``(4, 4, N)`` of the energy on
-        the two unit spheres in the tangent bases ``Ts`` at the unit
-        vectors ``ms`` (as used by `newton_spheres`)."""
-        G1, G2 = self.__vec_grad(*ms)
-        H11, H12, H22 = self.__vec_hess(*ms)
-        return project(ms, Ts, [G1, G2], [[H11, H12], [H12.transpose(1, 0, 2), H22]])
-
-    def __angle_functions(self, R1, R2, scale, in_plane):
-        """Normalized energy, gradient and Hessian with respect to the
-        spherical angles ``(theta1, phi1, theta2, phi2)`` in the local
-        frames ``R1``, ``R2`` (rotation matrices with the current
-        magnetization directions as the first columns, i.e. at the
-        equator ``(pi/2, 0)``), or with respect to the in-plane angles
-        ``(phi1, phi2)`` in the film plane if `in_plane`."""
-
-        def frames(x):
-            """Unit vectors and their derivatives (see `angle_frame`)."""
-            if in_plane:  # (azimuthal derivatives only)
-                return [
-                    (m, J[:, 1:], D[1:, 1:])
-                    for m, J, D in (angle_frame(np.pi / 2, p) for p in x)
-                ]
-            return [angle_frame(x[0], x[1], R1), angle_frame(x[2], x[3], R2)]
-
-        def fun(x):
-            (m1, _, _), (m2, _, _) = frames(x)
-            return self.__vec_energy(m1[:, None], m2[:, None])[0] / scale
-
-        def jac(x):
-            (m1, J1, _), (m2, J2, _) = frames(x)
-            G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
-            return np.concatenate([J1.T @ G1[:, 0], J2.T @ G2[:, 0]]) / scale
-
-        def hess(x):
-            (m1, J1, D1), (m2, J2, D2) = frames(x)
-            G1, G2 = self.__vec_grad(m1[:, None], m2[:, None])
-            H11, H12, H22 = self.__vec_hess(m1[:, None], m2[:, None])
-            k = J1.shape[1]
-            H = np.zeros((2 * k, 2 * k))
-            H[:k, :k] = angle_hessian(J1, D1, G1[:, 0], H11[:, :, 0])
-            H[k:, k:] = angle_hessian(J2, D2, G2[:, 0], H22[:, :, 0])
-            H[:k, k:] = J1.T @ H12[:, :, 0] @ J2
-            H[k:, :k] = H[:k, k:].T
-            return H / scale
-
-        return fun, jac, hess
 
     @staticmethod
     def __angles(m1, m2):
@@ -1244,6 +1154,115 @@ class DoubleLayerNumeric:
 # ----------------------------------------------------------------------
 # helpers
 # ----------------------------------------------------------------------
+class _Energy:
+    """Free energy per area of the two macrospins for fixed parameters,
+    ``E = -h1.m1 + m1.A1.m1/2 - h2.m2 + m2.A2.m2/2 - Jbl*c - Jbq*c**2``
+    with ``c = m1.m2`` (without the constant of the Gallardo form), and
+    its derivatives, vectorized over the columns of the unit vectors
+    ``m1``, ``m2`` with shape ``(3, N)``.  `scale` is the scale of the
+    variations of the energy."""
+
+    def __init__(self, h1, h2, A1, A2, Jbl, Jbq):
+        self.h1, self.h2, self.A1, self.A2 = h1, h2, A1, A2
+        self.Jbl, self.Jbq = Jbl, Jbq
+        self.scale = max(
+            np.linalg.norm(h1),
+            np.linalg.norm(h2),
+            np.abs(A1).max(),
+            np.abs(A2).max(),
+            abs(Jbl),
+            2 * abs(Jbq),
+        )
+        if self.scale == 0:  # (degenerate energy)
+            self.scale = 1.0
+
+    def __call__(self, m1, m2):
+        """Energy per area ``(N,)``."""
+        c = np.sum(m1 * m2, axis=0)
+        return (
+            -(self.h1 @ m1)
+            + 0.5 * np.sum(m1 * (self.A1 @ m1), axis=0)
+            - (self.h2 @ m2)
+            + 0.5 * np.sum(m2 * (self.A2 @ m2), axis=0)
+            - self.Jbl * c
+            - self.Jbq * c**2
+        )
+
+    def grad(self, m1, m2):
+        """Gradients ``(3, N)`` with respect to ``m1`` and ``m2``."""
+        j = self.Jbl + 2 * self.Jbq * np.sum(m1 * m2, axis=0)
+        G1 = -self.h1[:, None] + self.A1 @ m1 - j * m2
+        G2 = -self.h2[:, None] + self.A2 @ m2 - j * m1
+        return G1, G2
+
+    def hess(self, m1, m2):
+        """Blocks ``(3, 3, N)`` of the Hessian with respect to ``m1``,
+        ``m2`` (``H21 = H12^T``)."""
+        j = self.Jbl + 2 * self.Jbq * np.sum(m1 * m2, axis=0)
+        H11 = self.A1[:, :, None] - 2 * self.Jbq * m2[:, None] * m2[None, :]
+        H22 = self.A2[:, :, None] - 2 * self.Jbq * m1[:, None] * m1[None, :]
+        H12 = -j * np.eye(3)[:, :, None] - 2 * self.Jbq * m2[:, None] * m1[None, :]
+        return H11, H12, H22
+
+    def grad_hess(self, ms, Ts):
+        """Gradient ``(4, N)`` and Hessian ``(4, 4, N)`` on the two unit
+        spheres in the tangent bases ``Ts`` at the unit vectors ``ms``
+        (as used by `newton_spheres`)."""
+        G1, G2 = self.grad(*ms)
+        H11, H12, H22 = self.hess(*ms)
+        return project(ms, Ts, [G1, G2], [[H11, H12], [H12.transpose(1, 0, 2), H22]])
+
+
+def _angle_functions(energy, R1, R2, in_plane):
+    """Normalized `energy` (an `_Energy` object) and its gradient and
+    Hessian with respect to the spherical angles ``(theta1, phi1,
+    theta2, phi2)`` in the local frames ``R1``, ``R2`` (rotation
+    matrices with the current magnetization directions as the first
+    columns, i.e. at the equator ``(pi/2, 0)``), or with respect to the
+    in-plane angles ``(phi1, phi2)`` in the film plane if `in_plane`."""
+    scale = energy.scale
+
+    @memoize_last
+    def frames(x):
+        """Unit vectors and their derivatives (see `angle_frame`)."""
+        if in_plane:  # (azimuthal derivatives only)
+            return [
+                (m, J[:, 1:], D[1:, 1:])
+                for m, J, D in (angle_frame(np.pi / 2, p) for p in x)
+            ]
+        return [angle_frame(x[0], x[1], R1), angle_frame(x[2], x[3], R2)]
+
+    @memoize_last
+    def grads(x):
+        """Gradients of the energy with respect to the unit vectors."""
+        (m1, _, _), (m2, _, _) = frames(x)
+        G1, G2 = energy.grad(m1[:, None], m2[:, None])
+        return G1[:, 0], G2[:, 0]
+
+    def fun(x):
+        (m1, _, _), (m2, _, _) = frames(x)
+        return energy(m1[:, None], m2[:, None])[0] / scale
+
+    def jac(x):
+        (_, J1, _), (_, J2, _) = frames(x)
+        G1, G2 = grads(x)
+        return np.concatenate([J1.T @ G1, J2.T @ G2]) / scale
+
+    def hess(x):
+        (m1, J1, D1), (m2, J2, D2) = frames(x)
+        G1, G2 = grads(x)
+        H11, H12, H22 = energy.hess(m1[:, None], m2[:, None])
+        k = J1.shape[1]
+        H = np.zeros((2 * k, 2 * k))
+        H[:k, :k] = angle_hessian(J1, D1, G1, H11[:, :, 0])
+        H[k:, k:] = angle_hessian(J2, D2, G2, H22[:, :, 0])
+        H[:k, k:] = J1.T @ H12[:, :, 0] @ J2
+        H[k:, :k] = H[:k, k:].T
+        return H / scale
+
+    return fun, jac, hess
+
+
 def _zeta(k, d):
     """Thickness-averaged dipolar factor
     ``zeta(k, d) = sinh(k*d/2)*exp(-|k|*d/2)/(k*d/2) = (1 - exp(-|k|*d))/(|k|*d)``

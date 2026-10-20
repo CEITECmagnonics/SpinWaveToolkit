@@ -11,6 +11,7 @@ from SpinWaveToolkit.core._sphere import (
     angle_hessian,
     classify,
     local_frame,
+    memoize_last,
     minimize_kwargs,
     move,
     newton_spheres,
@@ -344,7 +345,7 @@ class MacrospinEquilibrium:
                 continue  # close to a pole of the local frame, repeat around m
             # stability check (Hessian on the sphere)
             T = tangent_bases(m[:, None])
-            _, H = grad_hess([m[:, None]], [T])
+            g, H = grad_hess([m[:, None]], [T])
             lam, vec = np.linalg.eigh(H[:, :, 0])
             if lam[0] >= -1e-9 * scale:
                 break
@@ -354,10 +355,11 @@ class MacrospinEquilibrium:
                     s *= np.sign(s[c])
                     break
             m = move(m, s, 1e-3)
+        else:  # (no stable minimum within the restarts: gradient at the last m)
+            g = tangent_bases(m[:, None])[:, :, 0].T @ (A @ m - h)
         res.x = np.array(cart2sphr(*m)[:2])
         # SciPy may stop at the round-off level of the gradient before
         # reaching its tolerance, such a result is accepted
-        g = tangent_bases(m[:, None])[:, :, 0].T @ (A @ m - h)
         if not res.success and np.linalg.norm(g) < 1e-7 * scale:
             # (limited by the round-off of the energy)
             res.success = True
@@ -606,16 +608,18 @@ def _energy_functions(h, A):
     and its analytical gradient and Hessian with respect to the angles.
     """
 
+    frame = memoize_last(lambda x: angle_frame(*x))
+
     def fun(x):
-        m = angle_frame(*x)[0]
+        m = frame(x)[0]
         return -h @ m + 0.5 * m @ A @ m
 
     def jac(x):
-        m, J, _ = angle_frame(*x)
+        m, J, _ = frame(x)
         return J.T @ (A @ m - h)
 
     def hess(x):
-        m, J, D = angle_frame(*x)
+        m, J, D = frame(x)
         return angle_hessian(J, D, A @ m - h, A)
 
     return fun, jac, hess
