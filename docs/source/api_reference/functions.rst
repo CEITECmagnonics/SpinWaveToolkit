@@ -25,6 +25,8 @@ General functions
 
 .. autofunction:: distBE
 
+.. autofunction:: bloch_function
+
 .. autofunction:: sphr2cart
 
 .. autofunction:: cart2sphr

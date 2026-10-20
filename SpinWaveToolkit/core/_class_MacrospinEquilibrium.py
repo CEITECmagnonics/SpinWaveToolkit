@@ -6,6 +6,18 @@ import numpy as np
 from scipy.optimize import minimize
 from tqdm import tqdm
 from SpinWaveToolkit.helpers import MU0, wrapAngle, sphr2cart, cart2sphr
+from SpinWaveToolkit.core._sphere import (
+    angle_frame,
+    angle_hessian,
+    classify,
+    local_frame,
+    memoize_last,
+    minimize_kwargs,
+    move,
+    newton_spheres,
+    project,
+    tangent_bases,
+)
 
 __all__ = ["MacrospinEquilibrium"]
 
@@ -21,14 +33,9 @@ class MacrospinEquilibrium:
     :doc:`/_example_nbs/FMR_with_PMA` examples.
 
     Usually searches for a local equilibrium based on the initial
-    position.  (The equilibrium is a minimum in the energy density
-    landscape.)
-
-    .. caution::
-
-       The model might get stuck in labile equilibria, therefore it is
-       encouraged to slightly perturb the angles (e.g. by 1 µrad) to get
-       more reliable results from the calculations.
+    position, see :meth:`minimize`.  (The equilibrium is a minimum in
+    the energy density landscape.)  All equilibria, including the global
+    minimum, can be found by :meth:`find_equilibria`.
 
     Includes the effect of the thin film's demagnetizing field (dipolar
     energy), external field (Zeeman energy) and any number of uniaxial
@@ -99,7 +106,8 @@ class MacrospinEquilibrium:
         respectively.  Stored as results of the last `minimize()` call.
     res : scipy.optimize.OptimizeResult
         Full output of the `scipy.optimize.minimize` function from the
-        last calculation.  (That is, given as None until first run.)
+        last calculation (see Notes of :meth:`minimize`).  (That is,
+        given as None until first run.)
     verbose : bool
         Additional informative output to console?
 
@@ -108,6 +116,7 @@ class MacrospinEquilibrium:
     add_uniaxial_anisotropy
     recalc_params
     minimize
+    find_equilibria
     eval_energy
     getHeff
     hysteresis
@@ -223,11 +232,14 @@ class MacrospinEquilibrium:
         self.anis[name] = {"Ku": Ku, "theta": theta, "phi": phi, "Na": Na}
         self.recalc_params()
 
-    def minimize(self, scipy_kwargs=None, verbose=None):
-        """Evaluate the minimization problem.
+    def minimize(self, scipy_kwargs=None, verbose=None, global_minimum=False):
+        """Find the equilibrium (local minimum of the energy density)
+        closest to the current magnetization direction.
 
-        Uses the `scipy.optimize.minimize` function to find the minimum
-        in the 2D energy landscape E(theta, phi).
+        Uses the :py:func:`scipy.optimize.minimize` function with the
+        analytical gradient and Hessian of the energy density, see
+        Notes.  The current magnetization direction (attribute `M`) is
+        the starting point.
 
         Result is saved in the attributes `M` (just magnetization
         angles) and `res` (full output).
@@ -236,58 +248,215 @@ class MacrospinEquilibrium:
         ----------
         scipy_kwargs : dict or None, optional
             Dictionary with settings passed to
-            :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol``
-            and ``bounds`` keywords, as they are fixly set here.
-            If None, ``{"method": "Nelder-Mead"}`` is used.
-            Default is None. Try changing the
-            optimization method is you have concern about the results
-            (see documentation of :py:func:`scipy.optimize.minimize`).
+            :py:func:`scipy.optimize.minimize`, e.g. ``{"method":
+            "Nelder-Mead"}``.  Cannot contain ``bounds`` (the angles are
+            periodic and are not bounded).  The analytical gradient
+            (``jac``) and Hessian (``hess``) are passed automatically to
+            the methods that use them.  If ``tol`` and ``options`` are
+            not given, tolerances for the precision of about 1e-8 rad
+            are used.  If None, ``{"method": "trust-exact"}`` is used
+            with the trust radius limited to 0.3 rad (see Notes).
+            Default is None.  Try changing the optimization method if
+            you have concern about the results (see documentation of
+            :py:func:`scipy.optimize.minimize`).
         verbose : bool or None, optional
             Additional informative output to console?  If None, the
             value is inferred from the ``verbose`` attribute.  Default
             is None.
-
+        global_minimum : bool, optional
+            If True, the global minimum of the energy density is found
+            instead (using :meth:`find_equilibria`, independent of the
+            current magnetization direction and of `scipy_kwargs`), the
+            magnetization angles are saved to that minimum and `res`
+            is set to None.  Default is False.
 
         Notes
         -----
-        The used minimize function usually finds a local minimum
-        based on the initial conditions. This can be used for
-        calculating hysteresis loops and field sweeps. For global
-        minimum finding, a brute force method could be used, but it
-        is not implemented here.
+        The energy density is a quadratic function of the magnetization
+        unit vector `m`, ``E = -Ms*Bext*(b.m) + MU0*Ms**2/2 * m.N.m``,
+        where ``N`` is the sum of the demagnetization and anisotropy
+        tensors.  Its gradient and Hessian are therefore evaluated
+        analytically.  The minimization runs on the energy divided by
+        ``MU0*Ms**2``, so that the tolerances do not depend on the
+        material.
 
+        The default trust-region method with a small trust radius (the
+        steps are at most 0.3 rad, initially 0.1 rad) follows the energy
+        landscape from the starting point to the local minimum of its
+        basin, similarly to the (overdamped) magnetization dynamics.
+        This is important for hysteresis loops, where the magnetization
+        has to stay in a metastable minimum until it vanishes.  Methods
+        with line searches (e.g. L-BFGS-B or BFGS) are similarly fast,
+        but their first steps can jump over an energy barrier into
+        another minimum, i.e. the magnetization switches too early (by
+        about 20 % for the Stoner-Wohlfarth model).
+
+        To avoid the singularity of the spherical coordinates at the
+        poles (``theta = 0`` and ``pi``), the angles used in the
+        minimization are measured in a local frame, in which the
+        starting point lies on the equator.  (If the minimum is close to
+        a pole of the local frame, the minimization is repeated in a new
+        local frame.)  Therefore, the ``x``, ``jac`` and ``hess``
+        attributes of `res` refer to these local angles, except
+        ``res.x``, which is converted back to ``(theta, phi)`` in the
+        lab frame.  If SciPy stops at the round-off level of the
+        gradient before reaching its tolerance, ``res.success`` is set
+        to True (with a note in ``res.message``).
+
+        After the minimization, the stability of the result is checked
+        by the Hessian.  If the result is a saddle point or a maximum
+        (labile equilibrium, e.g. when starting exactly in a symmetric
+        position), the magnetization is displaced by 1 mrad along the
+        direction of the negative curvature and the minimization is
+        repeated.  The displacement is chosen with a positive z
+        component (or y, x if the z component is zero), so that the
+        result is deterministic.
         """
         if verbose is None:
             verbose = self.verbose
-
-        def fun(_x):
-            """placeholder for energy evaluations"""
-            return self.eval_energy(_x)
-
-        m0 = (self.M["theta"] * 0.999 + 1e-3, self.M["phi"] * 0.999 + 1e-3)
         self.recalc_params()
-        if scipy_kwargs is None:
-            scipy_kwargs = {"method": "Nelder-Mead"}
 
-        self.res = minimize(
-            fun,
-            m0,
-            tol=1e-20,
-            **scipy_kwargs,
-            bounds=((-np.pi, 2 * np.pi), (-2 * np.pi, 4 * np.pi)),
-        )
+        if global_minimum:
+            theta, phi, _, eq_type = self.find_equilibria()
+            i = np.argmax(eq_type == 0)  # lowest energy local minimum
+            self.M["theta"], self.M["phi"] = theta[i], phi[i]
+            self.res = None
+            if verbose:
+                print("Global minimum found.")
+            self.__save_energies()
+            return
+
+        h, A = self.__reduced_params()
+        scale = max(1.0, np.abs(A).max(), np.linalg.norm(h))
+        grad_hess = _sphere_functions(h, A)
+        m = sphr2cart(self.M["theta"], self.M["phi"])
+        for _ in range(10):  # restarts in a new local frame or from saddle points
+            R = local_frame(m)
+            fun, jac, hess = _energy_functions(R.T @ h, R.T @ A @ R)
+            kwargs = minimize_kwargs(scipy_kwargs, jac, hess)
+            res = minimize(fun, np.array([np.pi / 2, 0.0]), **kwargs)
+            m = R @ sphr2cart(*res.x)
+            # polish by Newton steps on the sphere (SciPy stops at the
+            # round-off level of the energy, ~1e-7 rad)
+            (mn,), gnorm = newton_spheres([m[:, None]], grad_hess, 5, scale)
+            if gnorm[0] < 1e-9 * scale and mn[:, 0] @ m > np.cos(1e-6):
+                m = mn[:, 0]
+            if abs(res.x[0] - np.pi / 2) > np.pi / 3:
+                continue  # close to a pole of the local frame, repeat around m
+            # stability check (Hessian on the sphere)
+            T = tangent_bases(m[:, None])
+            g, H = grad_hess([m[:, None]], [T])
+            lam, vec = np.linalg.eigh(H[:, :, 0])
+            if lam[0] >= -1e-9 * scale:
+                break
+            s = T[:, :, 0] @ vec[:, 0]  # direction of negative curvature
+            for c in (2, 1, 0):  # deterministic sign
+                if abs(s[c]) > 1e-9:
+                    s *= np.sign(s[c])
+                    break
+            m = move(m, s, 1e-3)
+        else:  # (no stable minimum within the restarts: gradient at the last m)
+            g = tangent_bases(m[:, None])[:, :, 0].T @ (A @ m - h)
+        res.x = np.array(cart2sphr(*m)[:2])
+        # SciPy may stop at the round-off level of the gradient before
+        # reaching its tolerance, such a result is accepted
+        if not res.success and np.linalg.norm(g) < 1e-7 * scale:
+            # (limited by the round-off of the energy)
+            res.success = True
+            res.message += " (Accepted, the gradient is at the round-off level.)"
+        self.res = res
+
         if self.res.success and verbose:
-            # print(f"Minimum successfully found after {self.res.nit} iterations.")
             print("Minimum successfully found.")
         elif verbose:
             print(f"Not converged.\n{self.res.message}")
 
         # save final state
-        self.M["theta"], self.M["phi"] = wrapAngle(
-            cart2sphr(*sphr2cart(*self.res.x))[:2]
+        self.M["theta"], self.M["phi"] = wrapAngle(res.x)
+        self.__save_energies()
+
+    def find_equilibria(self):
+        """Find all equilibrium directions of the magnetization.
+
+        The equilibria are the stationary points of the energy density
+        on the unit sphere, i.e. the directions where the torque of the
+        effective field vanishes.  For the quadratic energy density used
+        here (see Notes of :meth:`minimize`), there are at most six
+        isolated ones, which are found directly (without iterations from
+        a starting point).  Does not change the state of the object.
+
+        Returns
+        -------
+        theta, phi : ndarray
+            (rad) polar and azimuthal angles of the equilibria in the
+            lab frame, sorted by increasing energy density, i.e. the
+            first one is the global minimum.
+        eden : ndarray
+            (J/m^3) energy density of the equilibria.
+        type : ndarray[int]
+            Type of the equilibria: 0 for (local) minima, i.e. stable
+            equilibria, 1 for maxima and 2 for saddle points.
+
+        Notes
+        -----
+        A stationary point ``m`` satisfies ``(N - lam*I) m = h`` for a
+        Lagrange multiplier ``lam``, where ``N`` is the sum of the
+        demagnetization and anisotropy tensors and
+        ``h = Bext*b/(MU0*Ms)``.  Together with ``|m| = 1``, it gives a
+        polynomial equation of the 6th degree in ``lam``, which is
+        solved as an eigenvalue problem of a 6x6 matrix (Gander,
+        Golub & von Matt, Linear Algebra Appl. 114, 815 (1989)).
+        The solutions are refined by Newton iterations on the sphere and
+        classified by the eigenvalues of the Hessian (both positive for
+        a minimum, both negative for a maximum).  In degenerate cases (e.g. a field
+        along the normal of a film without in-plane anisotropy), the
+        equilibria are not isolated and only some representatives are
+        returned.
+        """
+        self.recalc_params()
+        h, A = self.__reduced_params()
+        scale = max(1.0, np.abs(A).max(), np.linalg.norm(h))
+        grad_hess = _sphere_functions(h, A)
+
+        # candidates from the quadratic eigenvalue problem
+        # (A - lam)^2 g = h h^T g, linearized with d = (A - lam) g
+        M = np.block([[A, -np.eye(3)], [-np.outer(h, h), A]])
+        lams, vecs = np.linalg.eig(M)
+        cands = []
+        for lam, v in zip(lams, vecs.T):
+            if abs(lam.imag) > 1e-6 * scale:
+                continue
+            v = (v / v[np.argmax(np.abs(v))]).real  # remove the complex phase
+            d = v[3:]  # m is parallel to d (both signs are refined below)
+            if np.linalg.norm(d) > 1e-12:
+                cands += [d, -d]
+        # eigenvectors of A (the equilibria for zero field) as more seeds
+        _, V = np.linalg.eigh(A)
+        cands += list(V.T) + list(-V.T)
+        if np.linalg.norm(h) > 0:
+            cands += [h, -h]
+        cands = np.array(cands).T
+        cands /= np.linalg.norm(cands, axis=0)
+
+        # refine all candidates at once and remove the duplicates
+        (m,), gnorm = newton_spheres([cands], grad_hess, 50, scale)
+        found = []
+        for c in m[:, gnorm < 1e-9 * scale].T:
+            if not any(c @ f > 1 - 1e-12 for f in found):
+                found.append(c)
+        found = np.array(found).T  # (3, M)
+
+        eden_red = -h @ found + 0.5 * np.einsum("in,ij,jn->n", found, A, found)
+        _, H = grad_hess([found], [tangent_bases(found)])
+        eq_type = classify(H, scale)
+        order = np.argsort(eden_red)
+        theta, phi = cart2sphr(*found[:, order])[:2]
+        return (
+            theta,
+            wrapAngle(phi),
+            eden_red[order] * MU0 * self.Ms**2,
+            eq_type[order],
         )
-        eden = self.eval_energy(self.res.x, True)
-        self.eden_zeeman, self.eden_demag, self.eden_anis_uni = eden
 
     def eval_energy(self, m, components=False):
         """Evaluate the energy density for the magnetization direction
@@ -319,8 +488,11 @@ class MacrospinEquilibrium:
         """Calculate effective field with the current magnetization
         direction.
 
-        Performs a numerical derivative of the energy density wrt.
-        magnetization to get the effective field vector.
+        The effective field is the negative derivative of the energy
+        density with respect to the magnetization vector,
+        ``Beff = Bext*b - MU0*Ms*N.m``, where ``N`` is the sum of the
+        demagnetization and anisotropy tensors (evaluated
+        analytically).
 
         Returns
         -------
@@ -330,48 +502,11 @@ class MacrospinEquilibrium:
         Heff : float
             (T) effective field magnitude.
         """
-        # define relative and aboslute (in radians) step in numerical derivative
-        rstep, astep_rad = 1e-5, 1e-4
-        # get central values
-        Ms0 = float(self.Ms)
-        theta0 = float(self.M["theta"])
-        phi0 = float(self.M["phi"])
-
-        # radial derivative
-        self.Ms = Ms0 * (1 - rstep)
-        eden_ms_i = self.eval_energy(self.__getM())
-        self.Ms = Ms0 * (1 + rstep)
-        eden_ms_f = self.eval_energy(self.__getM())
-        self.Ms = Ms0  # reset Ms
-        heff_ms = (eden_ms_i - eden_ms_f) / (Ms0 * 2 * rstep)  # negative sign included
-
-        # theta derivative
-        theta_i = theta0 * (1 - rstep) - astep_rad
-        theta_f = theta0 * (1 + rstep) + astep_rad
-        eden_th_i = self.eval_energy((theta_i, phi0))
-        eden_th_f = self.eval_energy((theta_f, phi0))
-        heff_th = 1 / Ms0 * (eden_th_i - eden_th_f) / (theta_f - theta_i)
-
-        # phi derivative
-        phi_i = phi0 * (1 - rstep) - astep_rad
-        phi_f = phi0 * (1 + rstep) + astep_rad
-        eden_ph_i = self.eval_energy((theta0, phi_i))
-        eden_ph_f = self.eval_energy((theta0, phi_f))
-        heff_ph = 1 / (Ms0 * np.sin(theta0)) * (eden_ph_i - eden_ph_f) / (phi_f - phi_i)
-
-        # convert (heff_ms, heff_th, heff_ph) to cartesian coordinates
-        heff_cart = sphr2cart(theta0, phi0) * heff_ms
-        heff_cart += (
-            np.array(
-                [
-                    np.cos(theta0) * np.cos(phi0),
-                    np.cos(theta0) * np.sin(phi0),
-                    -np.sin(theta0),
-                ]
-            )
-            * heff_th
-        )
-        heff_cart += np.array([-np.sin(phi0), np.cos(phi0), 0.0]) * heff_ph
+        self.recalc_params()
+        m = sphr2cart(self.M["theta"], self.M["phi"])
+        N = self.demag + (self.Na_tot if self.anis else 0)
+        N = 0.5 * (N + N.T)  # (only the symmetric part contributes to the energy)
+        heff_cart = self.Bext["Bext"] * self.b - MU0 * self.Ms * (N @ m)
 
         # calculate magnitude and spherical angles
         theta_Heff, phi_Heff, heff_mag = cart2sphr(*heff_cart)
@@ -395,13 +530,9 @@ class MacrospinEquilibrium:
             (rad) azimuthal angle of external magnetic field.
         scipy_kwargs : dict or None, optional
             Dictionary with settings passed to
-            :py:func:`scipy.optimize.minimize`.  Cannot contain ``tol``
-            and ``bounds`` keywords, as they are fixly set here.
-            If None, ``{"method": "Nelder-Mead"}`` is used.
-            Defualt is None. Try changing the
-            optimization method is you have concern about the results
-            (see documentation of :py:func:`scipy.optimize.minimize`).
-            This is not a sweepable parameter!
+            :py:func:`scipy.optimize.minimize`, see :meth:`minimize`.
+            If None, the default of :meth:`minimize` is used.  Default
+            is None.  This is not a sweepable parameter!
 
 
         Returns
@@ -435,6 +566,20 @@ class MacrospinEquilibrium:
 
         return theta, phi
 
+    def __reduced_params(self):
+        """Reduced field ``h`` and tensor ``A`` of the energy density
+        divided by ``MU0*Ms**2``, i.e.
+        ``E/(MU0*Ms**2) = -h.m + m.A.m/2``.
+        """
+        h = self.Bext["Bext"] * self.b / (MU0 * self.Ms)
+        A = self.demag + (self.Na_tot if self.anis else 0)
+        return h, 0.5 * (A + A.T)
+
+    def __save_energies(self):
+        """Save the energy density components of the current state."""
+        eden = self.eval_energy(self.__getM(), True)
+        self.eden_zeeman, self.eden_demag, self.eden_anis_uni = eden
+
     def __check_angle(self, angle):
         """Function for checking the angles are in correct units.
 
@@ -456,3 +601,35 @@ class MacrospinEquilibrium:
     def __getM(self):
         """Returns magnetization vector data as ``(theta, phi)``."""
         return self.M["theta"], self.M["phi"]
+
+
+def _energy_functions(h, A):
+    """Reduced energy density ``-h.m + m.A.m/2`` of ``m(theta, phi)``
+    and its analytical gradient and Hessian with respect to the angles.
+    """
+
+    frame = memoize_last(lambda x: angle_frame(*x))
+
+    def fun(x):
+        m = frame(x)[0]
+        return -h @ m + 0.5 * m @ A @ m
+
+    def jac(x):
+        m, J, _ = frame(x)
+        return J.T @ (A @ m - h)
+
+    def hess(x):
+        m, J, D = frame(x)
+        return angle_hessian(J, D, A @ m - h, A)
+
+    return fun, jac, hess
+
+
+def _sphere_functions(h, A):
+    """Gradient and Hessian of the reduced energy ``-h.m + m.A.m/2`` on
+    the unit sphere in the tangent bases, as used by `newton_spheres`."""
+
+    def grad_hess(ms, Ts):
+        return project(ms, Ts, [A @ ms[0] - h[:, None]], [[A]])
+
+    return grad_hess

@@ -75,19 +75,23 @@ def test_single_layer_numeric_material_arrays():
 
 @pytest.mark.parametrize("cls", [SWT.SingleLayer, SWT.SingleLayerNumeric])
 def test_bloch_function(cls):
-    """The Bloch function peaks at the dispersion, and the Bose-Einstein
-    weighting multiplies it by sqrt(2*n_BE)."""
+    """`GetBlochFunction` is `bloch_function` of the dispersion and the
+    lifetime of the mode, or of the given lifetime and frequency axis."""
     kxi = np.linspace(1e5, 20e6, 50)
     sl = cls(0.05, SWT.NiFe, 30e-9, kxi)
-    w, bloch = sl.GetBlochFunction(Nf=300)
-    assert w.shape == (300,) and bloch.shape == (300, 50)
-    w_disp = sl.GetDispersion()
-    w_disp = w_disp[0][0] if cls is SWT.SingleLayerNumeric else w_disp
-    assert np.all(np.abs(w[np.argmax(bloch, axis=0)] - w_disp) <= w[1] - w[0])
     temp, mu = 300, -1e9 * SWT.H
-    _, bloch_be = sl.GetBlochFunction(Nf=300, temp=temp, mu=mu)
-    weight = np.sqrt(2 * SWT.distBE(w, temp=temp, mu=mu))
-    assert np.allclose(bloch_be, bloch * weight[:, None])
+    w, bloch = sl.GetBlochFunction(Nf=300, temp=temp, mu=mu)
+    w_disp, lifetime = sl.GetDispersion(), sl.GetLifetime()
+    if cls is SWT.SingleLayerNumeric:
+        w_disp = w_disp[0][0]
+    w_ref, bloch_ref = SWT.bloch_function(w_disp, lifetime, Nf=300, temp=temp, mu=mu)
+    assert np.array_equal(w, w_ref) and np.array_equal(bloch, bloch_ref)
+    w_axis = np.linspace(1e9, 1e11, 40)
+    w, bloch = sl.GetBlochFunction(lifetime=2e-9, w=w_axis)
+    assert np.array_equal(w, w_axis)
+    assert np.array_equal(bloch, SWT.bloch_function(w_disp, 2e-9, w=w_axis)[1])
+    w, _ = sl.GetBlochFunction(Nf=20, margin=0.5)
+    assert np.array_equal(w, SWT.bloch_function(w_disp, lifetime, Nf=20, margin=0.5)[0])
 
 
 def test_single_layer_parametric_pumping():

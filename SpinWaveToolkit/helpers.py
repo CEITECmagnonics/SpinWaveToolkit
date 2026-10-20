@@ -12,6 +12,7 @@ __all__ = [
     "H",
     "HBAR",
     "distBE",
+    "bloch_function",
     "wavenumber2wavelength",
     "wavelength2wavenumber",
     "wrapAngle",
@@ -113,6 +114,76 @@ def distBE(w, temp=300, mu=-1e12 * H):
         Bose-Einstein distribution in dependance to frequency.
     """
     return 1.0 / (np.exp((HBAR * (abs(w)) - mu) / (KB * temp)) - 1)
+
+
+def bloch_function(w_k, lifetime, Nf=200, temp=None, mu=None, w=None, margin=0.1):
+    """Bloch function (spectral shape) of a spin-wave mode from its
+    dispersion and lifetime.
+
+    For each wavevector, the Bloch function is the Lorentzian-like
+    profile ``1/((w - w_k)**2 + (2/lifetime)**2)`` on the frequency axis
+    `w`, optionally weighted by the thermal occupation.  It can be used
+    with a dispersion from any source, e.g. the dispersion classes of
+    this package (see their ``GetBlochFunction`` methods) or an external
+    code such as TetraX.
+
+    Parameters
+    ----------
+    w_k : array_like
+        (rad*Hz) angular frequencies of the mode at the wavevectors,
+        shape ``(N,)``.
+    lifetime : float or array_like
+        (s ) lifetime of the mode, a single value or one per
+        wavevector, shape ``(N,)``.
+    Nf : int, optional
+        Number of points of the frequency axis, used if `w` is None.
+        Default is 200.
+    temp : float or None, optional
+        (K ) temperature for the Bose-Einstein distribution.
+        If `temp` or `mu` is None, no distribution is applied.
+    mu : float or None, optional
+        (J ) chemical potential for the Bose-Einstein distribution.
+        If `temp` or `mu` is None, no distribution is applied.
+        Otherwise, the Bloch function is weighted by
+        ``sqrt(2*n_BE)``, where ``n_BE`` is the Bose-Einstein
+        distribution (see :func:`distBE`).
+    w : array_like or None, optional
+        (rad*Hz) frequency axis.  If None, `Nf` equidistant points are
+        used, spanning the frequencies `w_k` broadened by
+        ``2*pi/min(lifetime)`` (the widest peak) on both sides, extended
+        by `margin` and starting at zero at the lowest.  Default is None.
+    margin : float, optional
+        () relative margin of the constructed frequency axis (if `w` is
+        None), i.e. the fraction of the broadened frequency range added
+        below and above it.  Default is 0.1.
+
+    Returns
+    -------
+    w : ndarray
+        (rad*Hz) frequency axis, shape ``(Nf,)`` (or `w` as given).
+    blochFunc : ndarray
+        () Bloch function for `w` and the wavevectors, shape
+        ``(Nf, N)``.
+
+    See also
+    --------
+    distBE : Bose-Einstein distribution.
+    """
+    w_k = np.atleast_1d(np.asarray(w_k, dtype=np.float64))
+    lifetime = np.broadcast_to(np.asarray(lifetime, dtype=np.float64), w_k.shape)
+    if w is None:
+        if margin < 0:
+            raise ValueError("`margin` must be a non-negative number.")
+        broad = 2 * np.pi / np.min(np.abs(lifetime))  # (of the widest peak)
+        lo, hi = np.min(w_k) - broad, np.max(w_k) + broad
+        extra = margin * (hi - lo)
+        w = np.linspace(max(lo - extra, 0.0), hi + extra, Nf)
+    w = np.asarray(w, dtype=np.float64)
+    blochFunc = 1 / ((w[:, np.newaxis] - w_k) ** 2 + (2 / lifetime) ** 2)
+    if temp is not None and mu is not None:
+        # amplitude ~ sqrt(2*n_BE), i.e. BLS intensity ~ n_BE
+        blochFunc *= np.sqrt(2 * distBE(w, temp=temp, mu=mu))[:, np.newaxis]
+    return w, blochFunc
 
 
 def rootsearch(f, a, b, dx, args=()):

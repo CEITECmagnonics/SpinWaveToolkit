@@ -51,6 +51,21 @@ class TestRT:
         assert _rel(q3[..., 0], qf) < 1e-12
         assert _rel(s3, sf) < 1e-12
 
+    def test_focal_grid_warning(self, bls_setup):
+        """A real-space grid too coarse for the k-grid is reported."""
+        s = bls_setup
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # the conjugate grid is fine
+            SWT.bls.get_signal_RT_focal([s.x, s.x], s.Ei_r, s.Ej_r, [s.kx, s.kx], s.chi)
+        # every second point: the Nyquist limit drops below the k-grid limit
+        x2 = s.x[::2]
+        Ei = [c[::2, ::2] for c in s.Ei_r]
+        Ej = [c[::2, ::2] for c in s.Ej_r]
+        with pytest.warns(UserWarning, match="aliased"):
+            SWT.bls.get_signal_RT_focal([x2, x2], Ei, Ej, [s.kx, s.kx], s.chi)
+        with pytest.warns(UserWarning, match="aliased"):
+            SWT.bls.get_signal_RT_focal_3d([x2, x2], Ei, Ej, [s.kx, s.kx], s.chi)
+
     def test_focal_3d_depths(self, bls_setup):
         """Two identical depths: the transfer function is the same for
         both; the amplitudes add up, i.e. the signal is 4 times larger."""
