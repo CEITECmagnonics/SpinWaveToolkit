@@ -115,6 +115,23 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 - Example notebook `SAF_dispersion_2D`: 2D dispersion relation of the synthetic antiferromagnet
   of Adam et al., npj Spintronics 3, 33 (2025) (nonreciprocal along the field, reciprocal
   perpendicular to it), reproducing their Fig. 3 ([#15], [#53]).
+- `MultiLayerNumeric`: dispersion of multilayers with an arbitrary number of magnetic layers
+  (generalization of `DoubleLayerNumeric`, identical results for two layers).  Per-layer
+  parameters (`material`, `d`, `Ku`, `phiAnis`, `Ks`, `phiInit`, `thetaInit`) are sequences of
+  length L, per-interface parameters (`s`, `Jbl`, `Jbq`, `JblDyn`, `JbqDyn`) sequences of length
+  L - 1 (scalars are repeated).  Dipolar coupling of all pairs of layers, bilinear and
+  biquadratic interlayer exchange of neighboring layers, equilibria for arbitrary directions
+  (`GetEquilibrium()`, `GetPhis()`, `find_equilibria()` with random starting points for many
+  layers), `GetFreeEnergy()`, `GetDispersion()` returning `(L, N)` frequencies and
+  `(2L, L, N)` eigenvectors, and the derived quantities of the other dispersion classes.
+- Example notebook `multilayer_dispersion_vs_TetraX`: dispersion of a CoFeB/Py/CoFeB trilayer
+  with non-collinear, tilted magnetizations in an oblique field (frequencies within 1.3 % of
+  TetraX) and of a 40 nm Py film modelled by 20 exchange-coupled sublayers (Damon-Eshbach mode
+  and standing spin waves within 0.3 % of TetraX).  The notebook includes a workaround for
+  TetraX 2.0.0, whose setter of the interlayer-exchange constants drops a list of constants.
+- Unit tests of `MultiLayerNumeric` (equivalence with `DoubleLayerNumeric` and `SingleLayer`,
+  equilibria of a trilayer and of longer chains, analytical derivatives, uncoupled layers,
+  reversal of the stack, thick layer from sublayers vs. `SingleLayerNumeric`).
 - Unit tests of `DoubleLayerNumeric` (scissors state, all equilibria, analytical derivatives,
   2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers,
   oblique field and perpendicular anisotropy, tilted single layer vs. `SingleLayer` and

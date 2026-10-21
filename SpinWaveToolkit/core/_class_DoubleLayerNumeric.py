@@ -201,7 +201,7 @@ class DoubleLayerNumeric:
 
     See also
     --------
-    SingleLayer, SingleLayerNumeric, Material
+    SingleLayer, SingleLayerNumeric, MultiLayerNumeric, Material
 
     Notes
     -----

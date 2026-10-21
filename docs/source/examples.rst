@@ -21,6 +21,7 @@ Here is a list of examples that demonstrate how to use the SpinWaveToolkit. The 
     _example_nbs/SAF_dispersion_2D
     _example_nbs/SAF_dispersion_vs_TetraX
     _example_nbs/SAF_FMR_polar_sweep
+    _example_nbs/multilayer_dispersion_vs_TetraX
     _example_nbs/BLS_signal_from_GF_focal
     _example_nbs/BLS_signal_from_GF_pupil
     _example_nbs/BLS_signal_from_RT_focal

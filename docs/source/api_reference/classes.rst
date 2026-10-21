@@ -11,5 +11,6 @@ Select a class from the list to view its details.
    classes/SingleLayer
    classes/SingleLayerNumeric
    classes/DoubleLayerNumeric
+   classes/MultiLayerNumeric
    classes/SingleLayerSCcoupled
    classes/BulkPolariton

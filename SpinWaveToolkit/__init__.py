@@ -23,6 +23,10 @@ Classes
 :class:`~DoubleLayerNumeric`
     Compute spin-wave characteristics in dependance to k-vector for
     a double layer using a numerical model of Gallardo et al.
+:class:`~MultiLayerNumeric`
+    Compute spin-wave characteristics in dependance to k-vector for
+    a multilayer of an arbitrary number of magnetic layers using a
+    generalized numerical model of Gallardo et al.
 :class:`~SingleLayerSCcoupled`
     Compute spin-wave characteristics in dependance to k-vector for
     a single ferromagnetic layer dipolarly coupled to a superconductor
@@ -104,6 +108,7 @@ from .core._class_SingleLayer import *
 from .core._class_SingleLayerNumeric import *
 from .core._class_SingleLayerSCcoupled import *
 from .core._class_DoubleLayerNumeric import *
+from .core._class_MultiLayerNumeric import *
 from .core._class_BulkPolariton import *
 from .core._class_MacrospinEquilibrium import *
 from . import bls
@@ -117,6 +122,7 @@ __all__ = [
     "SingleLayerNumeric",
     "SingleLayerSCcoupled",
     "DoubleLayerNumeric",
+    "MultiLayerNumeric",
     "BulkPolariton",
     "MacrospinEquilibrium",
     "bls",
