@@ -38,7 +38,7 @@ Let's assume a single magnetic layer for the following examples. Therefore, we w
 
 Define your material
 ^^^^^^^^^^^^^^^^^^^^
-To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You can either use one of the predefined materials (see the documentation of :py:class:`.Material`), or define your own by specifying its parameters
+To handle materials, `SpinWaveToolkit` uses the :py:class:`.Material` class. You can either use one of the predefined materials (see the documentation of :py:class:`.Material`), a copy of one with some parameters changed (e.g. ``swt.NiFe.copy(Ms=900e3)``, see :py:meth:`.Material.copy`), or define your own by specifying its parameters
 
 .. code-block:: python
 

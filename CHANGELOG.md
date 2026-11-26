@@ -119,6 +119,9 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
   2D map of Adam et al., elementwise vs. per-point, wavevector sign, swapping of the layers,
   oblique field and perpendicular anisotropy, tilted single layer vs. `SingleLayer` and
   Smit-Beljers, Kittel with the effective magnetization).
+- `Material.copy()`: independent copy of a material, optionally with changed parameters
+  (e.g. ``SWT.NiFe.copy(Ms=900e3)``), so that parameter sweeps do not modify the predefined
+  materials ([#67]).  Used in the example `FMR_with_PMA`.
 
 ### Changed
 
@@ -434,6 +437,7 @@ large-scale incompatible changes.  Entries marked **Breaking** may require chang
 [#61]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/61
 [#63]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/63
 [#65]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/65
+[#67]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/67
 [#68]: https://github.com/CEITECmagnonics/SpinWaveToolkit/pull/68
 [#69]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/69
 [#70]: https://github.com/CEITECmagnonics/SpinWaveToolkit/issues/70

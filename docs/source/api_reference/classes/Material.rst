@@ -10,7 +10,9 @@
 Table of pre-defined materials
 ------------------------------
 
-All of these are instances of the :class:`~SpinWaveToolkit.Material` class.
+All of these are instances of the :class:`~SpinWaveToolkit.Material` class.  They are shared
+by the whole session, so do not change their attributes directly; to use a modified material,
+make a copy with :meth:`~SpinWaveToolkit.Material.copy`, e.g. ``SpinWaveToolkit.NiFe.copy(Ms=900e3)``.
 
 +-------------------------+------+-------+---------+-------------+----------+-------+
 | `Material`              |``Ms``|``Aex``|``alpha``|``gamma``/2pi|``mu0dH0``|``Ku`` |
