@@ -1,0 +1,30 @@
+:class:`SpinWaveToolkit.Material`
+=================================
+
+.. autoclass:: SpinWaveToolkit.Material
+   :members:
+   :undoc-members:
+
+
+
+Table of pre-defined materials
+------------------------------
+
+All of these are instances of the :class:`~SpinWaveToolkit.Material` class.  They are shared
+by the whole session, so do not change their attributes directly; to use a modified material,
+make a copy with :meth:`~SpinWaveToolkit.Material.copy`, e.g. ``SpinWaveToolkit.NiFe.copy(Ms=900e3)``.
+
++-------------------------+------+-------+---------+-------------+----------+-------+
+| `Material`              |``Ms``|``Aex``|``alpha``|``gamma``/2pi|``mu0dH0``|``Ku`` |
+|                         |(kA/m)|(pJ/m) |(10^-4)  |(GHz/T)      |(mT)      |(J/m^2)|
++=========================+======+=======+=========+=============+==========+=======+
+|``SpinWaveToolkit.NiFe`` | 800  | 16    | 70      | 28.8        | 0        | 0     |
++-------------------------+------+-------+---------+-------------+----------+-------+
+|``SpinWaveToolkit.CoFeB``| 1250 | 15    | 40      | 30          | 0        | 0     |
++-------------------------+------+-------+---------+-------------+----------+-------+
+|``SpinWaveToolkit.FeNi`` | 1410 | 11    | 80      | 28.1        | 0        | 0     |
++-------------------------+------+-------+---------+-------------+----------+-------+
+| ``SpinWaveToolkit.YIG`` | 140  | 3.6   | 1.5     | 28          | 0.18     | 0     |
++-------------------------+------+-------+---------+-------------+----------+-------+
+
+
